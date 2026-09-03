@@ -304,10 +304,7 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
         if matches.count() == 0:
             tokens = value.split()
             if tokens:
-                flexible_name = re.compile(
-                    r"\s*".join(re.escape(token) for token in tokens),
-                    re.IGNORECASE,
-                )
+                flexible_name = _token_pattern(value)
                 matches = page.get_by_text(flexible_name)
         if matches.count() == 0:
             for role in ("button", "link", "textbox", "combobox"):
@@ -344,6 +341,15 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
                 accessible = page.get_by_role(cast(Any, role), name=name, exact=True)
                 if accessible.count():
                     return accessible
+        for name in dict.fromkeys((value, cleaned)):
+            pattern = _token_pattern(name)
+            labeled = page.get_by_label(pattern)
+            if labeled.count() == 1:
+                return labeled
+            for role in ("textbox", "combobox"):
+                accessible = page.get_by_role(cast(Any, role), name=pattern)
+                if accessible.count() == 1:
+                    return accessible
         return placeholder
     if strategy == "alt_text":
         return page.get_by_alt_text(value, exact=True)
@@ -375,3 +381,10 @@ def _without_ui_metadata(value: str) -> str:
     while match := suffix.search(cleaned):
         cleaned = cleaned[: match.start()].rstrip()
     return cleaned
+
+
+def _token_pattern(value: str) -> re.Pattern[str]:
+    return re.compile(
+        r"\s*".join(re.escape(token) for token in value.split()),
+        re.IGNORECASE,
+    )
