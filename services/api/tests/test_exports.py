@@ -8,7 +8,12 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from demodirector_api.exports import ExportService, SQLiteExportRepository
+from demodirector_api.exports import (
+    CloudExportArtifactStore,
+    CloudTimelineMediaStore,
+    ExportService,
+    SQLiteExportRepository,
+)
 from demodirector_api.main import create_app
 from demodirector_api.repositories import SQLiteProjectRepository
 from demodirector_contracts import Project, RenderConfig, RenderResult, Timeline
@@ -125,6 +130,31 @@ class FailingRenderer:
     def render(self, timeline: Timeline, config: RenderConfig) -> RenderResult:
         del timeline, config
         raise RuntimeError("temporary encoder failure")
+
+
+class MemoryBlob:
+    def __init__(self, objects: dict[str, bytes], name: str) -> None:
+        self.objects = objects
+        self.name = name
+
+    def upload_from_filename(self, filename: str) -> None:
+        self.objects[self.name] = Path(filename).read_bytes()
+
+    def exists(self) -> bool:
+        return self.name in self.objects
+
+    def download_to_filename(self, filename: str) -> None:
+        Path(filename).write_bytes(self.objects[self.name])
+
+
+class MemoryBucket:
+    name = "demo-bucket"
+
+    def __init__(self) -> None:
+        self.objects: dict[str, bytes] = {}
+
+    def blob(self, name: str) -> MemoryBlob:
+        return MemoryBlob(self.objects, name)
 
 
 def project() -> Project:
@@ -255,3 +285,76 @@ def test_latest_export_keeps_the_most_recent_success_when_a_retry_fails(
 
     assert successful_service.latest("project-1") == successful
     assert successful_service.latest_path("project-1").read_bytes() == b"small mp4 fixture"
+
+
+def test_cloud_artifact_store_restores_export_after_local_file_is_removed(tmp_path: Path) -> None:
+    repository = SQLiteExportRepository(tmp_path / "exports.db")
+    bucket = MemoryBucket()
+    first_root = tmp_path / "first" / "exports"
+    service = ExportService(
+        FileRenderer(first_root),
+        repository,
+        first_root,
+        artifact_store=CloudExportArtifactStore(bucket, tmp_path / "first-cache"),
+    )
+    result = service.create(
+        "project-1",
+        Timeline(project_id="project-1", duration_ms=1_000, scene_clips=[]),
+        "1080p",
+    )
+    assert result.status == "succeeded"
+    shutil.rmtree(tmp_path / "first")
+
+    restored_service = ExportService(
+        FileRenderer(tmp_path / "unused"),
+        repository,
+        tmp_path / "unused",
+        artifact_store=CloudExportArtifactStore(bucket, tmp_path / "restored-cache"),
+    )
+
+    assert restored_service.latest("project-1") == result
+    assert restored_service.latest_path("project-1").read_bytes() == b"small mp4 fixture"
+
+
+def test_cloud_timeline_media_survives_local_capture_cleanup(tmp_path: Path) -> None:
+    source_root = tmp_path / "artifacts"
+    video = source_root / "captures" / "recording.webm"
+    audio = source_root / "narration" / "voice.wav"
+    video.parent.mkdir(parents=True)
+    audio.parent.mkdir(parents=True)
+    video.write_bytes(b"video")
+    audio.write_bytes(b"audio")
+    source_timeline = Timeline.model_validate(
+        {
+            "project_id": "project-1",
+            "duration_ms": 1_000,
+            "scene_clips": [
+                {
+                    "id": "scene-clip-1",
+                    "scene_id": "scene-1",
+                    "start_ms": 0,
+                    "end_ms": 1_000,
+                    "source_uri": str(video),
+                }
+            ],
+            "audio_clips": [
+                {
+                    "id": "audio-clip-1",
+                    "scene_id": "scene-1",
+                    "start_ms": 0,
+                    "end_ms": 1_000,
+                    "source_uri": str(audio),
+                }
+            ],
+        }
+    )
+    bucket = MemoryBucket()
+    store = CloudTimelineMediaStore(bucket, source_root, tmp_path / "cache")
+
+    persisted = store.persist(source_timeline)
+    shutil.rmtree(source_root)
+    restored = store.materialize(persisted)
+
+    assert persisted.scene_clips[0].source_uri.startswith("gs://demo-bucket/timeline-media/")
+    assert Path(restored.scene_clips[0].source_uri).read_bytes() == b"video"
+    assert Path(restored.audio_clips[0].source_uri).read_bytes() == b"audio"

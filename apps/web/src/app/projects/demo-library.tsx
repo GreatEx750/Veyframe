@@ -2,9 +2,11 @@
 
 import { projectSchema, type Project } from "@demodirector/contracts";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { ProductNavigation } from "@/components/product-navigation";
+import { isJudgeDemoProject, JUDGE_DEMO_VIDEO_URL } from "@/lib/judge-demo";
 
 type SortMode = "updated" | "name" | "duration";
 
@@ -34,6 +36,7 @@ function updatedLabel(value: string) {
 }
 
 export function DemoLibrary() {
+  const { replace } = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -42,11 +45,16 @@ export function DemoLibrary() {
   const [error, setError] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+  const [videoFailures, setVideoFailures] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     let active = true;
     fetch("/api/projects", { cache: "no-store" })
       .then(async (response) => {
+        if (response.status === 401) {
+          replace("/login?reason=session_expired");
+          return [];
+        }
         if (!response.ok) throw new Error("Project library could not be loaded.");
         return projectSchema.array().parse(await response.json());
       })
@@ -62,7 +70,7 @@ export function DemoLibrary() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [replace]);
 
   const visibleProjects = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -153,9 +161,18 @@ export function DemoLibrary() {
             <article className="demo-card" key={project.id}>
               <Link className="demo-card-link" href={`/projects/${project.id}/editor`}>
                 <div className={`demo-thumbnail demo-thumbnail-${index % 4} ${project.status === "published" ? "has-video" : ""}`}>
-                  {project.status === "published" ? <>
-                    <video aria-label={`Preview ${project.name}`} muted playsInline preload="metadata" src={`/api/projects/${project.id}/exports/latest/video`} />
+                  {project.status === "published" && !videoFailures.has(project.id) ? <>
+                    <video
+                      aria-label={`Preview ${project.name}`}
+                      muted
+                      onError={() => setVideoFailures((current) => new Set(current).add(project.id))}
+                      playsInline
+                      preload="metadata"
+                      src={isJudgeDemoProject(project.id) ? JUDGE_DEMO_VIDEO_URL : `/api/projects/${project.id}/exports/latest/video`}
+                    />
                     <span className="video-ready">▶ Video ready</span>
+                  </> : project.status === "published" ? <>
+                    <span>Video unavailable</span>
                   </> : <span>{project.name.slice(0, 2).toUpperCase()}</span>}
                   <time>{durationLabel(project.requested_duration_seconds)}</time>
                 </div>

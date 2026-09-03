@@ -36,14 +36,30 @@ from demodirector_api.brief_coverage import BriefCoverageService
 from demodirector_api.cloud import (
     CloudCaptureDispatcher,
     CloudTasksSettings,
+    FirestoreExportRepository,
+    FirestoreProductUnderstandingRepository,
     FirestoreProjectRepository,
+    FirestoreResearchSourceRepository,
+    FirestoreStoryboardRepository,
+    FirestoreTimelineRepository,
+    FirestoreWebsiteInspectionRepository,
 )
 from demodirector_api.cloud_routes import router as cloud_router
 from demodirector_api.director_agent import create_director_workflow
 from demodirector_api.edit_planner import EditPlannerService
 from demodirector_api.edit_routes import router as edit_router
 from demodirector_api.export_routes import router as export_router
-from demodirector_api.exports import ExportService, SQLiteExportRepository
+from demodirector_api.exports import (
+    CloudExportArtifactStore,
+    CloudTimelineMediaStore,
+    ExportArtifactStore,
+    ExportRepository,
+    ExportService,
+    LocalExportArtifactStore,
+    LocalTimelineMediaStore,
+    SQLiteExportRepository,
+    TimelineMediaStore,
+)
 from demodirector_api.generation import DemoGenerationService
 from demodirector_api.generation_routes import router as generation_router
 from demodirector_api.google_ai import (
@@ -124,13 +140,28 @@ def create_app(
         projects = FirestoreProjectRepository(firestore_client)
     else:
         projects = SQLiteProjectRepository(database_path)
-    research_sources = research_repository or SQLiteResearchSourceRepository(database_path)
-    inspections = inspection_repository or SQLiteWebsiteInspectionRepository(database_path)
-    understandings = product_understanding_repository or SQLiteProductUnderstandingRepository(
-        database_path
-    )
-    storyboards = storyboard_repository or SQLiteStoryboardRepository(database_path)
-    timelines = timeline_repository or SQLiteTimelineRepository(database_path)
+    if firestore_client is not None:
+        research_sources = (
+            research_repository or FirestoreResearchSourceRepository(firestore_client)
+        )
+        inspections = (
+            inspection_repository or FirestoreWebsiteInspectionRepository(firestore_client)
+        )
+        understandings = (
+            product_understanding_repository
+            or FirestoreProductUnderstandingRepository(firestore_client)
+        )
+        storyboards = storyboard_repository or FirestoreStoryboardRepository(firestore_client)
+        timelines = timeline_repository or FirestoreTimelineRepository(firestore_client)
+    else:
+        research_sources = research_repository or SQLiteResearchSourceRepository(database_path)
+        inspections = inspection_repository or SQLiteWebsiteInspectionRepository(database_path)
+        understandings = (
+            product_understanding_repository
+            or SQLiteProductUnderstandingRepository(database_path)
+        )
+        storyboards = storyboard_repository or SQLiteStoryboardRepository(database_path)
+        timelines = timeline_repository or SQLiteTimelineRepository(database_path)
     application.state.project_repository = projects
     auth_settings = AuthSettings.from_environment()
     if auth_service is not None:
@@ -174,10 +205,36 @@ def create_app(
         )
     artifact_root = Path(os.getenv("DEMO_ARTIFACTS_DIR", "artifacts"))
     export_root = artifact_root / "exports"
+    export_repository: ExportRepository
+    export_artifact_store: ExportArtifactStore
+    timeline_media_store: TimelineMediaStore
+    if firestore_client is not None:
+        artifact_bucket = os.getenv("DEMO_ARTIFACT_BUCKET", "").strip()
+        if not artifact_bucket:
+            raise RuntimeError("DEMO_ARTIFACT_BUCKET is required for durable cloud exports.")
+        from google.cloud import storage
+
+        export_repository = FirestoreExportRepository(firestore_client)
+        cloud_bucket = storage.Client(project=cloud_project_id).bucket(artifact_bucket)
+        export_artifact_store = CloudExportArtifactStore(
+            cloud_bucket,
+            artifact_root / "export-cache",
+        )
+        timeline_media_store = CloudTimelineMediaStore(
+            cloud_bucket,
+            artifact_root,
+            artifact_root / "media-cache",
+        )
+    else:
+        export_repository = SQLiteExportRepository(database_path)
+        export_artifact_store = LocalExportArtifactStore(export_root)
+        timeline_media_store = LocalTimelineMediaStore()
     application.state.export_service = ExportService(
         FFmpegRenderer(artifact_root, export_root),
-        SQLiteExportRepository(database_path),
+        export_repository,
         export_root,
+        artifact_store=export_artifact_store,
+        timeline_media_store=timeline_media_store,
     )
     capture_auth_origins = tuple(
         origin.strip()
@@ -259,6 +316,7 @@ def create_app(
             captions=CaptionService(),
             camera=AutoCameraService(),
             exports=application.state.export_service,
+            timeline_media_store=timeline_media_store,
         )
 
     research_tool = create_product_research_tool(projects, resolved_research_service)

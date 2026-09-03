@@ -27,6 +27,7 @@ from demodirector_contracts import (
 )
 from demodirector_worker import AutoCameraService, CaptionService
 
+from demodirector_api.exports import LocalTimelineMediaStore, TimelineMediaStore
 from demodirector_api.parallel_search import ResearchRunResult
 from demodirector_api.product_understanding import website_sources
 from demodirector_api.repositories import (
@@ -128,6 +129,7 @@ class DemoGenerationService:
         captions: CaptionService,
         camera: AutoCameraService,
         exports: ExportCreator,
+        timeline_media_store: TimelineMediaStore | None = None,
         caption_style: CaptionStyleConfig | None = None,
         voice: NarrationVoiceConfig | None = None,
     ) -> None:
@@ -146,6 +148,7 @@ class DemoGenerationService:
         self.captions = captions
         self.camera = camera
         self.exports = exports
+        self.timeline_media_store = timeline_media_store or LocalTimelineMediaStore()
         self.caption_style = caption_style or CaptionStyleConfig(enabled=True)
         self.voice = voice or NarrationVoiceConfig()
 
@@ -244,6 +247,7 @@ class DemoGenerationService:
                 self.captions,
                 self.camera,
             )
+            timeline = self.timeline_media_store.persist(timeline)
             history = self.timelines.initialize(timeline)
 
             stage = "video rendering"

@@ -8,9 +8,12 @@ from typing import Any
 from demodirector_api.cloud import (
     CloudCaptureDispatcher,
     CloudTasksSettings,
+    FirestoreExportRepository,
     FirestoreProjectRepository,
+    FirestoreTimelineRepository,
 )
-from demodirector_contracts import CapturePlan, Project, Scene
+from demodirector_api.exports import StoredExport
+from demodirector_contracts import CapturePlan, Project, Scene, Timeline, VideoExport
 from pydantic import HttpUrl
 
 
@@ -38,6 +41,9 @@ class Document:
     def set(self, value: dict[str, Any]) -> None:
         self.values[self.key] = value
 
+    def delete(self) -> None:
+        self.values.pop(self.key, None)
+
 
 class Collection:
     def __init__(self) -> None:
@@ -52,11 +58,10 @@ class Collection:
 
 class FirestoreClient:
     def __init__(self) -> None:
-        self.projects = Collection()
+        self.collections: dict[str, Collection] = {}
 
     def collection(self, name: str) -> Collection:
-        assert name == "projects"
-        return self.projects
+        return self.collections.setdefault(name, Collection())
 
 
 def project(project_id: str, updated_at: datetime) -> Project:
@@ -105,6 +110,49 @@ def test_firestore_project_repository_persists_and_lists_newest_first() -> None:
     assert [item.id for item in repository.list()] == [newer.id, older.id]
     assert repository.update(newer.model_copy(update={"name": "Renamed"})).name == "Renamed"  # type: ignore[union-attr]
     assert repository.update(project("missing", now)) is None
+
+
+def test_firestore_timeline_history_survives_repository_reconstruction() -> None:
+    client = FirestoreClient()
+    first = FirestoreTimelineRepository(client)  # type: ignore[arg-type]
+    initial = Timeline(project_id="project-1", duration_ms=1_000, scene_clips=[])
+
+    first.initialize(initial)
+    first.commit(1, initial.model_copy(update={"cta_text": "Start now"}), "CTA updated", [])
+
+    restored = FirestoreTimelineRepository(client).current("project-1")  # type: ignore[arg-type]
+
+    assert restored is not None
+    assert restored.current.version == 2
+    assert restored.current.timeline.cta_text == "Start now"
+    assert restored.can_undo is True
+
+
+def test_firestore_export_metadata_survives_repository_reconstruction() -> None:
+    client = FirestoreClient()
+    video_export = VideoExport(
+        id="export-1",
+        project_id="project-1",
+        status="succeeded",
+        quality="1080p",
+        filename="demo.mp4",
+        width=1920,
+        height=1080,
+        duration_ms=20_000,
+        size_bytes=12,
+        download_url="/download?token=fixture-token",
+        retryable=False,
+        created_at=datetime.now(UTC),
+    )
+    FirestoreExportRepository(client).save(  # type: ignore[arg-type]
+        StoredExport(video_export, "gs://demo-bucket/exports/project-1/export-1/demo.mp4", "hash")
+    )
+
+    restored = FirestoreExportRepository(client).latest_successful("project-1")  # type: ignore[arg-type]
+
+    assert restored is not None
+    assert restored.export == video_export
+    assert restored.file_path == "gs://demo-bucket/exports/project-1/export-1/demo.mp4"
 
 
 class TasksClient:

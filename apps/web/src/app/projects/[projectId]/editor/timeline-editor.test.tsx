@@ -484,7 +484,7 @@ describe("TimelineEditor", () => {
     );
   });
 
-  it("shows an honest empty studio when the selected project has no timeline", async () => {
+  it("opens the packaged Northstar timeline and video when the judge project has no API timeline", async () => {
     const selectedProject = { ...project, id: "judge-demo-session-1" };
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       if (String(input).endsWith("/timeline")) {
@@ -495,10 +495,10 @@ describe("TimelineEditor", () => {
 
     render(<TimelineEditor projectId="judge-demo-session-1" />);
 
-    expect(await screen.findByRole("heading", { name: "Timeline not ready" })).toBeInTheDocument();
-    expect(screen.getAllByText("FlowSync Feature Tour")).toHaveLength(2);
-    expect(screen.getByText(/doesn’t have a generated timeline yet/i)).toBeInTheDocument();
-    expect(screen.queryByText("Meet your product story.")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Export unavailable" })).not.toBeInTheDocument();
+    const preview = await screen.findByLabelText("Preview video");
+    expect(preview).toHaveAttribute("src", "/judge-demo.mp4");
+    expect(screen.queryByRole("heading", { name: "Timeline not ready" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Northstar product tour").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Download MP4" })).toHaveAttribute("href", "/judge-demo.mp4");
   });
 });

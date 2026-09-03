@@ -21,6 +21,13 @@ import {
 import Link from "next/link";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
+import {
+  isJudgeDemoProject,
+  JUDGE_DEMO_VIDEO_URL,
+  judgeDemoExport,
+  judgeDemoTimeline,
+} from "@/lib/judge-demo";
+
 type TimelineEditorProps = {
   projectId: string;
   initialProject?: Project;
@@ -218,7 +225,10 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
       const exportIsStale = loadExportStale(projectId);
       setExportStale(exportIsStale);
       let savedExport = generatedExport;
-      if (exportResponse.ok) {
+      if (isJudgeDemoProject(projectId)) {
+        savedExport = judgeDemoExport(projectId);
+        setVideoExport(savedExport);
+      } else if (exportResponse.ok) {
         const parsedExport = videoExportSchema.safeParse(await exportResponse.json());
         if (parsedExport.success) {
           savedExport = parsedExport.data;
@@ -243,6 +253,15 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
               : "1080p export ready to play"
             : "Project timeline loaded",
         );
+      } else if (isJudgeDemoProject(projectId)) {
+        const loadedTimeline = judgeDemoTimeline(projectId);
+        setTimeline(loadedTimeline);
+        setSelectedSceneId(loadedTimeline.scene_clips[0]?.scene_id ?? null);
+        setSelectedZoomId(null);
+        setTimelineVersion(1);
+        setCanUndo(false);
+        setCanRedo(false);
+        setStatus("Northstar fixture ready to play");
       } else {
         setTimeline(null);
         setStatus("Project loaded · timeline not ready");
@@ -332,6 +351,9 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
   }
 
   const activeTimeline: Timeline = timeline;
+  const previewVideoUrl = isJudgeDemoProject(projectId)
+    ? JUDGE_DEMO_VIDEO_URL
+    : `/api/projects/${projectId}/exports/latest/video`;
   const selectedZoom = activeTimeline.zoom_clips.find((clip) => clip.id === selectedZoomId) ?? null;
 
   function persist(next: Timeline, message: string) {
@@ -658,7 +680,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
             playsInline
             preload="metadata"
             ref={videoRef}
-              src={videoExport ? `/api/projects/${projectId}/exports/latest/video` : undefined}
+              src={videoExport ? previewVideoUrl : undefined}
             />
             {!videoExport && <div className="preview-product">
               <span>{project ? domainLabel(project.website_url) : "DemoDirector"}</span>
@@ -781,7 +803,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
                   event.currentTarget.releasePointerCapture?.(event.pointerId);
                 }}
               >
-                {videoExport ? <video aria-hidden="true" muted playsInline src={`/api/projects/${projectId}/exports/latest/video`} /> : <div className="zoom-target-placeholder"><b>{project?.name ?? "Demo preview"}</b><span>Drag the target to focus the zoom</span></div>}
+                {videoExport ? <video aria-hidden="true" muted playsInline src={previewVideoUrl} /> : <div className="zoom-target-placeholder"><b>{project?.name ?? "Demo preview"}</b><span>Drag the target to focus the zoom</span></div>}
                 <span
                   aria-label="Zoom center point"
                   aria-valuemax={100}

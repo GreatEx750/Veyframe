@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { apiBaseUrl, apiHeaders } from "@/lib/auth-session";
+import { apiBaseUrl, apiHeaders, clearSessionCookie } from "@/lib/auth-session";
 
 export async function GET() {
   try {
@@ -9,7 +9,9 @@ export async function GET() {
       cache: "no-store",
     });
     const body: unknown = await response.json();
-    return NextResponse.json(body, { status: response.status });
+    const result = NextResponse.json(body, { status: response.status });
+    if (response.status === 401) clearSessionCookie(result);
+    return result;
   } catch {
     return NextResponse.json(
       { detail: "The project service is temporarily unavailable" },

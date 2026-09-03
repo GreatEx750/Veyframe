@@ -3,6 +3,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DemoLibrary } from "./demo-library";
 
+const replace = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace }),
+}));
+
 const projects = [
   {
     id: "project-rendering",
@@ -54,6 +60,7 @@ const projects = [
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  replace.mockReset();
 });
 
 function renderLibrary() {
@@ -111,6 +118,32 @@ describe("DemoLibrary", () => {
       "/api/projects/project-published/exports/latest/video",
     );
     expect(screen.getByText(/Video ready/)).toBeInTheDocument();
+  });
+
+  it("uses the packaged video for a Northstar judge project", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ ...projects[2], id: "judge-demo-session-1", name: "Northstar AI — Judge Demo" }],
+      }),
+    );
+    render(<DemoLibrary />);
+
+    const preview = await screen.findByLabelText("Preview Northstar AI — Judge Demo");
+
+    expect(preview).toHaveAttribute("src", "/judge-demo.mp4");
+  });
+
+  it("returns an expired session to login instead of leaving the library loading", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ detail: "expired" }) }),
+    );
+    render(<DemoLibrary />);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?reason=session_expired"));
+    expect(screen.queryByText("Loading your demos…")).not.toBeInTheDocument();
   });
 
   it("deletes only the confirmed project and updates the library", async () => {
