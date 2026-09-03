@@ -72,6 +72,8 @@ def write_fixture(directory: Path) -> None:
     (directory / "index.html").write_text(
         """<!doctype html><title>Capture fixture</title>
 <label for="email">Work email</label><input id="email" type="email">
+<label for="brief">Describe your video</label>
+<textarea id="brief" placeholder="Tell us about the workflow"></textarea>
 <button aria-label="Save demo" onclick="document.querySelector('#saved').hidden=false">Save</button>
 <p id="saved" hidden>Saved successfully</p>
 <button onclick="document.querySelector('#opened').hidden=false">Insights</button>
@@ -249,6 +251,38 @@ def test_text_locator_falls_back_to_an_exact_accessible_name(tmp_path: Path) -> 
                         description="Confirm the save control",
                     )
                 ],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+
+
+def test_placeholder_locator_falls_back_to_a_label_without_counter_metadata(
+    tmp_path: Path,
+) -> None:
+    site = tmp_path / "site"
+    write_fixture(site)
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="fill",
+                        locator_strategy="placeholder",
+                        locator="Describe your video 0/500",
+                        value="Show the product workflow",
+                        description="Enter the video brief",
+                    )
+                ],
+                success_assertions=[],
                 timeout_seconds=2,
             )
         }

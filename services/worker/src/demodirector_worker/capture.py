@@ -332,7 +332,19 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
     if strategy == "test_id":
         return page.get_by_test_id(value)
     if strategy == "placeholder":
-        return page.get_by_placeholder(value, exact=True)
+        placeholder = page.get_by_placeholder(value, exact=True)
+        if placeholder.count():
+            return placeholder
+        cleaned = _without_ui_metadata(value)
+        for name in dict.fromkeys((value, cleaned)):
+            labeled = page.get_by_label(name, exact=True)
+            if labeled.count():
+                return labeled
+            for role in ("textbox", "combobox"):
+                accessible = page.get_by_role(cast(Any, role), name=name, exact=True)
+                if accessible.count():
+                    return accessible
+        return placeholder
     if strategy == "alt_text":
         return page.get_by_alt_text(value, exact=True)
     if strategy == "css":
@@ -355,3 +367,11 @@ def _clear_error(error: Exception) -> str:
 def _origin(url: str) -> str:
     parsed = urlsplit(url)
     return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"
+
+
+def _without_ui_metadata(value: str) -> str:
+    cleaned = value.strip()
+    suffix = re.compile(r"\s+(?:required|\d+\s*/\s*\d+)\s*$", re.IGNORECASE)
+    while match := suffix.search(cleaned):
+        cleaned = cleaned[: match.start()].rstrip()
+    return cleaned
