@@ -3,6 +3,7 @@ from typing import Annotated
 from demodirector_contracts import DemoGenerationResult
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from demodirector_api.auth_routes import bearer_token
 from demodirector_api.generation import (
     DemoGenerationConflict,
     DemoGenerationError,
@@ -29,9 +30,16 @@ router = APIRouter(tags=["generation"])
     response_model=DemoGenerationResult,
     status_code=status.HTTP_200_OK,
 )
-def generate_demo(project_id: str, generation: Generation) -> DemoGenerationResult:
+def generate_demo(
+    project_id: str,
+    generation: Generation,
+    request: Request,
+) -> DemoGenerationResult:
     try:
-        return generation.generate(project_id)
+        return generation.generate(
+            project_id,
+            capture_session_token=bearer_token(request.headers.get("authorization")),
+        )
     except KeyError as error:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

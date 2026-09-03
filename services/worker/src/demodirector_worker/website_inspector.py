@@ -7,7 +7,7 @@ from typing import Literal, Protocol
 from urllib.parse import urljoin, urlsplit
 
 from demodirector_contracts import InspectedElement, InspectedPage, WebsiteInspection
-from playwright.sync_api import Browser, Locator, Page, sync_playwright
+from playwright.sync_api import Browser, BrowserContext, Locator, Page, sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 ElementKind = Literal["button", "link", "input", "select", "textarea"]
@@ -20,6 +20,7 @@ class InspectorSettings:
     timeout_ms: int = 10_000
     viewport_width: int = 1280
     viewport_height: int = 720
+    authenticated_origins: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.max_pages <= 0:
@@ -31,7 +32,13 @@ class InspectorSettings:
 
 
 class WebsiteInspector(Protocol):
-    def inspect(self, *, project_id: str, website_url: str) -> WebsiteInspection: ...
+    def inspect(
+        self,
+        *,
+        project_id: str,
+        website_url: str,
+        session_token: str | None = None,
+    ) -> WebsiteInspection: ...
 
 
 class PlaywrightWebsiteInspector:
@@ -39,7 +46,13 @@ class PlaywrightWebsiteInspector:
         self.artifact_directory = artifact_directory
         self.settings = settings or InspectorSettings()
 
-    def inspect(self, *, project_id: str, website_url: str) -> WebsiteInspection:
+    def inspect(
+        self,
+        *,
+        project_id: str,
+        website_url: str,
+        session_token: str | None = None,
+    ) -> WebsiteInspection:
         project_directory = self.artifact_directory / project_id
         project_directory.mkdir(parents=True, exist_ok=True)
         pages: list[InspectedPage] = []
@@ -50,6 +63,7 @@ class PlaywrightWebsiteInspector:
 
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
+            context = self._new_context(browser, website_url, session_token)
             try:
                 while queue and len(pages) < self.settings.max_pages:
                     url, depth = queue.popleft()
@@ -57,7 +71,7 @@ class PlaywrightWebsiteInspector:
                     if normalized_url in visited:
                         continue
                     visited.add(normalized_url)
-                    page = self._new_page(browser)
+                    page = context.new_page()
                     try:
                         inspected, links = self._inspect_page(
                             page,
@@ -75,6 +89,7 @@ class PlaywrightWebsiteInspector:
                             if _origin(link) == origin and _without_fragment(link) not in visited:
                                 queue.append((link, depth + 1))
             finally:
+                context.close()
                 browser.close()
 
         return WebsiteInspection(
@@ -85,13 +100,34 @@ class PlaywrightWebsiteInspector:
             warning="; ".join(warnings) or None,
         )
 
-    def _new_page(self, browser: Browser) -> Page:
-        return browser.new_page(
+    def _new_context(
+        self,
+        browser: Browser,
+        website_url: str,
+        session_token: str | None,
+    ) -> BrowserContext:
+        context = browser.new_context(
             viewport={
                 "width": self.settings.viewport_width,
                 "height": self.settings.viewport_height,
             }
         )
+        origin = _origin(website_url)
+        allowed_origins = {_origin(item) for item in self.settings.authenticated_origins}
+        if session_token and origin in allowed_origins:
+            context.add_cookies(
+                [
+                    {
+                        "name": "demodirector_session",
+                        "value": session_token,
+                        "url": origin,
+                        "httpOnly": True,
+                        "secure": origin.startswith("https://"),
+                        "sameSite": "Lax",
+                    }
+                ]
+            )
+        return context
 
     def _inspect_page(
         self,

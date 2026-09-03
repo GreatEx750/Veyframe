@@ -33,6 +33,40 @@ def fixture_server(directory: Path) -> Iterator[str]:
         server.server_close()
 
 
+@contextmanager
+def protected_fixture_server() -> Iterator[tuple[str, list[str]]]:
+    received_cookies: list[str] = []
+
+    class Handler(SimpleHTTPRequestHandler):
+        def do_GET(self) -> None:
+            cookie = self.headers.get("Cookie", "")
+            received_cookies.append(cookie)
+            content = (
+                "<!doctype html><h1>Private workspace</h1>"
+                if "demodirector_session=smoke-token" in cookie
+                else "<!doctype html><h1>Log in</h1>"
+            )
+            body = content.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}/", received_cookies
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+
 def write_fixture(directory: Path) -> None:
     directory.mkdir()
     (directory / "index.html").write_text(
@@ -203,3 +237,61 @@ def test_capture_action_contract_rejects_javascript_evaluation() -> None:
         pass
     else:
         raise AssertionError("the deterministic action allowlist accepted JavaScript")
+
+
+def test_capture_forwards_session_only_to_an_allowlisted_origin(tmp_path: Path) -> None:
+    with protected_fixture_server() as (url, received_cookies):
+        worker = PlaywrightCaptureWorker(
+            tmp_path / "artifacts",
+            CaptureSettings(authenticated_origins=(url.rstrip("/"),)),
+        )
+        scene = scene_for(url).model_copy(
+            update={
+                "capture_plan": CapturePlan(
+                    start_url=HttpUrl(url),
+                    actions=[],
+                    success_assertions=[
+                        CaptureAction(
+                            type="assert_visible",
+                            locator_strategy="text",
+                            locator="Private workspace",
+                            description="Confirm the authenticated workspace",
+                        )
+                    ],
+                    timeout_seconds=2,
+                )
+            }
+        )
+        result = worker.capture_scene(scene, session_token="smoke-token")
+
+    assert result.status == "succeeded"
+    assert any("demodirector_session=smoke-token" in value for value in received_cookies)
+
+
+def test_capture_does_not_forward_session_to_an_untrusted_origin(tmp_path: Path) -> None:
+    with protected_fixture_server() as (url, received_cookies):
+        worker = PlaywrightCaptureWorker(
+            tmp_path / "artifacts",
+            CaptureSettings(authenticated_origins=("https://trusted.example",)),
+        )
+        scene = scene_for(url).model_copy(
+            update={
+                "capture_plan": CapturePlan(
+                    start_url=HttpUrl(url),
+                    actions=[],
+                    success_assertions=[
+                        CaptureAction(
+                            type="assert_visible",
+                            locator_strategy="text",
+                            locator="Log in",
+                            description="Confirm the public login page",
+                        )
+                    ],
+                    timeout_seconds=2,
+                )
+            }
+        )
+        result = worker.capture_scene(scene, session_token="smoke-token")
+
+    assert result.status == "succeeded"
+    assert all("smoke-token" not in value for value in received_cookies)
