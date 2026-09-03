@@ -311,6 +311,44 @@ def test_text_locator_falls_back_to_an_exact_accessible_name(tmp_path: Path) -> 
     assert result.status == "succeeded"
 
 
+def test_text_wait_uses_first_match_when_hydration_adds_duplicates(tmp_path: Path) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Hydration fixture</title>
+<script>
+setTimeout(() => {
+  document.body.insertAdjacentHTML('beforeend', '<p>Devpost</p><p>Devpost for Teams</p>');
+}, 100);
+</script>""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="wait_for",
+                        locator_strategy="text",
+                        locator="Devpost",
+                        description="Wait for hydrated page content",
+                    )
+                ],
+                success_assertions=[],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+
+
 def test_placeholder_locator_falls_back_to_a_label_without_counter_metadata(
     tmp_path: Path,
 ) -> None:

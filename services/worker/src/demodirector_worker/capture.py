@@ -325,7 +325,9 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
                 )
                 if interactive.count() == 1:
                     return interactive
-        return matches.first if matches.count() > 1 else matches
+        # Text can hydrate from zero to several matches after this locator is built.
+        # Selecting the first candidate up front keeps later waits out of strict mode.
+        return matches.first
     if strategy == "test_id":
         return page.get_by_test_id(value)
     if strategy == "placeholder":
