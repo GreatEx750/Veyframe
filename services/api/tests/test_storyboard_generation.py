@@ -139,6 +139,36 @@ def test_storyboard_service_canonicalizes_one_based_scene_order() -> None:
     assert [scene.order for scene in result.scenes] == [0, 1, 2, 3, 4]
 
 
+def test_storyboard_service_repairs_a_nearby_human_readable_locator() -> None:
+    payload = storyboard_payload()
+    first_plan = payload["scenes"][0]["capture_plan"]  # type: ignore[index]
+    first_plan["actions"] = [
+        {
+            "type": "click",
+            "locator_strategy": "text",
+            "locator": "Browse hackathons",
+            "description": "Open the public hackathon directory",
+        }
+    ]
+    first_plan["success_assertions"] = [
+        {
+            "type": "assert_visible",
+            "locator_strategy": "text",
+            "locator": "Search hackathons",
+            "description": "Confirm the directory control",
+        }
+    ]
+    grounded_source = source().model_copy(
+        update={"snippet": "Devpost homepage\nSearch hackathons\nFind your next hackathon"}
+    )
+
+    result = StoryboardGenerationService(FakeGoogleAIService(payload)).generate(
+        project=project(), understanding=understanding(), sources=[grounded_source]
+    )
+
+    assert result.scenes[0].capture_plan.actions[0].locator == "Search hackathons"
+
+
 @pytest.mark.parametrize(
     ("payload", "message"),
     [

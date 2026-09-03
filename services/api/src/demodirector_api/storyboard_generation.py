@@ -1,8 +1,17 @@
 from __future__ import annotations
 
 import json
+import re
+from difflib import SequenceMatcher
 
-from demodirector_contracts import ProductUnderstanding, Project, ResearchSource, Scene, Storyboard
+from demodirector_contracts import (
+    CaptureAction,
+    ProductUnderstanding,
+    Project,
+    ResearchSource,
+    Scene,
+    Storyboard,
+)
 
 from demodirector_api.google_ai import StructuredAIService
 
@@ -32,6 +41,7 @@ class StoryboardGenerationService:
             response_model=Storyboard,
         )
         storyboard = canonicalize_scene_order(storyboard)
+        storyboard = ground_capture_locators(storyboard, sources)
         validate_storyboard(storyboard, project, sources)
         return storyboard
 
@@ -93,7 +103,9 @@ def build_storyboard_prompt(
         f"within {int(DURATION_TOLERANCE * 100)}% of the requested duration. Every scene must "
         "have grounded source IDs, narration, expected evidence, and a typed deterministic "
         "CapturePlan. Set scene order to the zero-based array index (0 through n-1). Interactive "
-        "actions require assert_visible success assertions. Use only "
+        "actions require assert_visible success assertions. Every human-readable locator must "
+        "use an inspected accessible name or visible label exactly as written in a website "
+        "source; never paraphrase a control label. Use only "
         "the CaptureAction allowlist; never output code or shell commands.\n\n"
         + json.dumps(context, separators=(",", ":"))
     )
@@ -108,6 +120,99 @@ def canonicalize_scene_order(storyboard: Storyboard) -> Storyboard:
             ]
         }
     )
+
+
+def ground_capture_locators(
+    storyboard: Storyboard,
+    sources: list[ResearchSource],
+) -> Storyboard:
+    """Reconcile near-miss visible labels to inspected website text."""
+    candidates_by_source = {
+        source.id: _source_locator_candidates(source)
+        for source in sources
+        if source.source_type == "website"
+    }
+    all_candidates = list(
+        dict.fromkeys(
+            candidate
+            for candidates in candidates_by_source.values()
+            for candidate in candidates
+        )
+    )
+    grounded_scenes: list[Scene] = []
+    for scene in storyboard.scenes:
+        scoped = list(
+            dict.fromkeys(
+                candidate
+                for source_id in scene.source_ids
+                for candidate in candidates_by_source.get(source_id, [])
+            )
+        )
+        candidates = scoped or all_candidates
+        plan = scene.capture_plan
+        grounded_scenes.append(
+            scene.model_copy(
+                update={
+                    "capture_plan": plan.model_copy(
+                        update={
+                            "actions": [
+                                _ground_action_locator(action, candidates)
+                                for action in plan.actions
+                            ],
+                            "success_assertions": [
+                                _ground_action_locator(action, candidates)
+                                for action in plan.success_assertions
+                            ],
+                        }
+                    )
+                }
+            )
+        )
+    return storyboard.model_copy(update={"scenes": grounded_scenes})
+
+
+def _source_locator_candidates(source: ResearchSource) -> list[str]:
+    values = [source.title, *source.snippet.splitlines()]
+    return [value.strip() for value in values if value.strip()]
+
+
+def _ground_action_locator(action: CaptureAction, candidates: list[str]) -> CaptureAction:
+    if (
+        not action.locator
+        or action.locator_strategy not in {"text", "label", "placeholder", "alt_text", "role"}
+        or not candidates
+    ):
+        return action
+    role_prefix = ""
+    locator_name = action.locator
+    if action.locator_strategy == "role":
+        role, separator, name = action.locator.partition(":")
+        if not separator or not name:
+            return action
+        role_prefix = f"{role}:"
+        locator_name = name
+    normalized_locator = _normalize_locator(locator_name)
+    if any(normalized_locator in _normalize_locator(candidate) for candidate in candidates):
+        return action
+    locator_tokens = set(normalized_locator.split())
+    ranked = [
+        (
+            SequenceMatcher(None, normalized_locator, _normalize_locator(candidate)).ratio(),
+            candidate,
+        )
+        for candidate in candidates
+        if locator_tokens & set(_normalize_locator(candidate).split())
+    ]
+    if not ranked:
+        return action
+    score, replacement = max(ranked, key=lambda item: item[0])
+    if score < 0.55:
+        return action
+    return action.model_copy(update={"locator": f"{role_prefix}{replacement}"})
+
+
+def _normalize_locator(value: str) -> str:
+    return " ".join(re.findall(r"[a-z0-9]+", value.lower()))
 
 
 def validate_storyboard(
