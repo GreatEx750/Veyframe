@@ -46,6 +46,7 @@ describe("Create Demo Studio", () => {
     expect(screen.getByLabelText(/Website URL/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Describe your video/)).toBeInTheDocument();
     expect(screen.getByText(/Mention the story, product moments, and ending/i)).toBeInTheDocument();
+    expect(within(screen.getByLabelText("Length")).getByRole("option", { name: "30 seconds" })).toHaveValue("30");
     expect(screen.getByLabelText("Studio preview")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Director settings" })).toBeInTheDocument();
     expect(screen.getByLabelText("Project timeline")).toBeInTheDocument();

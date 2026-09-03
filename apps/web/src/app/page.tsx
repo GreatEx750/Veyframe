@@ -168,7 +168,7 @@ export default function Home() {
             {errors.audience && <p className="field-error">{errors.audience}</p>}
             <div className="split-fields">
               <div><label htmlFor="tone">Voice &amp; Tone</label><select id="tone" value={values.tone} onChange={(event) => update("tone", event.target.value)}><option value="professional">Professional &amp; confident</option><option value="friendly">Friendly &amp; conversational</option><option value="energetic">Energetic &amp; bold</option></select>{errors.tone && <p className="field-error">{errors.tone}</p>}</div>
-              <div><label htmlFor="duration">Length</label><select id="duration" value={values.duration} onChange={(event) => update("duration", event.target.value)}><option value="20">20 seconds</option><option value="60">~1 minute</option><option value="90">1–2 minutes</option><option value="150">2–3 minutes</option></select>{errors.duration && <p className="field-error">{errors.duration}</p>}</div>
+              <div><label htmlFor="duration">Length</label><select id="duration" value={values.duration} onChange={(event) => update("duration", event.target.value)}><option value="20">20 seconds</option><option value="30">30 seconds</option><option value="60">~1 minute</option><option value="90">1–2 minutes</option><option value="150">2–3 minutes</option></select>{errors.duration && <p className="field-error">{errors.duration}</p>}</div>
             </div>
             <label htmlFor="cta">Call to Action</label><input id="cta" placeholder="Book a demo" value={values.cta} onChange={(event) => update("cta", event.target.value)} />
             {errors.cta && <p className="field-error">{errors.cta}</p>}
