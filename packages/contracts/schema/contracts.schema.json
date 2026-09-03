@@ -1,0 +1,2084 @@
+{
+  "$defs": {
+    "AudioClip": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "minimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "source_uri": {
+          "minLength": 1,
+          "title": "Source Uri",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "scene_id",
+        "source_uri"
+      ],
+      "title": "AudioClip",
+      "type": "object"
+    },
+    "AuthError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "authentication_required",
+            "invalid_credentials",
+            "verification_required",
+            "account_unavailable",
+            "session_expired",
+            "session_revoked",
+            "rate_limited"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "AuthError",
+      "type": "object"
+    },
+    "BoundingBox": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "x": {
+          "minimum": 0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "minimum": 0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "BoundingBox",
+      "type": "object"
+    },
+    "BriefCoverageReport": {
+      "additionalProperties": false,
+      "properties": {
+        "all_covered": {
+          "title": "All Covered",
+          "type": "boolean"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/QACheck"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "requirements": {
+          "items": {
+            "$ref": "#/$defs/CoverageRequirement"
+          },
+          "title": "Requirements",
+          "type": "array"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "summary",
+        "all_covered"
+      ],
+      "title": "BriefCoverageReport",
+      "type": "object"
+    },
+    "CaptionClip": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "minimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "scene_id",
+        "text"
+      ],
+      "title": "CaptionClip",
+      "type": "object"
+    },
+    "CaptureAction": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "locator": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locator"
+        },
+        "locator_strategy": {
+          "anyOf": [
+            {
+              "enum": [
+                "role",
+                "label",
+                "text",
+                "test_id",
+                "css",
+                "xpath",
+                "placeholder",
+                "alt_text"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locator Strategy"
+        },
+        "type": {
+          "enum": [
+            "navigate",
+            "click",
+            "fill",
+            "select",
+            "scroll",
+            "wait_for",
+            "assert_visible",
+            "upload"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "type",
+        "description"
+      ],
+      "title": "CaptureAction",
+      "type": "object"
+    },
+    "CaptureActionResult": {
+      "additionalProperties": false,
+      "properties": {
+        "action_index": {
+          "minimum": 0,
+          "title": "Action Index",
+          "type": "integer"
+        },
+        "action_type": {
+          "enum": [
+            "navigate",
+            "click",
+            "fill",
+            "select",
+            "scroll",
+            "wait_for",
+            "assert_visible",
+            "upload"
+          ],
+          "title": "Action Type",
+          "type": "string"
+        },
+        "elapsed_ms": {
+          "minimum": 0,
+          "title": "Elapsed Ms",
+          "type": "integer"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_index",
+        "action_type",
+        "status",
+        "elapsed_ms",
+        "message"
+      ],
+      "title": "CaptureActionResult",
+      "type": "object"
+    },
+    "CapturePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "items": {
+            "$ref": "#/$defs/CaptureAction"
+          },
+          "title": "Actions",
+          "type": "array"
+        },
+        "start_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Start Url",
+          "type": "string"
+        },
+        "success_assertions": {
+          "items": {
+            "$ref": "#/$defs/CaptureAction"
+          },
+          "title": "Success Assertions",
+          "type": "array"
+        },
+        "timeout_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start_url",
+        "timeout_seconds"
+      ],
+      "title": "CapturePlan",
+      "type": "object"
+    },
+    "CoverageRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source_excerpt": {
+          "minLength": 1,
+          "title": "Source Excerpt",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "source_excerpt"
+      ],
+      "title": "CoverageRequirement",
+      "type": "object"
+    },
+    "DemoGenerationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "export": {
+          "$ref": "#/$defs/VideoExport"
+        },
+        "project": {
+          "$ref": "#/$defs/Project"
+        },
+        "timeline_version": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline Version",
+          "type": "integer"
+        },
+        "warnings": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "project",
+        "export",
+        "timeline_version"
+      ],
+      "title": "DemoGenerationResult",
+      "type": "object"
+    },
+    "EditOperation": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Arguments",
+          "type": "object"
+        },
+        "operation_type": {
+          "enum": [
+            "trim_scene",
+            "delete_scene",
+            "reorder_scene",
+            "update_narration",
+            "add_zoom",
+            "update_zoom",
+            "delete_zoom",
+            "add_caption",
+            "update_caption",
+            "change_voice_config",
+            "change_cta_text",
+            "change_presentation"
+          ],
+          "title": "Operation Type",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "target_id": {
+          "minLength": 1,
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation_type",
+        "target_id",
+        "rationale"
+      ],
+      "title": "EditOperation",
+      "type": "object"
+    },
+    "InteractionEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "bounding_box": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BoundingBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "event_type": {
+          "enum": [
+            "navigate",
+            "click",
+            "fill",
+            "select",
+            "scroll",
+            "wait_for",
+            "assert_visible",
+            "upload"
+          ],
+          "title": "Event Type",
+          "type": "string"
+        },
+        "locator": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Locator"
+        },
+        "scene_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scene Id"
+        },
+        "timestamp_ms": {
+          "minimum": 0,
+          "title": "Timestamp Ms",
+          "type": "integer"
+        },
+        "viewport": {
+          "$ref": "#/$defs/Viewport"
+        },
+        "x": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "X"
+        },
+        "y": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Y"
+        }
+      },
+      "required": [
+        "timestamp_ms",
+        "event_type",
+        "viewport"
+      ],
+      "title": "InteractionEvent",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "LoginRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "maxLength": 254,
+          "minLength": 3,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+          "title": "Email",
+          "type": "string"
+        },
+        "password": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Password",
+          "type": "string"
+        },
+        "return_to": {
+          "default": "/projects",
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Return To",
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "password"
+      ],
+      "title": "LoginRequest",
+      "type": "object"
+    },
+    "LoginResult": {
+      "additionalProperties": false,
+      "properties": {
+        "landing_path": {
+          "minLength": 1,
+          "title": "Landing Path",
+          "type": "string"
+        },
+        "session": {
+          "$ref": "#/$defs/SessionSummary"
+        },
+        "session_token": {
+          "minLength": 1,
+          "title": "Session Token",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session",
+        "session_token",
+        "landing_path"
+      ],
+      "title": "LoginResult",
+      "type": "object"
+    },
+    "LogoutResult": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "user_requested",
+            "absent",
+            "expired",
+            "revoked"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "logged_out",
+            "already_absent"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "reason",
+        "message"
+      ],
+      "title": "LogoutResult",
+      "type": "object"
+    },
+    "MissingRequirementRepairProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "insert_after_scene_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Insert After Scene Id"
+        },
+        "requirement_id": {
+          "minLength": 1,
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "scene": {
+          "$ref": "#/$defs/Scene"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "scene",
+        "explanation"
+      ],
+      "title": "MissingRequirementRepairProposal",
+      "type": "object"
+    },
+    "MissingRequirementRepairResult": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SceneCaptureResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "qa_report": {
+          "$ref": "#/$defs/BriefCoverageReport"
+        },
+        "render_result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RenderResult"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "requirement_id": {
+          "minLength": 1,
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "requires_approval",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "storyboard": {
+          "$ref": "#/$defs/Storyboard"
+        },
+        "timeline": {
+          "$ref": "#/$defs/Timeline"
+        }
+      },
+      "required": [
+        "project_id",
+        "requirement_id",
+        "status",
+        "storyboard",
+        "timeline",
+        "qa_report",
+        "message"
+      ],
+      "title": "MissingRequirementRepairResult",
+      "type": "object"
+    },
+    "NarrationVoiceConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "language_code": {
+          "default": "en-US",
+          "minLength": 1,
+          "title": "Language Code",
+          "type": "string"
+        },
+        "pace": {
+          "default": "normal",
+          "enum": [
+            "slow",
+            "normal",
+            "fast"
+          ],
+          "title": "Pace",
+          "type": "string"
+        },
+        "voice_name": {
+          "default": "Kore",
+          "minLength": 1,
+          "title": "Voice Name",
+          "type": "string"
+        }
+      },
+      "title": "NarrationVoiceConfig",
+      "type": "object"
+    },
+    "Project": {
+      "additionalProperties": false,
+      "properties": {
+        "audience": {
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "brand_kit_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Brand Kit Id"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "cta": {
+          "minLength": 1,
+          "title": "Cta",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_status": {
+          "default": "idle",
+          "enum": [
+            "idle",
+            "queued",
+            "running",
+            "succeeded",
+            "failed"
+          ],
+          "title": "Job Status",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "owner_user_id": {
+          "default": "system",
+          "minLength": 1,
+          "title": "Owner User Id",
+          "type": "string"
+        },
+        "product_summary": {
+          "minLength": 1,
+          "title": "Product Summary",
+          "type": "string"
+        },
+        "requested_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Requested Duration Seconds",
+          "type": "integer"
+        },
+        "status": {
+          "default": "draft",
+          "enum": [
+            "draft",
+            "storyboarding",
+            "ready",
+            "capturing",
+            "editing",
+            "rendering",
+            "published",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "tone": {
+          "minLength": 1,
+          "title": "Tone",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        },
+        "website_url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Website Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "website_url",
+        "product_summary",
+        "audience",
+        "tone",
+        "requested_duration_seconds",
+        "cta",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "Project",
+      "type": "object"
+    },
+    "QACheck": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "requirement": {
+          "minLength": 1,
+          "title": "Requirement",
+          "type": "string"
+        },
+        "requirement_id": {
+          "minLength": 1,
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "covered",
+            "partial",
+            "missing"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "suggested_repair": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suggested Repair"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "requirement",
+        "status"
+      ],
+      "title": "QACheck",
+      "type": "object"
+    },
+    "ReauthenticationRequired": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "expired",
+            "revoked",
+            "sensitive_operation"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "required",
+        "reason",
+        "message"
+      ],
+      "title": "ReauthenticationRequired",
+      "type": "object"
+    },
+    "RenderResult": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "has_audio": {
+          "title": "Has Audio",
+          "type": "boolean"
+        },
+        "has_video": {
+          "title": "Has Video",
+          "type": "boolean"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "output_path": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Path"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "thumbnail_path": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thumbnail Path"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "duration_ms",
+        "width",
+        "height",
+        "has_video",
+        "has_audio"
+      ],
+      "title": "RenderResult",
+      "type": "object"
+    },
+    "ResearchSource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "snippet": {
+          "minLength": 1,
+          "title": "Snippet",
+          "type": "string"
+        },
+        "source_type": {
+          "enum": [
+            "website",
+            "partner_search",
+            "user"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "title",
+        "url",
+        "snippet",
+        "source_type",
+        "retrieved_at"
+      ],
+      "title": "ResearchSource",
+      "type": "object"
+    },
+    "Scene": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_plan": {
+          "$ref": "#/$defs/CapturePlan"
+        },
+        "duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "expected_evidence": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Expected Evidence",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "narration": {
+          "minLength": 1,
+          "title": "Narration",
+          "type": "string"
+        },
+        "objective": {
+          "minLength": 1,
+          "title": "Objective",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "source_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "storyboard_id": {
+          "minLength": 1,
+          "title": "Storyboard Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "storyboard_id",
+        "order",
+        "title",
+        "objective",
+        "narration",
+        "capture_plan",
+        "duration_seconds"
+      ],
+      "title": "Scene",
+      "type": "object"
+    },
+    "SceneCaptureResult": {
+      "additionalProperties": false,
+      "properties": {
+        "action_results": {
+          "items": {
+            "$ref": "#/$defs/CaptureActionResult"
+          },
+          "title": "Action Results",
+          "type": "array"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "interaction_events": {
+          "items": {
+            "$ref": "#/$defs/InteractionEvent"
+          },
+          "title": "Interaction Events",
+          "type": "array"
+        },
+        "logs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Logs",
+          "type": "array"
+        },
+        "raw_clip_path": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Raw Clip Path"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "screenshot_paths": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Screenshot Paths",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_id",
+        "status",
+        "retryable",
+        "duration_ms"
+      ],
+      "title": "SceneCaptureResult",
+      "type": "object"
+    },
+    "SceneClip": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "minimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "source_uri": {
+          "minLength": 1,
+          "title": "Source Uri",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "scene_id",
+        "source_uri"
+      ],
+      "title": "SceneClip",
+      "type": "object"
+    },
+    "SessionState": {
+      "additionalProperties": false,
+      "properties": {
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "enum": [
+            "active",
+            "absent",
+            "expired",
+            "revoked"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "SessionState",
+      "type": "object"
+    },
+    "SessionSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/$defs/UserIdentity"
+        }
+      },
+      "required": [
+        "session_id",
+        "user",
+        "created_at",
+        "expires_at"
+      ],
+      "title": "SessionSummary",
+      "type": "object"
+    },
+    "SignupRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "maxLength": 254,
+          "minLength": 3,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+          "title": "Email",
+          "type": "string"
+        },
+        "password": {
+          "maxLength": 128,
+          "minLength": 12,
+          "title": "Password",
+          "type": "string"
+        }
+      },
+      "required": [
+        "email",
+        "password"
+      ],
+      "title": "SignupRequest",
+      "type": "object"
+    },
+    "SignupResult": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SessionSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "session_token": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Session Token"
+        },
+        "status": {
+          "enum": [
+            "signed_in",
+            "verification_required"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "message"
+      ],
+      "title": "SignupResult",
+      "type": "object"
+    },
+    "Storyboard": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "scenes": {
+          "items": {
+            "$ref": "#/$defs/Scene"
+          },
+          "title": "Scenes",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "approved",
+            "capturing",
+            "captured",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "total_duration_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Total Duration Seconds",
+          "type": "number"
+        },
+        "version": {
+          "exclusiveMinimum": 0,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "version",
+        "total_duration_seconds",
+        "status"
+      ],
+      "title": "Storyboard",
+      "type": "object"
+    },
+    "Timeline": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_clips": {
+          "items": {
+            "$ref": "#/$defs/AudioClip"
+          },
+          "title": "Audio Clips",
+          "type": "array"
+        },
+        "caption_clips": {
+          "items": {
+            "$ref": "#/$defs/CaptionClip"
+          },
+          "title": "Caption Clips",
+          "type": "array"
+        },
+        "cta_text": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cta Text"
+        },
+        "cursor_events": {
+          "items": {
+            "$ref": "#/$defs/InteractionEvent"
+          },
+          "title": "Cursor Events",
+          "type": "array"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "narration_overrides": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "propertyNames": {
+            "minLength": 1
+          },
+          "title": "Narration Overrides",
+          "type": "object"
+        },
+        "presentation": {
+          "$ref": "#/$defs/VideoPresentationConfig"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "scene_clips": {
+          "items": {
+            "$ref": "#/$defs/SceneClip"
+          },
+          "title": "Scene Clips",
+          "type": "array"
+        },
+        "voice_config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NarrationVoiceConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "zoom_clips": {
+          "items": {
+            "$ref": "#/$defs/ZoomClip"
+          },
+          "title": "Zoom Clips",
+          "type": "array"
+        }
+      },
+      "required": [
+        "project_id",
+        "duration_ms"
+      ],
+      "title": "Timeline",
+      "type": "object"
+    },
+    "UserIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "minLength": 1,
+          "title": "Email",
+          "type": "string"
+        },
+        "email_verified": {
+          "default": false,
+          "title": "Email Verified",
+          "type": "boolean"
+        },
+        "role": {
+          "default": "customer",
+          "enum": [
+            "customer",
+            "judge_demo",
+            "system"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "user_id": {
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "email"
+      ],
+      "title": "UserIdentity",
+      "type": "object"
+    },
+    "UserProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "email": {
+          "minLength": 1,
+          "title": "Email",
+          "type": "string"
+        },
+        "role": {
+          "default": "customer",
+          "enum": [
+            "customer",
+            "judge_demo",
+            "system"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        },
+        "user_id": {
+          "minLength": 1,
+          "title": "User Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "email",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "UserProfile",
+      "type": "object"
+    },
+    "VideoExport": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "download_url": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Download Url"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "filename": {
+          "minLength": 1,
+          "title": "Filename",
+          "type": "string"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "quality": {
+          "enum": [
+            "1080p",
+            "720p"
+          ],
+          "title": "Quality",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "thumbnail_path": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thumbnail Path"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "status",
+        "quality",
+        "filename",
+        "width",
+        "height",
+        "duration_ms",
+        "size_bytes",
+        "retryable",
+        "created_at"
+      ],
+      "title": "VideoExport",
+      "type": "object"
+    },
+    "VideoPresentationConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "template": {
+          "default": "edge_to_edge",
+          "enum": [
+            "edge_to_edge",
+            "soft_frame",
+            "spotlight"
+          ],
+          "title": "Template",
+          "type": "string"
+        }
+      },
+      "title": "VideoPresentationConfig",
+      "type": "object"
+    },
+    "Viewport": {
+      "additionalProperties": false,
+      "properties": {
+        "device_scale_factor": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "title": "Device Scale Factor",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "scroll_x": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Scroll X",
+          "type": "number"
+        },
+        "scroll_y": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Scroll Y",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "title": "Viewport",
+      "type": "object"
+    },
+    "ZoomClip": {
+      "additionalProperties": false,
+      "properties": {
+        "easing": {
+          "enum": [
+            "linear",
+            "ease_in",
+            "ease_out",
+            "ease_in_out"
+          ],
+          "title": "Easing",
+          "type": "string"
+        },
+        "end_ms": {
+          "minimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "focus_x": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Focus X"
+        },
+        "focus_y": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Focus Y"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "scale": {
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Scale",
+          "type": "number"
+        },
+        "source": {
+          "enum": [
+            "auto",
+            "manual",
+            "prompt_edit"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "source_viewport": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Viewport"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "target_rect": {
+          "$ref": "#/$defs/BoundingBox"
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "scale",
+        "target_rect",
+        "easing",
+        "source"
+      ],
+      "title": "ZoomClip",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Project"
+    },
+    {
+      "$ref": "#/$defs/UserIdentity"
+    },
+    {
+      "$ref": "#/$defs/UserProfile"
+    },
+    {
+      "$ref": "#/$defs/SessionSummary"
+    },
+    {
+      "$ref": "#/$defs/SessionState"
+    },
+    {
+      "$ref": "#/$defs/LoginRequest"
+    },
+    {
+      "$ref": "#/$defs/LoginResult"
+    },
+    {
+      "$ref": "#/$defs/LogoutResult"
+    },
+    {
+      "$ref": "#/$defs/ReauthenticationRequired"
+    },
+    {
+      "$ref": "#/$defs/SignupRequest"
+    },
+    {
+      "$ref": "#/$defs/SignupResult"
+    },
+    {
+      "$ref": "#/$defs/AuthError"
+    },
+    {
+      "$ref": "#/$defs/ResearchSource"
+    },
+    {
+      "$ref": "#/$defs/Storyboard"
+    },
+    {
+      "$ref": "#/$defs/Scene"
+    },
+    {
+      "$ref": "#/$defs/CapturePlan"
+    },
+    {
+      "$ref": "#/$defs/CaptureAction"
+    },
+    {
+      "$ref": "#/$defs/InteractionEvent"
+    },
+    {
+      "$ref": "#/$defs/Timeline"
+    },
+    {
+      "$ref": "#/$defs/ZoomClip"
+    },
+    {
+      "$ref": "#/$defs/EditOperation"
+    },
+    {
+      "$ref": "#/$defs/QACheck"
+    },
+    {
+      "$ref": "#/$defs/BriefCoverageReport"
+    },
+    {
+      "$ref": "#/$defs/MissingRequirementRepairProposal"
+    },
+    {
+      "$ref": "#/$defs/MissingRequirementRepairResult"
+    },
+    {
+      "$ref": "#/$defs/VideoExport"
+    },
+    {
+      "$ref": "#/$defs/DemoGenerationResult"
+    }
+  ],
+  "title": "DemoDirector shared contracts",
+  "x-contracts": [
+    "Project",
+    "UserIdentity",
+    "UserProfile",
+    "SessionSummary",
+    "SessionState",
+    "LoginRequest",
+    "LoginResult",
+    "LogoutResult",
+    "ReauthenticationRequired",
+    "SignupRequest",
+    "SignupResult",
+    "AuthError",
+    "ResearchSource",
+    "Storyboard",
+    "Scene",
+    "CapturePlan",
+    "CaptureAction",
+    "InteractionEvent",
+    "Timeline",
+    "ZoomClip",
+    "EditOperation",
+    "QACheck",
+    "BriefCoverageReport",
+    "MissingRequirementRepairProposal",
+    "MissingRequirementRepairResult",
+    "VideoExport",
+    "DemoGenerationResult"
+  ]
+}

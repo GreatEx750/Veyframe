@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "demodirector-contracts"
+version = "0.1.0"
+description = "Shared validated contracts for DemoDirector services"
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.11.7,<3"]
+
+[tool.setuptools.packages.find]
+where = ["python"]

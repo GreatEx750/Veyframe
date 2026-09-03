@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Northstar fixture</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0b1020;color:#f8fafc;font:16px system-ui}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid #26304a}
+    nav{display:flex;gap:8px}button{border:0;border-radius:8px;padding:10px 14px;background:#334155;color:white;cursor:pointer}
+    button.primary{background:#7c3aed}.screen{display:none;padding:32px}.screen.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{padding:22px;border:1px solid #334155;border-radius:14px;background:#151c30}
+    .metric{font-size:34px;font-weight:700;color:#a78bfa}#export-ready{color:#86efac;font-weight:700;margin-left:12px}
+  </style>
+</head>
+<body>
+  <header><strong>Northstar Analytics</strong><nav aria-label="Product areas">
+    <button onclick="show('dashboard')">Dashboard</button><button onclick="show('insights')">Insights</button>
+    <button onclick="show('goals')">Goals</button><button onclick="show('team')">Team</button>
+    <button onclick="show('recommendation')">Recommendation</button></nav></header>
+  <main>
+    <section id="dashboard" class="screen active"><h1>Executive dashboard</h1><div class="grid">
+      <article class="card"><span>Activation</span><div class="metric">84%</div></article>
+      <article class="card"><span>Weekly users</span><div class="metric">12.4k</div></article>
+      <article class="card"><span>Goal progress</span><div class="metric">73%</div></article></div></section>
+    <section id="insights" class="screen"><h1>Insights</h1><div class="card">Activation increased 18% after the onboarding update.</div></section>
+    <section id="goals" class="screen"><h1>Goals</h1><div class="card">Enterprise adoption <strong>73% complete</strong></div></section>
+    <section id="team" class="screen"><h1>Team</h1><div class="card">Product, Growth, and Success are aligned.</div></section>
+    <section id="recommendation" class="screen"><h1>Recommended next action</h1><div class="card">
+      Invite trial accounts to the guided activation flow.
+      <button class="primary" onclick="exportReport()">Export recommendation</button><span id="export-ready" hidden>Export ready</span>
+    </div></section>
+  </main>
+  <script>
+    function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active')}
+    function exportReport(){document.getElementById('export-ready').hidden=false}
+  </script>
+</body>
+</html>

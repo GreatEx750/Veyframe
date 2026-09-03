@@ -1,0 +1,10 @@
+.gcloudignore
+.git
+.gitignore
+
+#!include:.gitignore
+!artifacts/
+artifacts/*
+!artifacts/verification/
+artifacts/verification/*
+!artifacts/verification/golden-export-20s.mp4
