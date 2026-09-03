@@ -52,7 +52,13 @@ class ResearchAnalyzer(Protocol):
 
 
 class Inspector(Protocol):
-    def inspect(self, *, project_id: str, website_url: str) -> WebsiteInspection: ...
+    def inspect(
+        self,
+        *,
+        project_id: str,
+        website_url: str,
+        session_token: str | None = None,
+    ) -> WebsiteInspection: ...
 
 
 class UnderstandingGenerator(Protocol):
@@ -76,7 +82,12 @@ class StoryboardGenerator(Protocol):
 
 
 class CaptureWorker(Protocol):
-    def capture_scene(self, scene: Scene) -> SceneCaptureResult: ...
+    def capture_scene(
+        self,
+        scene: Scene,
+        *,
+        session_token: str | None = None,
+    ) -> SceneCaptureResult: ...
 
 
 class NarrationGenerator(Protocol):
@@ -138,7 +149,12 @@ class DemoGenerationService:
         self.caption_style = caption_style or CaptionStyleConfig(enabled=True)
         self.voice = voice or NarrationVoiceConfig()
 
-    def generate(self, project_id: str) -> DemoGenerationResult:
+    def generate(
+        self,
+        project_id: str,
+        *,
+        capture_session_token: str | None = None,
+    ) -> DemoGenerationResult:
         project = self.projects.get(project_id)
         if project is None:
             raise KeyError("Project not found")
@@ -155,6 +171,7 @@ class DemoGenerationService:
                 self.inspector.inspect(
                     project_id=project.id,
                     website_url=str(project.website_url),
+                    session_token=capture_session_token,
                 )
             )
             if not inspection.pages:
@@ -196,7 +213,10 @@ class DemoGenerationService:
                 project.requested_duration_seconds * 1_000,
             )
             continuous_scene = prepare_continuous_capture(scenes, scene_durations)
-            capture = self.capture_worker.capture_scene(continuous_scene)
+            capture = self.capture_worker.capture_scene(
+                continuous_scene,
+                session_token=capture_session_token,
+            )
             if capture.status != "succeeded" or capture.raw_clip_path is None:
                 raise DemoGenerationError(
                     "Continuous browser capture failed: "

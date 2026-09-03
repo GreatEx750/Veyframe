@@ -6,6 +6,7 @@ from typing import cast
 from demodirector_worker import (
     AutoCameraService,
     CaptionService,
+    CaptureSettings,
     FFmpegRenderer,
     GeminiTTSAdapter,
     GeminiTTSSettings,
@@ -178,12 +179,18 @@ def create_app(
         SQLiteExportRepository(database_path),
         export_root,
     )
+    capture_auth_origins = tuple(
+        origin.strip()
+        for origin in os.getenv("DEMO_CAPTURE_AUTH_ORIGINS", "").split(",")
+        if origin.strip()
+    )
     application.state.website_inspector = website_inspector or PlaywrightWebsiteInspector(
         Path(os.getenv("DEMO_ARTIFACTS_DIR", "artifacts")) / "inspections",
         InspectorSettings(
             max_pages=int(os.getenv("INSPECT_MAX_PAGES", "3")),
             max_depth=int(os.getenv("INSPECT_MAX_DEPTH", "1")),
             timeout_ms=int(os.getenv("INSPECT_TIMEOUT_MS", "10000")),
+            authenticated_origins=capture_auth_origins,
         ),
     )
     settings = ai_settings or GoogleAISettings.from_environment()
@@ -241,7 +248,10 @@ def create_app(
             inspector=application.state.website_inspector,
             understanding_generator=application.state.product_understanding_service,
             storyboard_generator=application.state.storyboard_generation_service,
-            capture_worker=PlaywrightCaptureWorker(artifact_root / "captures"),
+            capture_worker=PlaywrightCaptureWorker(
+                artifact_root / "captures",
+                CaptureSettings(authenticated_origins=capture_auth_origins),
+            ),
             narration=NarrationService(
                 GeminiTTSAdapter(GeminiTTSSettings.from_environment()),
                 artifact_root / "narration",

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 from demodirector_api.google_ai import FakeGoogleAIService
@@ -120,6 +121,22 @@ def test_storyboard_service_accepts_grounded_timed_scene_plan() -> None:
     assert len(result.scenes) == 5
     assert result.total_duration_seconds == 90
     assert "CaptureAction allowlist" in fake.prompts[0]
+
+
+def test_storyboard_service_canonicalizes_one_based_scene_order() -> None:
+    payload = storyboard_payload()
+    scenes = cast(list[dict[str, object]], payload["scenes"])
+    for index, scene in enumerate(scenes, start=1):
+        scene["order"] = index
+    service = StoryboardGenerationService(FakeGoogleAIService(payload))
+
+    result = service.generate(
+        project=project(),
+        understanding=understanding(),
+        sources=[source()],
+    )
+
+    assert [scene.order for scene in result.scenes] == [0, 1, 2, 3, 4]
 
 
 @pytest.mark.parametrize(

@@ -69,7 +69,17 @@ def project_fixture() -> Project:
 
 
 class FakeInspector:
-    def inspect(self, *, project_id: str, website_url: str) -> WebsiteInspection:
+    def __init__(self) -> None:
+        self.session_tokens: list[str | None] = []
+
+    def inspect(
+        self,
+        *,
+        project_id: str,
+        website_url: str,
+        session_token: str | None = None,
+    ) -> WebsiteInspection:
+        self.session_tokens.append(session_token)
         return WebsiteInspection(
             project_id=project_id,
             pages=[
@@ -167,9 +177,16 @@ class FakeStoryboardService:
 class FakeCaptureWorker:
     def __init__(self) -> None:
         self.scenes: list[Scene] = []
+        self.session_tokens: list[str | None] = []
 
-    def capture_scene(self, scene: Scene) -> SceneCaptureResult:
+    def capture_scene(
+        self,
+        scene: Scene,
+        *,
+        session_token: str | None = None,
+    ) -> SceneCaptureResult:
         self.scenes.append(scene)
+        self.session_tokens.append(session_token)
         holds = [action for action in scene.capture_plan.actions if action.type == "wait_for"]
         assert [hold.value for hold in holds] == [4_000] * 5
         return SceneCaptureResult(
@@ -194,7 +211,13 @@ class FakeCaptureWorker:
 
 
 class FailingCaptureWorker(FakeCaptureWorker):
-    def capture_scene(self, scene: Scene) -> SceneCaptureResult:
+    def capture_scene(
+        self,
+        scene: Scene,
+        *,
+        session_token: str | None = None,
+    ) -> SceneCaptureResult:
+        self.session_tokens.append(session_token)
         return SceneCaptureResult(
             scene_id=scene.id,
             status="failed",
@@ -328,6 +351,20 @@ def test_one_click_generation_persists_an_exact_timeline_and_export(tmp_path: Pa
     )
     assert exports.timeline == timeline
     assert projects.get("project-one-click") == result.project
+
+
+def test_one_click_generation_forwards_session_only_to_inspection_and_capture(
+    tmp_path: Path,
+) -> None:
+    capture = FakeCaptureWorker()
+    service, _, _, _ = build_service(tmp_path, capture)
+    inspector = service.inspector
+    assert isinstance(inspector, FakeInspector)
+
+    service.generate("project-one-click", capture_session_token="session-secret")
+
+    assert inspector.session_tokens == ["session-secret"]
+    assert capture.session_tokens == ["session-secret"]
 
 
 def test_continuous_capture_preserves_beat_order_without_reloading_start_page() -> None:

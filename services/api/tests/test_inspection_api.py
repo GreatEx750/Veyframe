@@ -17,7 +17,14 @@ class FakeWebsiteInspector:
         self.inspection = inspection
         self.calls: list[tuple[str, str]] = []
 
-    def inspect(self, *, project_id: str, website_url: str) -> WebsiteInspection:
+    def inspect(
+        self,
+        *,
+        project_id: str,
+        website_url: str,
+        session_token: str | None = None,
+    ) -> WebsiteInspection:
+        del session_token
         self.calls.append((project_id, website_url))
         return self.inspection.model_copy(update={"project_id": project_id})
 

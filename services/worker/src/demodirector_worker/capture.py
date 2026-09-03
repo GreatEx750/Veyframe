@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
+from urllib.parse import urlsplit
 
 from demodirector_contracts import (
     BoundingBox,
@@ -27,6 +28,7 @@ class CaptureSettings:
     viewport_width: int = 1280
     viewport_height: int = 720
     allowed_upload_directory: Path | None = None
+    authenticated_origins: tuple[str, ...] = ()
 
 
 class PlaywrightCaptureWorker:
@@ -34,7 +36,12 @@ class PlaywrightCaptureWorker:
         self.artifact_directory = artifact_directory
         self.settings = settings or CaptureSettings()
 
-    def capture_scene(self, scene: Scene) -> SceneCaptureResult:
+    def capture_scene(
+        self,
+        scene: Scene,
+        *,
+        session_token: str | None = None,
+    ) -> SceneCaptureResult:
         scene_directory = self.artifact_directory / scene.id
         video_directory = scene_directory / "video"
         scene_directory.mkdir(parents=True, exist_ok=True)
@@ -49,7 +56,12 @@ class PlaywrightCaptureWorker:
 
         with sync_playwright() as playwright:
             browser = playwright.chromium.launch(headless=True)
-            context = self._new_context(browser, video_directory)
+            context = self._new_context(
+                browser,
+                video_directory,
+                start_url=str(scene.capture_plan.start_url),
+                session_token=session_token,
+            )
             page = context.new_page()
             video = page.video
             timeout_ms = scene.capture_plan.timeout_seconds * 1_000
@@ -132,8 +144,15 @@ class PlaywrightCaptureWorker:
             error=error_message,
         )
 
-    def _new_context(self, browser: Browser, video_directory: Path) -> BrowserContext:
-        return browser.new_context(
+    def _new_context(
+        self,
+        browser: Browser,
+        video_directory: Path,
+        *,
+        start_url: str,
+        session_token: str | None,
+    ) -> BrowserContext:
+        context = browser.new_context(
             viewport={
                 "width": self.settings.viewport_width,
                 "height": self.settings.viewport_height,
@@ -144,6 +163,22 @@ class PlaywrightCaptureWorker:
                 "height": self.settings.viewport_height,
             },
         )
+        origin = _origin(start_url)
+        allowed_origins = {_origin(item) for item in self.settings.authenticated_origins}
+        if session_token and origin in allowed_origins:
+            context.add_cookies(
+                [
+                    {
+                        "name": "demodirector_session",
+                        "value": session_token,
+                        "url": origin,
+                        "httpOnly": True,
+                        "secure": origin.startswith("https://"),
+                        "sameSite": "Lax",
+                    }
+                ]
+            )
+        return context
 
     def _execute(self, page: Page, action: CaptureAction) -> None:
         if action.type == "navigate":
@@ -291,3 +326,8 @@ def _clear_error(error: Exception) -> str:
     if isinstance(error, PlaywrightTimeoutError):
         return "Timed out while waiting for a planned browser action or assertion."
     return str(error)
+
+
+def _origin(url: str) -> str:
+    parsed = urlsplit(url)
+    return f"{parsed.scheme.lower()}://{parsed.netloc.lower()}"

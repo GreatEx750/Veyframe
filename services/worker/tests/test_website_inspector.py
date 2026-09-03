@@ -92,3 +92,53 @@ def test_inspector_timeout_is_reported_without_crashing(tmp_path: Path) -> None:
     assert inspection.pages == []
     assert inspection.warning is not None
     assert "Timed out" in inspection.warning
+
+
+def test_inspector_can_inventory_an_allowlisted_authenticated_origin(tmp_path: Path) -> None:
+    received_cookies: list[str] = []
+
+    class Handler(SimpleHTTPRequestHandler):
+        def do_GET(self) -> None:
+            cookie = self.headers.get("Cookie", "")
+            received_cookies.append(cookie)
+            heading = (
+                "Private project library"
+                if "demodirector_session=inspection-token" in cookie
+                else "Log in"
+            )
+            body = f"<!doctype html><title>Protected</title><h1>{heading}</h1>".encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    url = f"http://127.0.0.1:{server.server_port}/"
+    try:
+        inspector = PlaywrightWebsiteInspector(
+            tmp_path / "artifacts",
+            InspectorSettings(
+                max_pages=1,
+                max_depth=0,
+                timeout_ms=2_000,
+                authenticated_origins=(url.rstrip("/"),),
+            ),
+        )
+        inspection = inspector.inspect(
+            project_id="project-authenticated",
+            website_url=url,
+            session_token="inspection-token",
+        )
+    finally:
+        server.shutdown()
+        thread.join(timeout=2)
+        server.server_close()
+
+    assert inspection.pages[0].headings == ["Private project library"]
+    assert any("demodirector_session=inspection-token" in value for value in received_cookies)

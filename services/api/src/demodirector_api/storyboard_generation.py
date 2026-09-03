@@ -31,6 +31,7 @@ class StoryboardGenerationService:
             prompt=build_storyboard_prompt(project, understanding, sources),
             response_model=Storyboard,
         )
+        storyboard = canonicalize_scene_order(storyboard)
         validate_storyboard(storyboard, project, sources)
         return storyboard
 
@@ -91,9 +92,21 @@ def build_storyboard_prompt(
         f"Create a timed storyboard with {MIN_SCENES}-{MAX_SCENES} scenes. Keep total duration "
         f"within {int(DURATION_TOLERANCE * 100)}% of the requested duration. Every scene must "
         "have grounded source IDs, narration, expected evidence, and a typed deterministic "
-        "CapturePlan. Interactive actions require assert_visible success assertions. Use only "
+        "CapturePlan. Set scene order to the zero-based array index (0 through n-1). Interactive "
+        "actions require assert_visible success assertions. Use only "
         "the CaptureAction allowlist; never output code or shell commands.\n\n"
         + json.dumps(context, separators=(",", ":"))
+    )
+
+
+def canonicalize_scene_order(storyboard: Storyboard) -> Storyboard:
+    return storyboard.model_copy(
+        update={
+            "scenes": [
+                scene.model_copy(update={"order": index})
+                for index, scene in enumerate(storyboard.scenes)
+            ]
+        }
     )
 
 
