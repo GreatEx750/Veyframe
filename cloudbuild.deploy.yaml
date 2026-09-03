@@ -1,0 +1,105 @@
+steps:
+  - id: build-web
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args:
+      - build
+      - --file
+      - Dockerfile
+      - --tag
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-web:${SHORT_SHA}
+      - .
+
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args:
+      - build
+      - --file
+      - services/api/Dockerfile
+      - --tag
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-api:${SHORT_SHA}
+      - .
+
+  - id: build-worker
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args:
+      - build
+      - --file
+      - services/worker/Dockerfile
+      - --tag
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-worker:${SHORT_SHA}
+      - .
+
+  - id: push-web
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-web]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-web:${SHORT_SHA}
+
+  - id: push-api
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-api]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-api:${SHORT_SHA}
+
+  - id: push-worker
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-worker]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-worker:${SHORT_SHA}
+
+  - id: deploy-web
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [push-web]
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - demodirector-web
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-web:${SHORT_SHA}
+      - --region=${_REGION}
+      - --project=${PROJECT_ID}
+      - --quiet
+
+  - id: deploy-api
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [push-api]
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - demodirector-api
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-api:${SHORT_SHA}
+      - --region=${_REGION}
+      - --project=${PROJECT_ID}
+      - --quiet
+
+  - id: deploy-worker
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    waitFor: [push-worker]
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - demodirector-worker
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-worker:${SHORT_SHA}
+      - --region=${_REGION}
+      - --project=${PROJECT_ID}
+      - --quiet
+
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: cloud-run-source-deploy
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 3600s

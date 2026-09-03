@@ -55,3 +55,16 @@ retrieve a customer project through the hosted web/API, enqueue one fixture capt
 `gs://habiwatch-demodirector-artifacts/captures/...` object exists. Inspect the web service
 environment and built JavaScript to confirm no credential name has a public `NEXT_PUBLIC_`
 equivalent.
+
+## Continuous deployment from GitHub
+
+`cloudbuild.deploy.yaml` is the push deployment pipeline for the `main` branch. It builds the web,
+API, and worker images in parallel, pushes commit-tagged images to Artifact Registry, and updates
+only the image on each existing Cloud Run service. Runtime environment variables, Secret Manager
+references, service identities, scaling, and ingress settings remain owned by the Cloud Run service
+configuration.
+
+The trigger runs as `demodirector-build@habiwatch.iam.gserviceaccount.com`. That identity needs
+Artifact Registry Writer, Cloud Run Developer, and Logs Writer on the project, plus Service Account User
+on each of the three DemoDirector runtime identities. Repository access is granted through the
+Google Cloud Build GitHub App; no GitHub or Google credential is stored in this repository.
