@@ -10,8 +10,8 @@ Use this only after the fake-adapter golden path passes. It intentionally limits
   requested duration. This is the only required structured-generation call.
 - Queue one capture scene. Confirm the private worker task succeeds and one clip appears beneath the
   project's Cloud Storage prefix. If it fails, verify a diagnostic screenshot is present.
-- Render at 720p for the smoke run, apply one prompt edit, and run brief coverage once.
-- Export once at 1080p, download it through the scoped token, and verify video dimensions/duration.
+- Render at 1440p for the smoke run, apply one prompt edit, and run brief coverage once.
+- Download the 1440p export through the scoped token and verify its 2560×1440 dimensions and duration.
 - In Cloud Run, confirm API and worker show minimum instances `0` and maximum instances `1`.
 - Inspect the web service environment and compiled browser assets: Gemini and Parallel secret values
   and secret environment variable names must not appear in a `NEXT_PUBLIC_` variable.
