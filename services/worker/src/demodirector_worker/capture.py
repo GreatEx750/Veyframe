@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -299,9 +300,32 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
         return page.get_by_label(value, exact=True)
     if strategy == "text":
         matches = page.get_by_text(value, exact=True)
+        flexible_name: str | re.Pattern[str] = value
+        if matches.count() == 0:
+            tokens = value.split()
+            if tokens:
+                flexible_name = re.compile(
+                    r"\s*".join(re.escape(token) for token in tokens),
+                    re.IGNORECASE,
+                )
+                matches = page.get_by_text(flexible_name)
+        if matches.count() == 0:
+            for role in ("button", "link", "textbox", "combobox"):
+                accessible = page.get_by_role(
+                    cast(Any, role),
+                    name=flexible_name,
+                    exact=isinstance(flexible_name, str),
+                )
+                if accessible.count():
+                    matches = accessible
+                    break
         if action.type == "click" and matches.count() > 1:
             for role in ("button", "link"):
-                interactive = page.get_by_role(cast(Any, role), name=value, exact=True)
+                interactive = page.get_by_role(
+                    cast(Any, role),
+                    name=flexible_name,
+                    exact=isinstance(flexible_name, str),
+                )
                 if interactive.count() == 1:
                     return interactive
         return matches.first if matches.count() > 1 else matches

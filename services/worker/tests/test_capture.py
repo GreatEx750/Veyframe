@@ -75,7 +75,8 @@ def write_fixture(directory: Path) -> None:
 <button aria-label="Save demo" onclick="document.querySelector('#saved').hidden=false">Save</button>
 <p id="saved" hidden>Saved successfully</p>
 <button onclick="document.querySelector('#opened').hidden=false">Insights</button>
-<h1>Insights</h1><p id="opened" hidden>Insights opened</p>""",
+<h1>Insights</h1><p id="opened" hidden>Insights opened</p>
+<p><span>Website URL</span><span>Required</span></p>""",
         encoding="utf-8",
     )
 
@@ -200,6 +201,64 @@ def test_text_click_prefers_a_unique_interactive_control_over_matching_heading(
 
     assert result.status == "succeeded"
     assert result.interaction_events[0].bounding_box is not None
+
+
+def test_text_locator_matches_escaped_tokens_across_adjacent_elements(tmp_path: Path) -> None:
+    site = tmp_path / "site"
+    write_fixture(site)
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[],
+                success_assertions=[
+                    CaptureAction(
+                        type="assert_visible",
+                        locator_strategy="text",
+                        locator="Website URL Required",
+                        description="Confirm the required website URL field",
+                    )
+                ],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+
+
+def test_text_locator_falls_back_to_an_exact_accessible_name(tmp_path: Path) -> None:
+    site = tmp_path / "site"
+    write_fixture(site)
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[],
+                success_assertions=[
+                    CaptureAction(
+                        type="assert_visible",
+                        locator_strategy="text",
+                        locator="Save demo",
+                        description="Confirm the save control",
+                    )
+                ],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
 
 
 def test_upload_path_must_be_inside_explicit_fixture_directory(tmp_path: Path) -> None:
