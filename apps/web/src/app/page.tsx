@@ -188,7 +188,7 @@ export default function Home() {
           <div className="device-tabs" role="group" aria-label="Preview device">
             {["Desktop", "Tablet", "Mobile"].map((item) => <button aria-pressed={device === item} className={device === item ? "selected" : ""} key={item} onClick={() => setDevice(item)} type="button">{item}</button>)}
           </div>
-          <select aria-label="Preview resolution" className="resolution" defaultValue="1280 × 720"><option>1280 × 720</option><option>1920 × 1080</option></select>
+          <select aria-label="Preview resolution" className="resolution" defaultValue="2560 × 1440"><option>2560 × 1440</option></select>
         </div>
         <div className={`browser device-${device.toLowerCase()}`}>
           <div className="browser-bar"><span className="browser-dots"><i /><i /><i /></span><div className="address">app.ecotrack.com/dashboard</div><span className="secure-status">Secure</span></div>
@@ -203,7 +203,7 @@ export default function Home() {
         <section className="control-card"><div className="control-title"><b>Narration</b><span>01</span></div><label htmlFor="voice-select">Voice</label><select id="voice-select"><option>Emma — Professional</option><option>Alex — Warm</option></select><label htmlFor="pace">Pace <span>1.0×</span></label><input id="pace" max="1.4" min="0.7" step="0.1" type="range" defaultValue="1" /><label htmlFor="language">Language</label><select id="language"><option>English (US)</option><option>English (UK)</option></select></section>
         <section className="control-card compact"><div className="control-title"><b>Captions</b><Toggle checked={captions} label="Toggle captions" onChange={() => setCaptions((value) => !value)} /></div><label htmlFor="caption-style">Style</label><select id="caption-style"><option>Auto highlight</option><option>Minimal</option></select></section>
         <section className="control-card compact"><div className="control-title"><b>Auto zoom</b><Toggle checked={autoZoom} label="Toggle auto zoom" onChange={() => setAutoZoom((value) => !value)} /></div><label htmlFor="intensity">Intensity <span>70%</span></label><input id="intensity" max="100" min="0" type="range" defaultValue="70" /></section>
-        <section className="control-card compact"><div className="control-title"><b>Export</b><span>04</span></div><label htmlFor="output-format">Output format</label><select id="output-format"><option>Landscape · 1080p</option><option>Landscape · 720p</option></select></section>
+        <section className="control-card compact"><div className="control-title"><b>Export</b><span>04</span></div><label htmlFor="output-format">Output format</label><select id="output-format"><option>Landscape · 1440p</option></select></section>
         <section className="ready-card"><div><span>{scenes.length} scenes</span><span>{Math.ceil(Number(values.duration) / 60)} min</span></div><button className="gradient-button" disabled={isSubmitting} form="demo-form" type="submit"><Icon name="spark" />{isSubmitting ? "Generating demo…" : "Create Demo"}</button></section>
       </aside>
 

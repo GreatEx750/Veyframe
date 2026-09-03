@@ -662,7 +662,7 @@ class VideoExport(ContractModel):
     id: NonEmptyString
     project_id: NonEmptyString
     status: Literal["succeeded", "failed"]
-    quality: Literal["1080p", "720p"]
+    quality: Literal["1440p", "1080p", "720p"]
     filename: NonEmptyString
     width: int = Field(gt=0)
     height: int = Field(gt=0)

@@ -261,18 +261,18 @@ class FakeExportService:
         self,
         project_id: str,
         timeline: Timeline,
-        quality: Literal["1080p", "720p"],
+        quality: Literal["1440p", "1080p", "720p"],
     ) -> VideoExport:
-        assert quality == "1080p"
+        assert quality == "1440p"
         self.timeline = timeline
         return VideoExport(
             id="export-one-click",
             project_id=project_id,
             status="succeeded",
-            quality="1080p",
+            quality="1440p",
             filename="demo.mp4",
-            width=1920,
-            height=1080,
+            width=2560,
+            height=1440,
             duration_ms=20_000,
             size_bytes=1024,
             download_url=(

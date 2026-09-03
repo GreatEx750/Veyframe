@@ -18,8 +18,8 @@ class InspectorSettings:
     max_pages: int = 3
     max_depth: int = 1
     timeout_ms: int = 10_000
-    viewport_width: int = 1280
-    viewport_height: int = 720
+    viewport_width: int = 2560
+    viewport_height: int = 1440
     authenticated_origins: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:

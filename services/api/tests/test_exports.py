@@ -175,7 +175,7 @@ def project() -> Project:
     )
 
 
-def test_1080p_export_is_ffprobe_valid(tmp_path: Path) -> None:
+def test_1440p_export_is_ffprobe_valid(tmp_path: Path) -> None:
     artifact_root = tmp_path / "artifacts"
     ffmpeg = media_binary("ffmpeg")
     ffprobe = media_binary("ffprobe")
@@ -191,10 +191,10 @@ def test_1080p_export_is_ffprobe_valid(tmp_path: Path) -> None:
         export_root,
     )
 
-    result = service.create("project-1", timeline(video, audio), "1080p")
+    result = service.create("project-1", timeline(video, audio), "1440p")
 
     assert result.status == "succeeded"
-    assert (result.width, result.height) == (1920, 1080)
+    assert (result.width, result.height) == (2560, 1440)
     assert result.duration_ms == pytest.approx(2_000, abs=150)
     assert result.download_url is not None
 

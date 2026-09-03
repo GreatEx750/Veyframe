@@ -463,16 +463,19 @@ describe("TimelineEditor", () => {
     await waitFor(() => expect(screen.getAllByRole("status").at(-1)).toHaveTextContent("Undid to version 1"));
   });
 
-  it("creates a 1080p export and exposes its download", async () => {
+  it("creates a 1440p export and exposes its download", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
         ...videoExport,
+        quality: "1440p",
+        width: 2560,
+        height: 1440,
       }),
     }));
     render(<TimelineEditor initialTimeline={timeline} projectId="project-1" />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Export 1080p" }));
+    fireEvent.click(screen.getByRole("button", { name: "Export 1440p" }));
 
     const download = await screen.findByRole("link", { name: "Download MP4" });
     expect(download).toHaveAttribute(
@@ -480,7 +483,7 @@ describe("TimelineEditor", () => {
       "/api/projects/project-1/exports/export-1/download?token=fixture-token",
     );
     expect(screen.getAllByRole("status").at(-1)).toHaveTextContent(
-      "1080p export ready to download",
+      "1440p export ready to download",
     );
   });
 

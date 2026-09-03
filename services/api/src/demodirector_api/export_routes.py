@@ -13,7 +13,7 @@ class ExportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     timeline: Timeline
-    quality: Literal["1080p", "720p"] = "1080p"
+    quality: Literal["1440p", "1080p", "720p"] = "1440p"
 
 
 def get_export_service(request: Request) -> ExportService:

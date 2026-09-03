@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+import os
+import shutil
+import subprocess
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -7,9 +11,26 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import pytest
 from demodirector_contracts import CaptureAction, CapturePlan, Scene
 from demodirector_worker.capture import CaptureSettings, PlaywrightCaptureWorker
 from pydantic import HttpUrl
+
+
+def media_binary(name: str) -> str:
+    discovered = shutil.which(name)
+    if discovered:
+        return discovered
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        matches = sorted(
+            (Path(local_app_data) / "Microsoft" / "WinGet" / "Packages").glob(
+                f"Gyan.FFmpeg*/*/bin/{name}.exe"
+            )
+        )
+        if matches:
+            return str(matches[0])
+    pytest.skip(f"{name} is required for the capture resolution test")
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -126,6 +147,12 @@ def scene_for(url: str, *, bad_locator: bool = False) -> Scene:
     )
 
 
+def test_default_capture_settings_match_qhd_monitor_resolution() -> None:
+    settings = CaptureSettings()
+
+    assert (settings.viewport_width, settings.viewport_height) == (2560, 1440)
+
+
 def test_fixture_scene_records_webm_and_safe_action_results(tmp_path: Path) -> None:
     site = tmp_path / "site"
     write_fixture(site)
@@ -149,6 +176,25 @@ def test_fixture_scene_records_webm_and_safe_action_results(tmp_path: Path) -> N
     assert click.x is not None and click.y is not None
     assert result.model_validate_json(result.model_dump_json()) == result
     assert "private@example.com" not in result.model_dump_json()
+    probe = subprocess.run(
+        [
+            media_binary("ffprobe"),
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "json",
+            result.raw_clip_path,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    stream = json.loads(probe.stdout)["streams"][0]
+    assert (stream["width"], stream["height"]) == (2560, 1440)
 
 
 def test_bad_locator_is_retryable_and_saves_failure_screenshot(tmp_path: Path) -> None:

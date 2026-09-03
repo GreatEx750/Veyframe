@@ -301,15 +301,20 @@ class ExportService:
         self,
         project_id: str,
         timeline: Timeline,
-        quality: Literal["1080p", "720p"],
+        quality: Literal["1440p", "1080p", "720p"],
     ) -> VideoExport:
         if timeline.project_id != project_id:
             raise ExportError("Export timeline does not belong to the requested project.")
-        if quality not in {"1080p", "720p"}:
-            raise ExportError("Export quality must be 1080p or 720p.")
+        if quality not in {"1440p", "1080p", "720p"}:
+            raise ExportError("Export quality must be 1440p, 1080p, or 720p.")
         export_id = str(uuid4())
         filename = f"demodirector-{project_id}-{export_id}.mp4"
-        width, height = (1920, 1080) if quality == "1080p" else (1280, 720)
+        dimensions = {
+            "1440p": (2560, 1440),
+            "1080p": (1920, 1080),
+            "720p": (1280, 720),
+        }
+        width, height = dimensions[quality]
         try:
             rendered = self.renderer.render(
                 self.timeline_media_store.materialize(timeline),

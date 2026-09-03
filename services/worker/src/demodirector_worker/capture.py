@@ -26,8 +26,8 @@ class CaptureExecutionError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class CaptureSettings:
-    viewport_width: int = 1280
-    viewport_height: int = 720
+    viewport_width: int = 2560
+    viewport_height: int = 1440
     allowed_upload_directory: Path | None = None
     authenticated_origins: tuple[str, ...] = ()
 

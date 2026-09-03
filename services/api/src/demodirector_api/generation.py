@@ -106,7 +106,7 @@ class ExportCreator(Protocol):
         self,
         project_id: str,
         timeline: Timeline,
-        quality: Literal["1080p", "720p"],
+        quality: Literal["1440p", "1080p", "720p"],
     ) -> VideoExport: ...
 
 
@@ -252,7 +252,7 @@ class DemoGenerationService:
 
             stage = "video rendering"
             self._set_status(project.id, "rendering", "running")
-            video_export = self.exports.create(project.id, timeline, "1080p")
+            video_export = self.exports.create(project.id, timeline, "1440p")
             if video_export.status != "succeeded":
                 raise DemoGenerationError(video_export.error or "The video export failed.")
 

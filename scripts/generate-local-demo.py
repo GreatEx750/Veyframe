@@ -94,9 +94,9 @@ def capture_product_flow(artifact_root: Path, session_token: str) -> Path:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         context = browser.new_context(
-            viewport={"width": 1280, "height": 720},
+            viewport={"width": 2560, "height": 1440},
             record_video_dir=str(video_directory),
-            record_video_size={"width": 1280, "height": 720},
+            record_video_size={"width": 2560, "height": 1440},
         )
         context.add_cookies(
             [
@@ -236,8 +236,8 @@ def main() -> None:
     result = renderer.render(
         timeline,
         RenderConfig(
-            width=1280,
-            height=720,
+            width=2560,
+            height=1440,
             output_filename="demodirector-localhost-demo-20s.mp4",
         ),
     )

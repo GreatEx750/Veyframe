@@ -845,7 +845,7 @@ export const videoExportSchema = z
     id: nonEmptyString,
     project_id: nonEmptyString,
     status: z.enum(["succeeded", "failed"]),
-    quality: z.enum(["1080p", "720p"]),
+    quality: z.enum(["1440p", "1080p", "720p"]),
     filename: nonEmptyString,
     width: z.number().int().positive(),
     height: z.number().int().positive(),

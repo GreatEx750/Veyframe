@@ -187,7 +187,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
   const [activeMode, setActiveMode] = useState<EditorMode>("zoom");
   const [playheadMs, setPlayheadMs] = useState(0);
   const [status, setStatus] = useState(
-    generatedExport ? "1080p export ready to download" : initialTimeline ? "Timeline ready" : "Loading project timeline",
+    generatedExport ? `${generatedExport.quality} export ready to download` : initialTimeline ? "Timeline ready" : "Loading project timeline",
   );
   const [instruction, setInstruction] = useState("");
   const [proposal, setProposal] = useState<EditPlan | null>(null);
@@ -250,7 +250,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
           savedExport
             ? exportIsStale
               ? "Timeline changed · previewing previous export"
-              : "1080p export ready to play"
+              : `${savedExport.quality} export ready to play`
             : "Project timeline loaded",
         );
       } else if (isJudgeDemoProject(projectId)) {
@@ -567,12 +567,12 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
   async function createExport() {
     setExporting(true);
-    setStatus("Rendering 1080p export…");
+    setStatus("Rendering 1440p export…");
     try {
       const response = await fetch(`/api/projects/${projectId}/exports`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timeline, quality: "1080p" }),
+        body: JSON.stringify({ timeline, quality: "1440p" }),
       });
       const parsed = videoExportSchema.safeParse(await response.json());
       if (!response.ok || !parsed.success) throw new Error("Invalid export response");
@@ -584,7 +584,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
       }
       setStatus(
         parsed.data.status === "succeeded"
-          ? "1080p export ready to download"
+          ? `${parsed.data.quality} export ready to download`
           : "Export failed · retry when ready",
       );
     } catch {
@@ -661,7 +661,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
           <a className="publish-button export-download" href={videoExport.download_url}>Download MP4</a>
         ) : (
           <button className="publish-button" disabled={exporting} onClick={() => void createExport()} type="button">
-            {exporting ? "Exporting…" : videoExport ? "Export changes" : "Export 1080p"}
+            {exporting ? "Exporting…" : videoExport ? "Export changes" : "Export 1440p"}
           </button>
         )}
       </header>
@@ -770,8 +770,8 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
           {activeMode === "layout" && <>
             <div className="inspector-heading"><h2>Layout</h2><p>Canvas and framing</p></div>
-            <button className="layout-option selected" type="button"><span>16:9</span><small>1920 × 1080 landscape</small></button>
-            <p className="camera-note">Exports use a full HD canvas. Choose a frame in Overlay to change how the recording sits inside it.</p>
+            <button className="layout-option selected" type="button"><span>16:9</span><small>2560 × 1440 landscape</small></button>
+            <p className="camera-note">Recordings and exports use a native QHD canvas. Choose a frame in Overlay to change how the recording sits inside it.</p>
           </>}
 
           {activeMode === "cut" && <>
