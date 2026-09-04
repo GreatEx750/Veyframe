@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
@@ -40,6 +41,7 @@ STAGES: tuple[GenerationStage, ...] = (
     "done",
 )
 PAID_STAGES = {"research", "understanding", "storyboard", "narration"}
+logger = logging.getLogger(__name__)
 
 
 class JobConflict(ValueError):
@@ -202,6 +204,18 @@ class GenerationStages:
             scene = prepare_continuous_capture(scenes, durations)
             capture = s.capture_worker.capture_scene(scene, session_token=token)
             if capture.status != "succeeded" or capture.raw_clip_path is None:
+                failed_actions = [
+                    result.action_index
+                    for result in capture.action_results
+                    if result.status == "failed"
+                ]
+                logger.warning(
+                    "Capture failed for project %s after %sms; error=%s; failed_actions=%s",
+                    project.id,
+                    capture.duration_ms,
+                    capture.error or "no usable video was returned",
+                    failed_actions,
+                )
                 raise JobConflict("Capture did not produce a usable video")
             media = s.timeline_media_store.persist(
                 Timeline(
