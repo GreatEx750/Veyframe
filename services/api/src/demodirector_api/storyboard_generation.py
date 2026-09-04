@@ -105,8 +105,9 @@ def build_storyboard_prompt(
         "CapturePlan. Set scene order to the zero-based array index (0 through n-1). Interactive "
         "actions require assert_visible success assertions. Every human-readable locator must "
         "use an inspected accessible name or visible label exactly as written in a website "
-        "source; never paraphrase a control label. Use only "
-        "the CaptureAction allowlist; never output code or shell commands.\n\n"
+        "source; never paraphrase a control label. When a scene objective says to submit after "
+        "filling a field, include a click action for the submit control after the fill action. "
+        "Use only the CaptureAction allowlist; never output code or shell commands.\n\n"
         + json.dumps(context, separators=(",", ":"))
     )
 
@@ -254,3 +255,15 @@ def validate_scene(scene: Scene, allowed_sources: set[str]) -> None:
         raise StoryboardValidationError(
             f"Interactive scene {scene.id} requires a success assertion."
         )
+    if "submit" in scene.objective.casefold():
+        actions = scene.capture_plan.actions
+        last_fill = max(
+            (index for index, action in enumerate(actions) if action.type == "fill"),
+            default=-1,
+        )
+        if last_fill >= 0 and not any(
+            action.type == "click" for action in actions[last_fill + 1 :]
+        ):
+            raise StoryboardValidationError(
+                f"Scene {scene.id} requires a submit action after filling the field."
+            )

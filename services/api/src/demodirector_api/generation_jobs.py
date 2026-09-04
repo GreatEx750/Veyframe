@@ -418,6 +418,11 @@ class GenerationJobs:
                 message="Review storyboard evidence, then approve capture and narration.",
             )
         except Exception:
+            logger.exception(
+                "Generation stage %s failed for project %s",
+                job.stage,
+                job.project_id,
+            )
             failed = self._save(
                 claimed,
                 status="awaiting_retry",

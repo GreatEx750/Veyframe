@@ -318,7 +318,7 @@ def test_cloud_artifact_store_restores_export_after_local_file_is_removed(tmp_pa
 
 def test_cloud_timeline_media_survives_local_capture_cleanup(tmp_path: Path) -> None:
     source_root = tmp_path / "artifacts"
-    video = source_root / "captures" / "recording.webm"
+    video = source_root / "captures" / "page@capture-id.webm"
     audio = source_root / "narration" / "voice.wav"
     video.parent.mkdir(parents=True)
     audio.parent.mkdir(parents=True)

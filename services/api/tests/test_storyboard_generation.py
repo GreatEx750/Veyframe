@@ -209,3 +209,24 @@ def test_storyboard_rejects_unknown_source_and_missing_interaction_assertion() -
         StoryboardGenerationService(FakeGoogleAIService(unsafe_payload)).generate(
             project=project(), understanding=understanding(), sources=[source()]
         )
+
+
+def test_storyboard_rejects_submit_intent_without_an_action_after_fill() -> None:
+    payload = storyboard_payload()
+    first_scene = payload["scenes"][0]  # type: ignore[index]
+    first_scene["objective"] = "Type a query and submit the search"
+    first_plan = first_scene["capture_plan"]
+    first_plan["actions"] = [
+        {
+            "type": "fill",
+            "locator_strategy": "placeholder",
+            "locator": "Search",
+            "value": "Google Gemini",
+            "description": "Type the search query",
+        }
+    ]
+
+    with pytest.raises(StoryboardValidationError, match="submit action after filling"):
+        StoryboardGenerationService(FakeGoogleAIService(payload)).generate(
+            project=project(), understanding=understanding(), sources=[source()]
+        )

@@ -349,6 +349,43 @@ setTimeout(() => {
     assert result.status == "succeeded"
 
 
+def test_text_wait_prefers_a_visible_partial_match_over_a_hidden_exact_match(
+    tmp_path: Path,
+) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Visible text fixture</title>
+<span hidden>Wikipedia</span>
+<p>From Wikipedia, the free encyclopedia</p>""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="wait_for",
+                        locator_strategy="text",
+                        locator="Wikipedia",
+                        description="Wait for visible Wikipedia content",
+                    )
+                ],
+                success_assertions=[],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+
+
 def test_placeholder_locator_falls_back_to_a_label_without_counter_metadata(
     tmp_path: Path,
 ) -> None:
@@ -411,6 +448,133 @@ def test_placeholder_locator_matches_tokens_within_an_accessible_label(
         result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
 
     assert result.status == "succeeded"
+
+
+def test_placeholder_assertion_uses_a_visible_match_when_page_has_duplicates(
+    tmp_path: Path,
+) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Duplicate search fixture</title>
+<input type="search" placeholder="Search Wikipedia">
+<input type="search" placeholder="Search Wikipedia">""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[],
+                success_assertions=[
+                    CaptureAction(
+                        type="assert_visible",
+                        locator_strategy="placeholder",
+                        locator="Search Wikipedia",
+                        description="Assert a search field remains visible",
+                    )
+                ],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+
+
+def test_semantic_search_locators_fall_back_to_unique_native_controls(tmp_path: Path) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Search fixture</title>
+<form><input id="searchInput" name="search" type="search">
+<button type="submit">Search</button></form>
+<button type="button">Language</button>""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="fill",
+                        locator_strategy="placeholder",
+                        locator="Search Wikipedia",
+                        value="Google Gemini",
+                        description="Enter the search query",
+                    ),
+                    CaptureAction(
+                        type="click",
+                        locator_strategy="role",
+                        locator="Search",
+                        description="Submit the search",
+                    ),
+                ],
+                success_assertions=[],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+    assert [event.locator for event in result.interaction_events] == [
+        "Search Wikipedia",
+        "Search",
+    ]
+
+
+def test_unnamed_button_role_uses_the_unique_native_submit_control(tmp_path: Path) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Submit fixture</title>
+<form><input name="search"><button type="submit">Search</button></form>
+<button type="button">Language</button>""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="click",
+                        locator_strategy="role",
+                        locator="button",
+                        description="Submit the search",
+                    )
+                ],
+                success_assertions=[
+                    CaptureAction(
+                        type="assert_visible",
+                        locator_strategy="role",
+                        locator="button",
+                        description="Ensure a button remains visible",
+                    )
+                ],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+    assert result.interaction_events[0].locator == "button"
 
 
 def test_upload_path_must_be_inside_explicit_fixture_directory(tmp_path: Path) -> None:

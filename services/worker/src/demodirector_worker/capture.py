@@ -291,22 +291,49 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
     value = action.locator
     if strategy == "role":
         role, separator, name = value.partition(":")
-        return page.get_by_role(
+        if not separator and action.type == "click" and "submit" in action.description.casefold():
+            named_submit = page.get_by_role("button", name=value, exact=True)
+            if named_submit.count() == 1:
+                return named_submit
+        matches = page.get_by_role(
             cast(Any, role),
             name=name if separator else None,
             exact=True,
         )
+        if (
+            not separator
+            and role == "button"
+            and action.type == "click"
+            and matches.count() > 1
+            and "submit" in action.description.casefold()
+        ):
+            submit = page.locator('button[type="submit"], input[type="submit"]')
+            if submit.count() == 1:
+                return submit
+        if action.type in {"assert_visible", "wait_for"} and matches.count() > 1:
+            return _first_visible(matches) or matches.first
+        return matches
     if strategy == "label":
-        return page.get_by_label(value, exact=True)
+        labeled = page.get_by_label(value, exact=True)
+        if labeled.count():
+            return labeled
+        for role in ("button", "link", "textbox", "combobox"):
+            accessible = page.get_by_role(cast(Any, role), name=value, exact=True)
+            if accessible.count() == 1:
+                return accessible
+        exact_text = page.get_by_text(value, exact=True)
+        if exact_text.count() == 1:
+            return exact_text
+        return labeled
     if strategy == "text":
         matches = page.get_by_text(value, exact=True)
         flexible_name: str | re.Pattern[str] = value
-        if matches.count() == 0:
+        if matches.count() == 0 or _first_visible(matches) is None:
             tokens = value.split()
             if tokens:
                 flexible_name = _token_pattern(value)
                 matches = page.get_by_text(flexible_name)
-        if matches.count() == 0:
+        if matches.count() == 0 or _first_visible(matches) is None:
             for role in ("button", "link", "textbox", "combobox"):
                 accessible = page.get_by_role(
                     cast(Any, role),
@@ -327,12 +354,14 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
                     return interactive
         # Text can hydrate from zero to several matches after this locator is built.
         # Selecting the first candidate up front keeps later waits out of strict mode.
-        return matches.first
+        return _first_visible(matches) or matches.first
     if strategy == "test_id":
         return page.get_by_test_id(value)
     if strategy == "placeholder":
         placeholder = page.get_by_placeholder(value, exact=True)
         if placeholder.count():
+            if action.type in {"assert_visible", "wait_for"} and placeholder.count() > 1:
+                return _first_visible(placeholder) or placeholder.first
             return placeholder
         cleaned = _without_ui_metadata(value)
         for name in dict.fromkeys((value, cleaned)):
@@ -352,6 +381,10 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
                 accessible = page.get_by_role(cast(Any, role), name=pattern)
                 if accessible.count() == 1:
                     return accessible
+        if "search" in cleaned.casefold():
+            native_search = page.locator('input[type="search"], input[name="search"]')
+            if native_search.count() == 1:
+                return native_search
         return placeholder
     if strategy == "alt_text":
         return page.get_by_alt_text(value, exact=True)
@@ -364,6 +397,14 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
 
 def _elapsed_ms(started: float) -> int:
     return max(0, round((time.monotonic() - started) * 1_000))
+
+
+def _first_visible(matches: Locator) -> Locator | None:
+    for index in range(matches.count()):
+        candidate = matches.nth(index)
+        if candidate.is_visible():
+            return candidate
+    return None
 
 
 def _clear_error(error: Exception) -> str:

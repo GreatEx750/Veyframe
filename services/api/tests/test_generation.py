@@ -439,7 +439,9 @@ def test_continuous_capture_preserves_beat_order_without_reloading_start_page() 
         for item in ("click", "assert_visible", "wait_for")
     ]
     assert continuous.capture_plan.success_assertions == []
-    assert continuous.capture_plan.timeout_seconds >= 50
+    # The exported beat duration remains 20 seconds, while browser/network setup gets a
+    # separate two-minute execution allowance for production Cloud Run variability.
+    assert continuous.capture_plan.timeout_seconds >= 140
     assert continuous.duration_seconds == 20
 
 

@@ -397,7 +397,7 @@ def prepare_continuous_capture(
     )
     timeout_seconds = max(
         max(scene.capture_plan.timeout_seconds for scene in scenes),
-        math.ceil(total_duration_ms / 1_000) + 30,
+        math.ceil(total_duration_ms / 1_000) + 120,
     )
     return Scene(
         id=f"{first.storyboard_id}-continuous",

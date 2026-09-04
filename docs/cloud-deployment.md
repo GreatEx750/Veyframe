@@ -10,12 +10,12 @@ to the same private bucket.
 Gemini, Parallel, and Identity Platform credentials are mounted from Secret Manager and are never
 included in the web image.
 
-All services use `--min-instances=0 --max-instances=1 --cpu=1` to minimize idle cost. The web uses
-768 MiB; a live post-deploy project/video load exceeded 512 MiB by 1 MiB. The API uses 2 GiB and
-concurrency 2 because one-click generation currently runs its
+All services use `--min-instances=0 --max-instances=1` to minimize idle cost. The web uses
+768 MiB; a live post-deploy project/video load exceeded 512 MiB by 1 MiB. The API uses 2 CPUs,
+4 GiB, and concurrency 2 because one-click generation currently runs its
 inspector, capture, narration, and renderer in the request-bound API process; the second request
 slot keeps lightweight session checks available during capture. The private Chromium worker uses
-768 MiB. Memory is billed only while each scale-to-zero instance is active. The worker has no
+2 GiB. Memory is billed only while each scale-to-zero instance is active. The worker has no
 public invoker binding.
 
 ## One-time infrastructure
@@ -51,7 +51,7 @@ gcloud run deploy demodirector-web --image us-central1-docker.pkg.dev/habiwatch/
 gcloud builds submit --config cloudbuild.worker.yaml --project habiwatch .
 gcloud run deploy demodirector-worker --image us-central1-docker.pkg.dev/habiwatch/cloud-run-source-deploy/demodirector-worker:latest --region us-central1 --project habiwatch --service-account demodirector-worker@habiwatch.iam.gserviceaccount.com --no-allow-unauthenticated --min-instances 0 --max-instances 1 --cpu 1 --memory 2Gi --set-env-vars DEMO_ARTIFACT_BUCKET=habiwatch-demodirector-artifacts
 gcloud builds submit --config cloudbuild.api.yaml --project habiwatch .
-gcloud run deploy demodirector-api --image us-central1-docker.pkg.dev/habiwatch/cloud-run-source-deploy/demodirector-api:latest --region us-central1 --project habiwatch --service-account demodirector-api@habiwatch.iam.gserviceaccount.com --allow-unauthenticated --min-instances 0 --max-instances 1 --concurrency 2 --timeout 900 --cpu 1 --memory 2Gi --set-env-vars GOOGLE_CLOUD_PROJECT=habiwatch,DEMO_METADATA_BACKEND=firestore,DEMO_FIRESTORE_DATABASE=demodirector,DEMO_ARTIFACT_BUCKET=habiwatch-demodirector-artifacts,DEMO_TASK_LOCATION=us-central1,DEMO_TASK_QUEUE=demodirector-jobs,DEMO_WORKER_URL=WORKER_URL,DEMO_TASK_INVOKER_SERVICE_ACCOUNT=demodirector-tasks@habiwatch.iam.gserviceaccount.com,DEMO_AUTH_REQUIRED=true,DEMO_AUTH_REQUIRE_VERIFIED_EMAIL=true,DEMO_JUDGE_ENABLED=true,DEMO_CAPTURE_AUTH_ORIGINS=https://demodirector-web-cq5t2gao5q-uc.a.run.app --set-secrets GEMINI_API_KEY=demodirector-gemini-api-key:latest,PARALLEL_API_KEY=demodirector-parallel-api-key:latest,IDENTITY_PLATFORM_API_KEY=demodirector-identity-platform-api-key:latest
+gcloud run deploy demodirector-api --image us-central1-docker.pkg.dev/habiwatch/cloud-run-source-deploy/demodirector-api:latest --region us-central1 --project habiwatch --service-account demodirector-api@habiwatch.iam.gserviceaccount.com --allow-unauthenticated --min-instances 0 --max-instances 1 --concurrency 2 --timeout 900 --cpu 2 --memory 4Gi --set-env-vars GOOGLE_CLOUD_PROJECT=habiwatch,DEMO_METADATA_BACKEND=firestore,DEMO_FIRESTORE_DATABASE=demodirector,DEMO_ARTIFACT_BUCKET=habiwatch-demodirector-artifacts,DEMO_TASK_LOCATION=us-central1,DEMO_TASK_QUEUE=demodirector-jobs,DEMO_WORKER_URL=WORKER_URL,DEMO_TASK_INVOKER_SERVICE_ACCOUNT=demodirector-tasks@habiwatch.iam.gserviceaccount.com,DEMO_AUTH_REQUIRED=true,DEMO_AUTH_REQUIRE_VERIFIED_EMAIL=true,DEMO_JUDGE_ENABLED=true,DEMO_CAPTURE_AUTH_ORIGINS=https://demodirector-web-cq5t2gao5q-uc.a.run.app --set-secrets GEMINI_API_KEY=demodirector-gemini-api-key:latest,PARALLEL_API_KEY=demodirector-parallel-api-key:latest,IDENTITY_PLATFORM_API_KEY=demodirector-identity-platform-api-key:latest
 ```
 
 Agent Engine is not required for the current implementation: the ADK coordinator is request-bound

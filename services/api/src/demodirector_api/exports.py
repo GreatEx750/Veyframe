@@ -452,7 +452,7 @@ def _safe_component(value: str) -> str:
 
 def _safe_filename(value: str) -> str:
     if Path(value).name != value or any(
-        character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_."
+        character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_@."
         for character in value
     ):
         raise ExportError("Cloud artifact filename contains unsupported characters.")
