@@ -514,7 +514,7 @@ class AuthService:
         if len(self._judge_attempts) >= 10:
             raise AuthenticationError("rate_limited", "Try the judge demo again in a moment.")
         self._judge_attempts.append(now_monotonic)
-        user_id = f"judge-{uuid4()}"
+        user_id = "judge-demo"
         token, summary = self.issue_session(
             UserIdentity(
                 user_id=user_id,
@@ -524,7 +524,7 @@ class AuthService:
             ),
             ttl_seconds=self.settings.judge_session_ttl_seconds,
         )
-        project_id = f"judge-demo-{summary.session_id}"
+        project_id = "judge-demo-northstar"
         return JudgeSession(
             session=summary,
             session_token=token,

@@ -187,11 +187,9 @@ def judge_fixture_project(session: JudgeSession) -> Project:
 @router.post("/judge-session", response_model=JudgeSession)
 def create_judge_session(auth: Auth, projects: Projects) -> JudgeSession:
     try:
-        for expired_owner in auth.expired_judge_user_ids():
-            for stale in projects.list(expired_owner):
-                projects.delete(stale.id)
         session = auth.issue_judge_session()
-        projects.create(judge_fixture_project(session))
+        if projects.get(session.sandbox.project_id) is None:
+            projects.create(judge_fixture_project(session))
         return session
     except AuthenticationError as error:
         error_status = (
@@ -241,14 +239,14 @@ def _reset_session(active: SessionSummary, project_id: str) -> JudgeSession:
 def reset_judge_sandbox(active: CurrentSession, projects: Projects) -> Project:
     if active.user.role != "judge_demo":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Judge demo not found")
-    existing = projects.list(active.user.user_id)
-    project_id = existing[0].id if existing else f"judge-demo-{active.session_id}"
+    project_id = "judge-demo-northstar"
+    existing = projects.get(project_id)
     replacement = judge_fixture_project(_reset_session(active, project_id))
     if existing:
         replacement = Project.model_validate(
             {
                 **replacement.model_dump(),
-                "created_at": existing[0].created_at,
+                "created_at": existing.created_at,
                 "updated_at": datetime.now(UTC),
             }
         )

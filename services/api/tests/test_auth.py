@@ -256,7 +256,7 @@ def test_revoked_session_cannot_access_private_or_sensitive_routes(tmp_path: Pat
     )
 
 
-def test_judge_sessions_are_isolated_and_allow_owned_project_writes(
+def test_judge_sessions_share_one_persistent_workspace_and_allow_owned_project_writes(
     tmp_path: Path,
 ) -> None:
     client, _ = auth_client(tmp_path / "judge.db")
@@ -270,7 +270,12 @@ def test_judge_sessions_are_isolated_and_allow_owned_project_writes(
     second_session = second.json()
     assert first_session["session"]["user"]["role"] == "judge_demo"
     assert first_session["landing_path"] == "/projects"
-    assert first_session["sandbox"]["project_id"] != second_session["sandbox"]["project_id"]
+    assert first_session["sandbox"]["project_id"] == second_session["sandbox"]["project_id"]
+    assert (
+        first_session["session"]["user"]["user_id"]
+        == second_session["session"]["user"]["user_id"]
+        == "judge-demo"
+    )
     assert first_session["session_token"] != second_session["session_token"]
     first_headers = bearer(first_session)
     second_headers = bearer(second_session)
@@ -279,16 +284,7 @@ def test_judge_sessions_are_isolated_and_allow_owned_project_writes(
     assert [project["id"] for project in first_projects] == [
         first_session["sandbox"]["project_id"]
     ]
-    assert [project["id"] for project in second_projects] == [
-        second_session["sandbox"]["project_id"]
-    ]
-    assert (
-        client.get(
-            f"/projects/{second_session['sandbox']['project_id']}",
-            headers=first_headers,
-        ).status_code
-        == 404
-    )
+    assert second_projects == first_projects
     created = client.post(
         "/projects",
         headers=first_headers,
@@ -303,14 +299,12 @@ def test_judge_sessions_are_isolated_and_allow_owned_project_writes(
     )
     assert updated.status_code == 200
     assert updated.json()["cta"] == "Explore the result"
-    assert (
-        client.patch(
-            f"/projects/{created.json()['id']}",
-            headers=second_headers,
-            json={"cta": "Change another sandbox"},
-        ).status_code
-        == 404
+    shared = client.patch(
+        f"/projects/{created.json()['id']}",
+        headers=second_headers,
+        json={"cta": "Visible in the shared judge workspace"},
     )
+    assert shared.status_code == 200
     deleted = client.delete(
         f"/projects/{first_session['sandbox']['project_id']}",
         headers=first_headers,
