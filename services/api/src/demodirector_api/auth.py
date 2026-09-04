@@ -541,6 +541,10 @@ class AuthService:
                 "explore_editor",
                 "preview_fixture",
                 "reset_sandbox",
+                "create_project",
+                "generate_demo",
+                "edit_timeline",
+                "export_video",
             ],
             landing_path="/projects",
         )

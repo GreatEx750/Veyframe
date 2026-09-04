@@ -256,7 +256,7 @@ def test_revoked_session_cannot_access_private_or_sensitive_routes(tmp_path: Pat
     )
 
 
-def test_judge_sessions_are_isolated_and_allow_only_safe_reads_or_project_deletion(
+def test_judge_sessions_are_isolated_and_allow_owned_project_writes(
     tmp_path: Path,
 ) -> None:
     client, _ = auth_client(tmp_path / "judge.db")
@@ -289,19 +289,36 @@ def test_judge_sessions_are_isolated_and_allow_only_safe_reads_or_project_deleti
         ).status_code
         == 404
     )
-    blocked = client.post(
-        f"/projects/{first_session['sandbox']['project_id']}/exports",
+    created = client.post(
+        "/projects",
         headers=first_headers,
-        json={},
+        json=project_payload("Judge-created project"),
     )
-    assert blocked.status_code == 403
-    assert blocked.json()["detail"]["code"] == "judge_read_only"
+    assert created.status_code == 201
+    assert created.json()["owner_user_id"] == first_session["session"]["user"]["user_id"]
+    updated = client.patch(
+        f"/projects/{created.json()['id']}",
+        headers=first_headers,
+        json={"cta": "Explore the result"},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["cta"] == "Explore the result"
+    assert (
+        client.patch(
+            f"/projects/{created.json()['id']}",
+            headers=second_headers,
+            json={"cta": "Change another sandbox"},
+        ).status_code
+        == 404
+    )
     deleted = client.delete(
         f"/projects/{first_session['sandbox']['project_id']}",
         headers=first_headers,
     )
     assert deleted.status_code == 204
-    assert client.get("/projects", headers=first_headers).json() == []
+    assert [project["id"] for project in client.get("/projects", headers=first_headers).json()] == [
+        created.json()["id"]
+    ]
 
 
 def test_judge_status_and_reset_use_pre_generated_fixture(tmp_path: Path) -> None:

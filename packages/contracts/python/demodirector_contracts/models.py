@@ -207,7 +207,16 @@ class JudgeSession(ContractModel):
     session_token: NonEmptyString
     sandbox: JudgeSandbox
     capabilities: list[
-        Literal["view_project", "explore_editor", "preview_fixture", "reset_sandbox"]
+        Literal[
+            "view_project",
+            "explore_editor",
+            "preview_fixture",
+            "reset_sandbox",
+            "create_project",
+            "generate_demo",
+            "edit_timeline",
+            "export_video",
+        ]
     ] = Field(min_length=1)
     landing_path: NonEmptyString
 

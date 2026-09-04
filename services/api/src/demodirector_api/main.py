@@ -448,21 +448,6 @@ def create_app(
                     },
                     headers={"Cache-Control": "no-store"},
                 )
-            if active_session.user.role == "judge_demo" and request.method not in {
-                "GET",
-                "HEAD",
-                "DELETE",
-            }:
-                return JSONResponse(
-                    status_code=403,
-                    content={
-                        "detail": {
-                            "code": "judge_read_only",
-                            "message": "Judge mode uses pre-generated, read-only product data.",
-                        }
-                    },
-                    headers={"Cache-Control": "no-store"},
-                )
             project = projects.get(project_id)
             if project is None or project.owner_user_id != active_session.user.user_id:
                 return JSONResponse(

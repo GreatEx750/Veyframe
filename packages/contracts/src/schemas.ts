@@ -190,7 +190,20 @@ export const judgeSessionSchema = z
     session: sessionSummarySchema,
     session_token: nonEmptyString,
     sandbox: judgeSandboxSchema,
-    capabilities: z.array(z.enum(["view_project", "explore_editor", "preview_fixture", "reset_sandbox"])).min(1),
+    capabilities: z
+      .array(
+        z.enum([
+          "view_project",
+          "explore_editor",
+          "preview_fixture",
+          "reset_sandbox",
+          "create_project",
+          "generate_demo",
+          "edit_timeline",
+          "export_video",
+        ]),
+      )
+      .min(1),
     landing_path: nonEmptyString,
   })
   .strict();
