@@ -1,0 +1,64 @@
+steps:
+  - id: build-web
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args:
+      - build
+      - --file
+      - Dockerfile
+      - --tag
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-web:${_TAG}
+      - .
+
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args:
+      - build
+      - --file
+      - services/api/Dockerfile
+      - --tag
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-api:${_TAG}
+      - .
+
+  - id: build-worker
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args:
+      - build
+      - --file
+      - services/worker/Dockerfile
+      - --tag
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-worker:${_TAG}
+      - .
+
+  - id: push-web
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-web]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-web:${_TAG}
+
+  - id: push-api
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-api]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-api:${_TAG}
+
+  - id: push-worker
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-worker]
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-worker:${_TAG}
+
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: cloud-run-source-deploy
+  _TAG: manual
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 3600s

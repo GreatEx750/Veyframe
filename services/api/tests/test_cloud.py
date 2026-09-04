@@ -21,6 +21,7 @@ class Snapshot:
     def __init__(self, value: dict[str, Any] | None) -> None:
         self.value = value
         self.exists = value is not None
+        self.update_time = datetime.now(UTC)
 
     def to_dict(self) -> dict[str, Any]:
         assert self.value is not None
@@ -39,6 +40,10 @@ class Document:
         return Snapshot(self.values.get(self.key))
 
     def set(self, value: dict[str, Any]) -> None:
+        self.values[self.key] = value
+
+    def update(self, value: dict[str, Any], *, option: object = None) -> None:
+        del option
         self.values[self.key] = value
 
     def delete(self) -> None:

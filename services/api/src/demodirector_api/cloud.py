@@ -16,6 +16,7 @@ from demodirector_contracts import (
     VideoExport,
     WebsiteInspection,
 )
+from google.api_core.exceptions import FailedPrecondition
 from google.cloud import firestore, tasks_v2
 
 from demodirector_api.exports import StoredExport
@@ -254,7 +255,10 @@ class FirestoreTimelineRepository:
             "current_version": next_version,
             "versions": [item.model_dump(mode="json") for item in versions],
         }
-        reference.set(updated)
+        try:
+            reference.update(updated, option=firestore.LastUpdateOption(snapshot.update_time))
+        except FailedPrecondition as error:
+            raise TimelineVersionConflict("Timeline changed during this transaction.") from error
         return self._state(updated)
 
     def undo(self, project_id: str) -> TimelineHistoryState:
@@ -276,7 +280,10 @@ class FirestoreTimelineRepository:
             direction = "undo" if delta < 0 else "redo"
             raise TimelineVersionConflict(f"There is no timeline version to {direction}.")
         payload["current_version"] = target
-        reference.set(payload)
+        try:
+            reference.update(payload, option=firestore.LastUpdateOption(snapshot.update_time))
+        except FailedPrecondition as error:
+            raise TimelineVersionConflict("Timeline changed during undo/redo.") from error
         return self._state(payload)
 
 

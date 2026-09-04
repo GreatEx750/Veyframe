@@ -204,7 +204,7 @@ describe("TimelineEditor", () => {
     expect(toolButtons.slice(0, 3).map((button) => button.textContent)).toEqual([
       "Setup",
       "Sources",
-      "Layout",
+      "Quality",
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Sources" }));

@@ -176,17 +176,19 @@ def _validate_operation(
         _known(operation.target_id, set(captions_by_id), "caption clip")
         _only(arguments, {"start_ms", "end_ms", "text"}, kind)
         current_caption = captions_by_id[operation.target_id]
-        updated_caption = CaptionClip.model_validate(
-            {**current_caption.model_dump(), **arguments}
+        updated_caption = CaptionClip.model_validate({**current_caption.model_dump(), **arguments})
+        containing_scene = next(
+            (scene for scene in timeline.scene_clips if scene.scene_id == updated_caption.scene_id),
+            None,
         )
-        target_scene = next(
-            scene
-            for scene in timeline.scene_clips
-            if scene.scene_id == updated_caption.scene_id
-        )
+        if containing_scene is None and len(timeline.scene_clips) == 1:
+            # Continuous footage retains each narration beat's scene ID in captions.
+            containing_scene = timeline.scene_clips[0]
+        if containing_scene is None:
+            raise EditPlanValidationError("Caption does not belong to a captured scene.")
         if (
-            updated_caption.start_ms < target_scene.start_ms
-            or updated_caption.end_ms > target_scene.end_ms
+            updated_caption.start_ms < containing_scene.start_ms
+            or updated_caption.end_ms > containing_scene.end_ms
         ):
             raise EditPlanValidationError("Updated caption must fit within its target scene.")
     elif kind == "change_voice_config":

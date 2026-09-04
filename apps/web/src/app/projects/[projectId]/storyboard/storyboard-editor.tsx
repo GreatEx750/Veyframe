@@ -2,6 +2,7 @@
 
 import { storyboardSchema, type Scene, type Storyboard } from "@demodirector/contracts";
 import { useEffect, useState } from "react";
+import { EvidenceApproval } from "./evidence-approval";
 
 type StoryboardEditorProps = {
   projectId: string;
@@ -12,6 +13,7 @@ export function StoryboardEditor({ projectId, initialStoryboard }: StoryboardEdi
   const [storyboard, setStoryboard] = useState<Storyboard | null>(initialStoryboard ?? null);
   const [message, setMessage] = useState(initialStoryboard ? "Storyboard ready" : "Loading storyboard…");
   const [busyScene, setBusyScene] = useState<string | null>(null);
+  const [unsaved, setUnsaved] = useState(false);
 
   useEffect(() => {
     if (initialStoryboard) return;
@@ -29,6 +31,7 @@ export function StoryboardEditor({ projectId, initialStoryboard }: StoryboardEdi
   async function persist(scenes: Scene[]) {
     if (!storyboard) return;
     setMessage("Saving storyboard…");
+    setUnsaved(true);
     try {
       const response = await fetch(`/api/projects/${projectId}/storyboard`, {
         method: "PUT",
@@ -39,6 +42,7 @@ export function StoryboardEditor({ projectId, initialStoryboard }: StoryboardEdi
       if (!response.ok || !parsed.success) throw new Error("Save failed");
       setStoryboard(parsed.data);
       setMessage(`Saved version ${parsed.data.version}`);
+      setUnsaved(false);
     } catch {
       setMessage("Couldn’t save storyboard changes. Reload and try again.");
     }
@@ -56,6 +60,7 @@ export function StoryboardEditor({ projectId, initialStoryboard }: StoryboardEdi
 
   function updateNarration(sceneId: string, narration: string) {
     if (!storyboard) return;
+    setUnsaved(true);
     setStoryboard({
       ...storyboard,
       scenes: storyboard.scenes.map((scene) => scene.id === sceneId ? { ...scene, narration } : scene),
@@ -120,6 +125,7 @@ export function StoryboardEditor({ projectId, initialStoryboard }: StoryboardEdi
           </article>
         ))}
       </section>
+      <EvidenceApproval projectId={projectId} version={storyboard.version} disabled={unsaved || busyScene !== null} />
       <footer className="storyboard-footer"><button onClick={addScene} type="button">＋ Add simple scene</button><p role="status">{message}</p></footer>
     </main>
   );

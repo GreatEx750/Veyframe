@@ -68,3 +68,13 @@ DemoDirector uses a Next.js frontend, FastAPI services, Google Cloud AI and Gemi
 The scale-to-zero Cloud Run deployment is available at
 https://demodirector-web-cq5t2gao5q-uc.a.run.app/. Choose **Enter Judge Demo** for immediate,
 credential-free evaluation of the preloaded workflow.
+
+## Generation, review, and approval
+
+Demo generation now runs as a durable job. The UI saves progress and pauses for storyboard/evidence approval before capture and narration. Local development needs a separate worker:
+
+```powershell
+node scripts/python-runner.mjs -m demodirector_api.job_worker
+```
+
+The editor's Quality tool reviews a saved export and proposes bounded, approved camera/caption repairs. Successful reviews are cached; ordinary tests make no paid calls. See [generation and cloud setup](docs/generation-jobs.md) before deploying this version, especially the API-targeted task queue and authenticated-capture encryption key.

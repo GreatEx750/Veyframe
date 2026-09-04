@@ -522,6 +522,7 @@ class SQLiteTimelineRepository:
         affected_ids: list[str],
     ) -> TimelineHistoryState:
         with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 "SELECT current_version FROM timeline_heads WHERE project_id = ?",
                 (timeline.project_id,),
@@ -567,6 +568,7 @@ class SQLiteTimelineRepository:
 
     def _move_head(self, project_id: str, offset: int) -> TimelineHistoryState:
         with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 """
                 SELECT current_version,

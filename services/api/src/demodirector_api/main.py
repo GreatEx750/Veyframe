@@ -48,6 +48,8 @@ from demodirector_api.cloud_routes import router as cloud_router
 from demodirector_api.director_agent import create_director_workflow
 from demodirector_api.edit_planner import EditPlannerService
 from demodirector_api.edit_routes import router as edit_router
+from demodirector_api.evidence import EvidenceService
+from demodirector_api.evidence_routes import router as evidence_router
 from demodirector_api.export_routes import router as export_router
 from demodirector_api.exports import (
     CloudExportArtifactStore,
@@ -61,7 +63,14 @@ from demodirector_api.exports import (
     TimelineMediaStore,
 )
 from demodirector_api.generation import DemoGenerationService
-from demodirector_api.generation_routes import router as generation_router
+from demodirector_api.generation_jobs import (
+    CaptureTokenVault,
+    CloudGenerationDispatcher,
+    GenerationJobs,
+    GenerationStages,
+    JobDispatcher,
+    LocalJobDispatcher,
+)
 from demodirector_api.google_ai import (
     AIConfigurationError,
     GoogleAIService,
@@ -71,6 +80,9 @@ from demodirector_api.google_ai import (
 )
 from demodirector_api.health import HealthResponse
 from demodirector_api.inspection_routes import router as inspection_router
+from demodirector_api.job_routes import router as generation_router
+from demodirector_api.optimization import OptimizationService
+from demodirector_api.optimization_routes import router as optimization_router
 from demodirector_api.parallel_search import (
     ParallelConfigurationError,
     ParallelSearchAdapter,
@@ -82,6 +94,7 @@ from demodirector_api.parallel_search import (
 from demodirector_api.product_understanding import ProductUnderstandingService
 from demodirector_api.projects import router as projects_router
 from demodirector_api.qa_routes import router as qa_router
+from demodirector_api.records import FirestoreRecordStore, RecordStore, SQLiteRecordStore
 from demodirector_api.repair import MissingRequirementRepairService
 from demodirector_api.repair_routes import router as repair_router
 from demodirector_api.repositories import (
@@ -100,11 +113,13 @@ from demodirector_api.repositories import (
 )
 from demodirector_api.research_routes import router as research_router
 from demodirector_api.research_tools import create_product_research_tool
+from demodirector_api.review_routes import router as review_router
 from demodirector_api.storyboard_generation import StoryboardGenerationService
 from demodirector_api.storyboard_routes import router as storyboard_router
 from demodirector_api.timeline_edits import TimelineEditService
 from demodirector_api.timeline_routes import router as timeline_router
 from demodirector_api.understanding_routes import router as understanding_router
+from demodirector_api.video_reviews import GeminiVideoCritic, VideoReviewService
 
 
 def create_app(
@@ -141,11 +156,11 @@ def create_app(
     else:
         projects = SQLiteProjectRepository(database_path)
     if firestore_client is not None:
-        research_sources = (
-            research_repository or FirestoreResearchSourceRepository(firestore_client)
+        research_sources = research_repository or FirestoreResearchSourceRepository(
+            firestore_client
         )
-        inspections = (
-            inspection_repository or FirestoreWebsiteInspectionRepository(firestore_client)
+        inspections = inspection_repository or FirestoreWebsiteInspectionRepository(
+            firestore_client
         )
         understandings = (
             product_understanding_repository
@@ -156,13 +171,26 @@ def create_app(
     else:
         research_sources = research_repository or SQLiteResearchSourceRepository(database_path)
         inspections = inspection_repository or SQLiteWebsiteInspectionRepository(database_path)
-        understandings = (
-            product_understanding_repository
-            or SQLiteProductUnderstandingRepository(database_path)
+        understandings = product_understanding_repository or SQLiteProductUnderstandingRepository(
+            database_path
         )
         storyboards = storyboard_repository or SQLiteStoryboardRepository(database_path)
         timelines = timeline_repository or SQLiteTimelineRepository(database_path)
     application.state.project_repository = projects
+    records: RecordStore = (
+        FirestoreRecordStore(firestore_client)
+        if firestore_client is not None
+        else SQLiteRecordStore(database_path)
+    )
+    application.state.workflow_records = records
+    evidence_service = EvidenceService(
+        projects,
+        research_sources,
+        storyboards,
+        understandings,
+        records,
+    )
+    application.state.evidence_service = evidence_service
     auth_settings = AuthSettings.from_environment()
     if auth_service is not None:
         resolved_auth_service = auth_service
@@ -235,6 +263,8 @@ def create_app(
         export_root,
         artifact_store=export_artifact_store,
         timeline_media_store=timeline_media_store,
+        records=records,
+        timelines=timelines,
     )
     capture_auth_origins = tuple(
         origin.strip()
@@ -259,6 +289,16 @@ def create_app(
     else:
         resolved_ai_service = ai_service
     application.state.ai_service = resolved_ai_service
+    application.state.video_review_service = (
+        VideoReviewService(application.state.export_service, records, GeminiVideoCritic(settings))
+        if settings.is_configured
+        else None
+    )
+    application.state.optimization_service = (
+        OptimizationService(application.state.video_review_service, timelines, records)
+        if application.state.video_review_service
+        else None
+    )
     application.state.product_understanding_service = ProductUnderstandingService(
         resolved_ai_service
     )
@@ -320,6 +360,35 @@ def create_app(
         )
 
     research_tool = create_product_research_tool(projects, resolved_research_service)
+    application.state.generation_jobs = None
+    generation = application.state.generation_service
+    if generation is not None:
+        dispatcher: JobDispatcher | None = LocalJobDispatcher()
+        if firestore_client is not None:
+            dispatcher = None
+            task_url = os.getenv("DEMO_GENERATION_TASK_URL")
+            if cloud_project_id and queue and invoker_service_account and task_url:
+                from google.cloud import tasks_v2
+
+                dispatcher = CloudGenerationDispatcher(
+                    tasks_v2.CloudTasksClient(),  # type: ignore[arg-type]
+                    CloudTasksSettings(
+                        project_id=cloud_project_id,
+                        location=os.getenv("DEMO_TASK_LOCATION", "us-central1"),
+                        queue=queue,
+                        worker_url=task_url,
+                        invoker_service_account=invoker_service_account,
+                    ),
+                )
+        if dispatcher is not None:
+            vault = CaptureTokenVault(artifact_root, firestore_client is not None)
+            application.state.generation_jobs = GenerationJobs(
+                records,
+                GenerationStages(generation, records, vault, evidence_service),
+                dispatcher,
+                generation,
+                vault,
+            )
     application.state.director_workflow = create_director_workflow(
         settings.model_name,
         tools=[research_tool],
@@ -338,6 +407,9 @@ def create_app(
     application.include_router(repair_router)
     application.include_router(export_router)
     application.include_router(generation_router)
+    application.include_router(review_router)
+    application.include_router(optimization_router)
+    application.include_router(evidence_router)
     application.include_router(cloud_router)
 
     @application.middleware("http")

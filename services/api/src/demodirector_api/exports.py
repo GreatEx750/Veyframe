@@ -13,6 +13,9 @@ from uuid import uuid4
 
 from demodirector_contracts import RenderConfig, RenderResult, Timeline, VideoExport
 
+from demodirector_api.records import RecordStore
+from demodirector_api.repositories import TimelineRepository
+
 
 class ExportError(RuntimeError):
     """Raised when export metadata or download authorization is invalid."""
@@ -290,12 +293,16 @@ class ExportService:
         artifact_directory: Path,
         artifact_store: ExportArtifactStore | None = None,
         timeline_media_store: TimelineMediaStore | None = None,
+        records: RecordStore | None = None,
+        timelines: TimelineRepository | None = None,
     ) -> None:
         self.renderer = renderer
         self.repository = repository
         self.artifact_directory = artifact_directory.resolve()
         self.artifact_store = artifact_store or LocalExportArtifactStore(self.artifact_directory)
         self.timeline_media_store = timeline_media_store or LocalTimelineMediaStore()
+        self.records = records
+        self.timelines = timelines
 
     def create(
         self,
@@ -357,6 +364,14 @@ class ExportService:
                     token_hash=_token_hash(token),
                 )
             )
+            if self.records is not None and self.timelines is not None:
+                history = self.timelines.current(project_id)
+                if history is not None and history.current.timeline == timeline:
+                    self.records.put(f"export-{export_id}", 0, {
+                        "project_id": project_id,
+                        "timeline_version": history.current.version,
+                        "timeline": timeline.model_dump(mode="json"),
+                    })
             return export
         except Exception as error:
             failed = VideoExport(
@@ -381,20 +396,26 @@ class ExportService:
         return None if item is None else item.export
 
     def latest(self, project_id: str) -> VideoExport | None:
-        item = self.repository.latest_successful(project_id)
+        item = self._preferred(project_id)
         if item is None or item.file_path is None:
             return None
         path = self.artifact_store.resolve(item.file_path)
         return item.export if path is not None else None
 
     def latest_path(self, project_id: str) -> Path:
-        item = self.repository.latest_successful(project_id)
+        item = self._preferred(project_id)
         if item is None or item.file_path is None:
             raise ExportError("No completed video is available for this project.")
         path = self.artifact_store.resolve(item.file_path)
         if path is None:
             raise ExportError("The completed video file is unavailable.")
         return path
+
+    def _preferred(self, project_id: str) -> StoredExport | None:
+        preference = self.records.get(f"preferred-{project_id}") if self.records else None
+        if preference is not None:
+            return self.repository.get(project_id, str(preference[1]["export_id"]))
+        return self.repository.latest_successful(project_id)
 
     def authorize_download(self, project_id: str, export_id: str, token: str) -> Path:
         item = self.repository.get(project_id, export_id)

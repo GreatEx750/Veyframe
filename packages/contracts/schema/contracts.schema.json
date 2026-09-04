@@ -381,6 +381,34 @@
       "title": "CoverageRequirement",
       "type": "object"
     },
+    "CriticOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "findings": {
+          "items": {
+            "$ref": "#/$defs/VideoReviewFinding"
+          },
+          "maxItems": 12,
+          "title": "Findings",
+          "type": "array"
+        },
+        "scores": {
+          "items": {
+            "$ref": "#/$defs/VideoReviewScore"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "title": "Scores",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scores",
+        "findings"
+      ],
+      "title": "CriticOutput",
+      "type": "object"
+    },
     "DemoGenerationResult": {
       "additionalProperties": false,
       "properties": {
@@ -457,6 +485,140 @@
         "rationale"
       ],
       "title": "EditOperation",
+      "type": "object"
+    },
+    "GenerationJob": {
+      "additionalProperties": false,
+      "properties": {
+        "attempts": {
+          "default": 0,
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "completed_stages": {
+          "items": {
+            "enum": [
+              "inspection",
+              "research",
+              "understanding",
+              "storyboard",
+              "capture",
+              "narration",
+              "render",
+              "done"
+            ],
+            "type": "string"
+          },
+          "title": "Completed Stages",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "export_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Export Id"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "lease_until": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lease Until"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "inspection",
+            "research",
+            "understanding",
+            "storyboard",
+            "capture",
+            "narration",
+            "render",
+            "done"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "awaiting_approval",
+            "awaiting_retry",
+            "failed",
+            "succeeded"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "timeline_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeline Version"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        },
+        "version": {
+          "exclusiveMinimum": 0,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "status",
+        "stage",
+        "version",
+        "created_at",
+        "updated_at",
+        "message"
+      ],
+      "title": "GenerationJob",
       "type": "object"
     },
     "InteractionEvent": {
@@ -648,6 +810,39 @@
       "title": "LogoutResult",
       "type": "object"
     },
+    "MediaEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "media_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Media Sha256",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "media_sha256"
+      ],
+      "title": "MediaEvidence",
+      "type": "object"
+    },
     "MissingRequirementRepairProposal": {
       "additionalProperties": false,
       "properties": {
@@ -757,6 +952,59 @@
       "title": "MissingRequirementRepairResult",
       "type": "object"
     },
+    "NarrationEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "source_quote",
+            "source_linked",
+            "user_assertion",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "scene_id",
+        "text",
+        "status",
+        "source_ids",
+        "explanation"
+      ],
+      "title": "NarrationEvidence",
+      "type": "object"
+    },
     "NarrationVoiceConfig": {
       "additionalProperties": false,
       "properties": {
@@ -784,6 +1032,216 @@
         }
       },
       "title": "NarrationVoiceConfig",
+      "type": "object"
+    },
+    "OptimizationProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "explanation": {
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "finding_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Finding Ids",
+          "type": "array"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/EditOperation"
+          },
+          "maxItems": 3,
+          "title": "Operations",
+          "type": "array"
+        },
+        "unsupported_findings": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Unsupported Findings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "operations",
+        "finding_ids",
+        "explanation"
+      ],
+      "title": "OptimizationProposal",
+      "type": "object"
+    },
+    "OptimizationRun": {
+      "additionalProperties": false,
+      "properties": {
+        "after_export_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Export Id"
+        },
+        "after_review_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Review Id"
+        },
+        "after_score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Score"
+        },
+        "after_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "After Version"
+        },
+        "before_export_id": {
+          "minLength": 1,
+          "title": "Before Export Id",
+          "type": "string"
+        },
+        "before_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Before Score",
+          "type": "number"
+        },
+        "before_version": {
+          "exclusiveMinimum": 0,
+          "title": "Before Version",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "cycles": {
+          "default": 0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Cycles",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "model_calls": {
+          "default": 0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Model Calls",
+          "type": "integer"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "proposal": {
+          "$ref": "#/$defs/OptimizationProposal"
+        },
+        "review_id": {
+          "minLength": 1,
+          "title": "Review Id",
+          "type": "string"
+        },
+        "score_delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Score Delta"
+        },
+        "status": {
+          "enum": [
+            "proposed",
+            "running",
+            "succeeded",
+            "failed",
+            "cancelled"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "stop_reason": {
+          "enum": [
+            "awaiting_approval",
+            "target_reached",
+            "improved",
+            "no_improvement",
+            "unsupported",
+            "render_failed",
+            "review_failed",
+            "version_conflict",
+            "cancelled",
+            "apply_failed",
+            "budget_limit"
+          ],
+          "title": "Stop Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "review_id",
+        "before_export_id",
+        "before_version",
+        "before_score",
+        "proposal",
+        "status",
+        "stop_reason",
+        "created_at",
+        "message"
+      ],
+      "title": "OptimizationRun",
       "type": "object"
     },
     "Project": {
@@ -1522,6 +1980,65 @@
       "title": "Storyboard",
       "type": "object"
     },
+    "StoryboardEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "approval_required": {
+          "default": true,
+          "title": "Approval Required",
+          "type": "boolean"
+        },
+        "approved": {
+          "title": "Approved",
+          "type": "boolean"
+        },
+        "claims": {
+          "items": {
+            "$ref": "#/$defs/NarrationEvidence"
+          },
+          "title": "Claims",
+          "type": "array"
+        },
+        "fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Fingerprint",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/ResearchSource"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "storyboard_version": {
+          "exclusiveMinimum": 0,
+          "title": "Storyboard Version",
+          "type": "integer"
+        },
+        "unverified_count": {
+          "minimum": 0,
+          "title": "Unverified Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "storyboard_version",
+        "fingerprint",
+        "claims",
+        "sources",
+        "unverified_count",
+        "approved"
+      ],
+      "title": "StoryboardEvidence",
+      "type": "object"
+    },
     "Timeline": {
       "additionalProperties": false,
       "properties": {
@@ -1832,6 +2349,268 @@
       "title": "VideoPresentationConfig",
       "type": "object"
     },
+    "VideoReview": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 180000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/MediaEvidence"
+          },
+          "maxItems": 180,
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "export_id": {
+          "minLength": 1,
+          "title": "Export Id",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "model_calls": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Model Calls",
+          "type": "integer"
+        },
+        "model_name": {
+          "minLength": 1,
+          "title": "Model Name",
+          "type": "string"
+        },
+        "overall_score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Overall Score"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "prompt_version": {
+          "minLength": 1,
+          "title": "Prompt Version",
+          "type": "string"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CriticOutput"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "timeline_version": {
+          "exclusiveMinimum": 0,
+          "title": "Timeline Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "export_id",
+        "timeline_version",
+        "status",
+        "model_name",
+        "prompt_version",
+        "created_at",
+        "duration_ms",
+        "evidence",
+        "model_calls"
+      ],
+      "title": "VideoReview",
+      "type": "object"
+    },
+    "VideoReviewFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "dimension": {
+          "enum": [
+            "visual_clarity",
+            "narration_sync",
+            "caption_readability",
+            "pacing",
+            "camera_quality",
+            "cta_effectiveness"
+          ],
+          "title": "Dimension",
+          "type": "string"
+        },
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_summary": {
+          "maxLength": 800,
+          "minLength": 1,
+          "title": "Evidence Summary",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "observation": {
+          "maxLength": 800,
+          "minLength": 1,
+          "title": "Observation",
+          "type": "string"
+        },
+        "repair_category": {
+          "enum": [
+            "camera",
+            "caption",
+            "pacing",
+            "narration",
+            "cta",
+            "recapture",
+            "manual"
+          ],
+          "title": "Repair Category",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "dimension",
+        "severity",
+        "start_ms",
+        "end_ms",
+        "observation",
+        "evidence_summary",
+        "evidence_ids",
+        "repair_category"
+      ],
+      "title": "VideoReviewFinding",
+      "type": "object"
+    },
+    "VideoReviewScore": {
+      "additionalProperties": false,
+      "properties": {
+        "dimension": {
+          "enum": [
+            "visual_clarity",
+            "narration_sync",
+            "caption_readability",
+            "pacing",
+            "camera_quality",
+            "cta_effectiveness"
+          ],
+          "title": "Dimension",
+          "type": "string"
+        },
+        "explanation": {
+          "maxLength": 800,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        },
+        "finding_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 12,
+          "title": "Finding Ids",
+          "type": "array"
+        },
+        "score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "dimension",
+        "score",
+        "explanation",
+        "finding_ids"
+      ],
+      "title": "VideoReviewScore",
+      "type": "object"
+    },
     "Viewport": {
       "additionalProperties": false,
       "properties": {
@@ -1971,6 +2750,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "oneOf": [
     {
+      "$ref": "#/$defs/GenerationJob"
+    },
+    {
+      "$ref": "#/$defs/StoryboardEvidence"
+    },
+    {
+      "$ref": "#/$defs/VideoReview"
+    },
+    {
+      "$ref": "#/$defs/OptimizationRun"
+    },
+    {
       "$ref": "#/$defs/Project"
     },
     {
@@ -2054,6 +2845,10 @@
   ],
   "title": "DemoDirector shared contracts",
   "x-contracts": [
+    "GenerationJob",
+    "StoryboardEvidence",
+    "VideoReview",
+    "OptimizationRun",
     "Project",
     "UserIdentity",
     "UserProfile",

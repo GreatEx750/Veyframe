@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "DemoDirector application API"
 requires-python = ">=3.12"
 dependencies = [
+  "cryptography>=50.0.1,<51",
   "demodirector-contracts>=0.1.0",
   "demodirector-worker>=0.1.0",
   "fastapi>=0.116.1,<1",

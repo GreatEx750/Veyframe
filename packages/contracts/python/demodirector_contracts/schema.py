@@ -7,6 +7,8 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
+from demodirector_contracts.evidence import StoryboardEvidence
+from demodirector_contracts.jobs import GenerationJob
 from demodirector_contracts.models import (
     AuthError,
     BriefCoverageReport,
@@ -36,8 +38,13 @@ from demodirector_contracts.models import (
     VideoExport,
     ZoomClip,
 )
+from demodirector_contracts.quality import OptimizationRun, VideoReview
 
 CONTRACT_MODELS: tuple[type[BaseModel], ...] = (
+    GenerationJob,
+    StoryboardEvidence,
+    VideoReview,
+    OptimizationRun,
     Project,
     UserIdentity,
     UserProfile,

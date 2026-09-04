@@ -1,6 +1,6 @@
 "use client";
 
-import { demoGenerationResultSchema, projectSchema } from "@demodirector/contracts";
+import { demoGenerationResultSchema, generationJobSchema, projectSchema } from "@demodirector/contracts";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -115,11 +115,16 @@ export default function Home() {
       const body: unknown = await response.json();
       const project = projectSchema.safeParse(body);
       if (!response.ok || !project.success) throw new Error("Project could not be saved");
-      setMessage("Building your first cut — inspecting, recording, narrating, and rendering. Keep this tab open.");
+      setMessage("Starting a saved generation job. You may close this tab once it is queued.");
       const generationResponse = await fetch(`/api/projects/${project.data.id}/generate`, {
         method: "POST",
       });
       const generationBody: unknown = await generationResponse.json();
+      const job = generationJobSchema.safeParse(generationBody);
+      if (generationResponse.ok && job.success) {
+        router.replace(`/projects/${project.data.id}/generation`);
+        return;
+      }
       const generation = demoGenerationResultSchema.safeParse(generationBody);
       if (!generationResponse.ok || !generation.success) {
         throw new Error("Demo generation did not complete");

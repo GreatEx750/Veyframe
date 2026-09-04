@@ -39,7 +39,12 @@ def create_export(
     if projects.get(project_id) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     try:
-        return exports.create(project_id, payload.timeline, payload.quality)
+        result = exports.create(project_id, payload.timeline, payload.quality)
+        if result.status == "succeeded" and exports.records is not None:
+            key = f"preferred-{project_id}"
+            current = exports.records.get(key)
+            exports.records.put(key, current[0] if current else 0, {"export_id": result.id})
+        return result
     except ExportError as error:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -91,3 +96,14 @@ def download_export(
     except ExportError as error:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
     return FileResponse(path, media_type="video/mp4", filename=path.name)
+
+
+@router.get("/projects/{project_id}/exports/{export_id}/video")
+def play_export(project_id: str, export_id: str, exports: Exports) -> FileResponse:
+    item = exports.repository.get(project_id, export_id)
+    if item is None or item.file_path is None or item.export.status != "succeeded":
+        raise HTTPException(404, "Export not found")
+    path = exports.artifact_store.resolve(item.file_path)
+    if path is None:
+        raise HTTPException(404, "Export media unavailable")
+    return FileResponse(path, media_type="video/mp4", content_disposition_type="inline")

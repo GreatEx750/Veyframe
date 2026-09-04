@@ -19,6 +19,7 @@ import {
   type ZoomClip,
 } from "@demodirector/contracts";
 import Link from "next/link";
+import { VideoQuality } from "./video-quality";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import {
@@ -34,12 +35,13 @@ type TimelineEditorProps = {
   initialTimeline?: Timeline;
 };
 
-type EditorMode = "setup" | "sources" | "layout" | "cut" | "zoom" | "overlay" | "captions" | "audio" | "adjust";
+type EditorMode = "setup" | "sources" | "quality" | "layout" | "cut" | "zoom" | "overlay" | "captions" | "audio" | "adjust";
 type PresentationTemplate = Timeline["presentation"]["template"];
 
 const editorModes: Array<{ id: EditorMode; label: string }> = [
   { id: "setup", label: "Setup" },
   { id: "sources", label: "Sources" },
+  { id: "quality", label: "Quality" },
   { id: "layout", label: "Layout" },
   { id: "cut", label: "Cut" },
   { id: "zoom", label: "Zoom" },
@@ -345,6 +347,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
           <h1>Timeline not ready</h1>
           <p><b>{project?.name ?? "This project"}</b> doesn’t have a generated timeline yet. Once its recording workflow creates one, the saved scenes, captions, audio, and camera moves will appear here.</p>
           <Link href="/projects">Return to Projects</Link>
+          <Link href={`/projects/${projectId}/generation`}>Open saved generation progress</Link>
         </section>
       </main>
     );
@@ -696,6 +699,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
       <aside className="editor-right-sidebar">
         <section className="clip-inspector editor-mode-panel">
+          {activeMode === "quality" && <VideoQuality key={videoExport?.id} projectId={projectId} exportId={isJudgeDemoProject(projectId) ? undefined : videoExport?.id} onSeek={(ms) => { if (videoRef.current) videoRef.current.currentTime = ms / 1000; }} onTimelineChanged={() => { setExportStale(true); window.localStorage.setItem(exportStaleKey(projectId), "true"); setStatus("Repair saved · reload to inspect the candidate timeline before exporting"); }} />}
           {activeMode === "setup" && <>
             <div className="inspector-heading"><h2>Project setup</h2><p>Recording details</p></div>
             <dl className="editor-detail-list">
@@ -919,6 +923,7 @@ function TemplateButton({
 
 function EditorModeIcon({ mode }: { mode: EditorMode }) {
   const paths: Record<EditorMode, React.ReactNode> = {
+    quality: <><path d="m5 12 4 4L19 6" /><rect x="3" y="3" width="18" height="18" rx="2" /></>,
     setup: <><rect height="14" rx="2" width="16" x="4" y="5" /><path d="M8 3v4M16 3v4M8 17v4M16 17v4" /></>,
     sources: <><path d="M7 3h8l4 4v14H7z" /><path d="M15 3v5h5M10 12h6M10 16h6" /><path d="M4 7v12" /></>,
     layout: <><rect height="16" rx="2" width="18" x="3" y="4" /><path d="M9 4v16M9 10h12" /></>,

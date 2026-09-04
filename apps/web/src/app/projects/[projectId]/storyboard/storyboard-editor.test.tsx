@@ -37,6 +37,7 @@ function scene(id: string, order: number, title: string, narration: string, dura
 
 function savingFetch() {
   return vi.fn(async (_url: string, init?: RequestInit) => {
+    if (init?.method !== "PUT") return { ok: false, json: async () => ({ detail: "No evidence fixture" }) };
     const payload = JSON.parse(String(init?.body)) as { scenes: typeof storyboard.scenes };
     return {
       ok: true,
@@ -64,7 +65,7 @@ describe("StoryboardEditor", () => {
     fireEvent.click(screen.getByRole("button", { name: "Move Dashboard down" }));
 
     await screen.findByText("Saved version 2");
-    const request = fetchMock.mock.calls[0][1] as RequestInit;
+    const request = fetchMock.mock.calls.find((call) => call[1]?.method === "PUT")![1] as RequestInit;
     const payload = JSON.parse(String(request.body)) as { expected_version: number; scenes: Array<{ id: string }> };
     expect(payload.expected_version).toBe(1);
     expect(payload.scenes.map((item) => item.id)).toEqual(["scene-2", "scene-1"]);
@@ -80,7 +81,7 @@ describe("StoryboardEditor", () => {
     fireEvent.change(narration, { target: { value: "Updated narration" } });
     fireEvent.blur(narration);
     await screen.findByText("Saved version 2");
-    const editPayload = JSON.parse(String(fetchMock.mock.calls[0][1]?.body)) as { scenes: Array<{ narration: string }> };
+    const editPayload = JSON.parse(String(fetchMock.mock.calls.find((call) => call[1]?.method === "PUT")![1]?.body)) as { scenes: Array<{ narration: string }> };
     expect(editPayload.scenes[0].narration).toBe("Updated narration");
 
     fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
