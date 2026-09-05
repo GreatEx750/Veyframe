@@ -14,7 +14,7 @@ from typing import Any
 from demodirector_contracts import Scene, SceneCaptureResult
 from playwright.sync_api import sync_playwright
 
-from demodirector_worker.capture import PlaywrightCaptureWorker, _locator
+from demodirector_worker.capture import CaptureSettings, PlaywrightCaptureWorker, _locator
 
 PACK_ROOT = Path(__file__).parent / "templates" / "presentation-story-v2"
 
@@ -73,6 +73,25 @@ def run_ffmpeg(arguments: list[str], cwd: Path) -> None:
         raise RuntimeError(result.stderr[-4000:])
 
 
+def capture_settings_for_template(template: dict[str, Any]) -> CaptureSettings:
+    """Use the authored product window as the browser and recording pixel grid."""
+    if not template.get("requires_product"):
+        raise ValueError("Only product templates have a recording viewport")
+    aperture = template.get("product_aperture", {})
+    for position, dimension, limit in [("x", "width", 2560), ("y", "height", 1440)]:
+        offset, size = aperture.get(position), aperture.get(dimension)
+        if (
+            type(offset) is not int
+            or type(size) is not int
+            or offset < 0
+            or size < 2
+            or size % 2
+            or offset + size > limit
+        ):
+            raise ValueError("Invalid authored product aperture for browser recording")
+    return CaptureSettings(viewport_width=aperture["width"], viewport_height=aperture["height"])
+
+
 def media_probe(path: Path) -> dict[str, Any]:
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-show_streams", "-show_format", "-of", "json", str(path)],
@@ -90,10 +109,17 @@ class AuthoredSlideRenderer:
         self.output.mkdir(parents=True, exist_ok=True)
         self.pack = load_pack()
 
-    def capture(self, scene: Scene, duration_ms: int) -> tuple[Path, SceneCaptureResult]:
+    def capture(
+        self, scene: Scene, duration_ms: int, template: dict[str, Any]
+    ) -> tuple[Path, SceneCaptureResult]:
         """Record one scene, moving through observed targets with the standard executor."""
-        worker = PlaywrightCaptureWorker(self.output / "capture")
-        destination = self.output / "capture" / scene.id
+        settings = capture_settings_for_template(template)
+        worker = PlaywrightCaptureWorker(self.output / "capture", settings)
+        destination = (
+            self.output
+            / "capture"
+            / (f"{scene.id}-{settings.viewport_width}x{settings.viewport_height}")
+        )
         destination.mkdir(parents=True, exist_ok=True)
         events = []
         logs = []
@@ -117,7 +143,7 @@ class AuthoredSlideRenderer:
                 page.wait_for_timeout(400)
                 offset_ms = round((time.monotonic() - started) * 1000)
                 visible_start = time.monotonic()
-                page.mouse.move(1280, 760)
+                page.mouse.move(settings.viewport_width / 2, settings.viewport_height / 2)
                 count = len(scene.capture_plan.actions)
                 for index, action in enumerate(scene.capture_plan.actions):
                     target_time = 1 + index * ((duration_ms / 1000 - 4) / max(1, count - 1))
@@ -183,6 +209,12 @@ class AuthoredSlideRenderer:
             self.output,
         )
         metadata = media_probe(trimmed)
+        stream = next(s for s in metadata["streams"] if s["codec_type"] == "video")
+        if (stream["width"], stream["height"]) != (
+            settings.viewport_width,
+            settings.viewport_height,
+        ):
+            raise ValueError("Recording dimensions do not match the authored product aperture")
         measured = float(metadata["format"]["duration"])
         if measured < duration_ms / 1000 - 0.04:
             raise ValueError("The captured recording is shorter than its slide")
@@ -335,13 +367,12 @@ class AuthoredSlideRenderer:
             ]
             a = template["product_aperture"]
             w, h, x, y = (a[k] for k in ["width", "height", "x", "y"])
+            capture_settings_for_template(template)
+            source = next(s for s in media_probe(product)["streams"] if s["codec_type"] == "video")
+            if (source["width"], source["height"]) != (w, h):
+                raise ValueError("Re-record this slide at its authored product aperture dimensions")
             filters += [
-                "[5:v]split=2[pfill][pfull]",
-                f"[pfill]scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h},"
-                "boxblur=24:2[fill]",
-                f"[pfull]scale={w}:{h}:force_original_aspect_ratio=decrease[full]",
-                "[fill][full]overlay=(W-w)/2:(H-h)/2:shortest=1[contained]",
-                f"[contained]pad=2560:1440:{x}:{y}:color=black[placed]",
+                f"[5:v]setsar=1,pad=2560:1440:{x}:{y}:color=black[placed]",
                 "[placed][6:v]alphamerge[masked]",
                 "[0:v][masked]overlay=0:0:shortest=1[base]",
             ]

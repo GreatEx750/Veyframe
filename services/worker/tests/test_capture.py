@@ -153,6 +153,25 @@ def test_default_capture_settings_match_qhd_monitor_resolution() -> None:
     assert (settings.viewport_width, settings.viewport_height) == (2560, 1440)
 
 
+def test_authored_slide_records_native_window_and_matching_clicks(tmp_path: Path) -> None:
+    from demodirector_worker.presentation_assets import AuthoredSlideRenderer, media_probe
+
+    site = tmp_path / "site"
+    write_fixture(site)
+    renderer = AuthoredSlideRenderer(tmp_path / "artifacts")
+    template = renderer.pack["templates"][4]
+    with fixture_server(site) as url:
+        path, result = renderer.capture(scene_for(url), 5000, template)
+    stream = next(s for s in media_probe(path)["streams"] if s["codec_type"] == "video")
+    assert (stream["width"], stream["height"]) == (2304, 816)
+    assert result.interaction_events
+    for event in result.interaction_events:
+        assert event.viewport is not None
+        assert (event.viewport.width, event.viewport.height) == (2304, 816)
+        assert event.x is not None and 0 <= event.x < 2304
+        assert event.y is not None and 0 <= event.y < 816
+
+
 def test_fixture_scene_records_webm_and_safe_action_results(tmp_path: Path) -> None:
     site = tmp_path / "site"
     write_fixture(site)

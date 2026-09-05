@@ -53,6 +53,7 @@ from demodirector_worker.narration import (  # noqa: E402
 )
 from demodirector_worker.presentation_assets import (  # noqa: E402
     AuthoredSlideRenderer,
+    capture_settings_for_template,
     media_probe,
     run_ffmpeg,
 )
@@ -314,18 +315,39 @@ def main() -> None:
         product = None
         if template["requires_product"]:
             capture_path = OUTPUT / f"slide-{number:02d}-capture.json"
+            settings = capture_settings_for_template(template)
             if capture_path.exists():
                 capture = SceneCaptureResult.model_validate_json(capture_path.read_text("utf-8"))
                 product = Path(str(capture.raw_clip_path))
-            else:
+                if product.is_file():
+                    stream = next(
+                        s for s in media_probe(product)["streams"] if s["codec_type"] == "video"
+                    )
+                    if (stream["width"], stream["height"]) != (
+                        settings.viewport_width,
+                        settings.viewport_height,
+                    ):
+                        product = None
+                else:
+                    product = None
+            if product is None:
                 print(f"Slide {number}: record real Wikipedia actions", flush=True)
-                product, capture = renderer.capture(scene, duration_ms)
+                product, capture = renderer.capture(scene, duration_ms, template)
                 capture_path.write_text(capture.model_dump_json(indent=2), "utf-8")
         composed = OUTPUT / f"slide-{number:02d}" / "composed.mp4"
         composition_receipt = OUTPUT / f"slide-{number:02d}-composition.json"
         composition_key = hashlib.sha256(
             json.dumps(
-                {"copy": copy, "voice": voice_key, "recipe": "authored-pilot-v2"}, sort_keys=True
+                {
+                    "copy": copy,
+                    "voice": voice_key,
+                    "recipe": "authored-pilot-v2-native-aperture",
+                    "product_hash": hashlib.sha256(product.read_bytes()).hexdigest()
+                    if product
+                    else None,
+                    "aperture": template.get("product_aperture"),
+                },
+                sort_keys=True,
             ).encode()
         ).hexdigest()
         changed = (
