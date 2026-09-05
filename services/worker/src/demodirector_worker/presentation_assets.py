@@ -177,7 +177,12 @@ class AuthoredSlideRenderer:
                     logs.append(action.description)
                 for assertion in scene.capture_plan.success_assertions:
                     worker._execute(page, assertion)
-                remaining = duration_ms / 1000 + 0.7 - (time.monotonic() - visible_start)
+                # Keep the entire action sequence, including its final visible result.
+                # Slow navigation must not silently trim clicks out of a fixed-length slide.
+                capture_seconds = max(
+                    duration_ms / 1000, time.monotonic() - visible_start + 1.0
+                )
+                remaining = capture_seconds + 0.7 - (time.monotonic() - visible_start)
                 if remaining > 0:
                     page.wait_for_timeout(remaining * 1000)
                 page.screenshot(path=str(destination / "last-frame.png"))
@@ -191,6 +196,8 @@ class AuthoredSlideRenderer:
                 raise ValueError("Capture produced no video")
             raw = Path(video.path())
         trimmed = destination / "recording.mp4"
+        time_scale = duration_ms / 1000 / capture_seconds
+        logs.append(f"Fit complete recording: {capture_seconds:.3f}s at {1 / time_scale:.3f}x")
         run_ffmpeg(
             [
                 "-ss",
@@ -201,7 +208,7 @@ class AuthoredSlideRenderer:
                 str(duration_ms / 1000),
                 "-an",
                 "-vf",
-                "fps=30",
+                f"setpts={time_scale:.9f}*(PTS-STARTPTS),fps=30",
                 "-c:v",
                 "libx264",
                 "-preset",
@@ -230,7 +237,10 @@ class AuthoredSlideRenderer:
             retryable=False,
             duration_ms=duration_ms,
             raw_clip_path=str(trimmed),
-            interaction_events=[event for event in events if event.timestamp_ms < duration_ms],
+            interaction_events=[
+                event.model_copy(update={"timestamp_ms": round(event.timestamp_ms * time_scale)})
+                for event in events
+            ],
             logs=logs,
         )
         if not any(event.event_type == "click" for event in capture.interaction_events):

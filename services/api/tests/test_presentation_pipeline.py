@@ -5,6 +5,12 @@ from typing import Any
 import pytest
 from demodirector_api import presentation_pipeline as pipeline
 from demodirector_api.activity_cards import ActivityPanel
+from demodirector_api.exports import (
+    CloudExportArtifactStore,
+    CloudTimelineMediaStore,
+    ExportService,
+    SQLiteExportRepository,
+)
 from demodirector_api.presentation_pilot import SlideScript
 from demodirector_api.repositories import (
     SQLiteProjectRepository,
@@ -13,10 +19,12 @@ from demodirector_api.repositories import (
 )
 from demodirector_contracts import ResearchSource, SceneCaptureResult
 from demodirector_worker.presentation_assets import load_pack
+from test_exports import MemoryBucket
 from test_generation import FakeCaptureWorker, build_service
 
 
 @pytest.mark.parametrize("bad_audio", [False, True])
+@pytest.mark.parametrize("cloud", [False, True])
 @pytest.mark.parametrize(
     "preview,expected_count,expected_ms", [(True, 5, 61000), (False, 9, 120000)]
 )
@@ -27,8 +35,9 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
     expected_count: int,
     expected_ms: int,
     bad_audio: bool,
+    cloud: bool,
 ) -> None:
-    _, projects, _, _ = build_service(tmp_path, FakeCaptureWorker())
+    generation, projects, _, _ = build_service(tmp_path, FakeCaptureWorker())
     original = projects.get("project-one-click")
     assert original
     project = original.model_copy(
@@ -195,17 +204,40 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
         "peak": .8, "duration": expected_ms / 1000,
     })
     monkeypatch.setattr(pipeline, "FFmpegRenderer", lambda *_: SimpleNamespace(render=render))
+    if cloud:
+        generation.projects = SQLiteProjectRepository(db)
+        generation.research_sources = SQLiteResearchSourceRepository(db)
+        generation.timelines = SQLiteTimelineRepository(db)
+        bucket = MemoryBucket()
+        generation.timeline_media_store = CloudTimelineMediaStore(
+            bucket, tmp_path / "artifacts", tmp_path / "cache"
+        )
+        generation.exports = ExportService(
+            SimpleNamespace(render=render), SQLiteExportRepository(db),
+            tmp_path / "artifacts" / "exports",
+            artifact_store=CloudExportArtifactStore(bucket, tmp_path / "export-cache"),
+        )
     progress: list[str] = []
+    if cloud:
+        partial = pipeline.run_presentation(
+            project, tmp_path, output, db, progress.append, preview=preview,
+            generation=generation, slide_limit=1,
+        )
+        assert partial == {"completed_slides": 1}
+        assert calls == [("direct", 0), ("compose", 0)]
+        assert generation.timelines.current(project.id) is None
     if bad_audio:
         with pytest.raises(ValueError, match="excessive gap"):
             pipeline.run_presentation(
-                project, tmp_path, output, db, progress.append, preview=preview
+                project, tmp_path, output, db, progress.append, preview=preview,
+                generation=generation if cloud else None,
             )
         assert SQLiteTimelineRepository(db).current(project.id) is None
         assert not (output / "result.json").exists()
         return
     report = pipeline.run_presentation(
-        project, tmp_path, output, db, progress.append, preview=preview
+        project, tmp_path, output, db, progress.append, preview=preview,
+        generation=generation if cloud else None,
     )
     assert report["export"]["duration_ms"] == expected_ms  # type: ignore[index]
     assert len([c for c in calls if c[0] == "capture"]) == expected_count - (
@@ -219,3 +251,9 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
     published = SQLiteProjectRepository(db).get(project.id)
     assert published and published.status == "published"
     assert f"Finished: {expected_count} slides, {expected_ms // 1000} seconds" in progress
+    if cloud:
+        stored = SQLiteExportRepository(db).latest_successful(project.id)
+        assert stored and stored.file_path and stored.file_path.startswith("gs://")
+        history = generation.timelines.current(project.id)
+        assert history and all(c.source_uri.startswith("gs://")
+                               for c in history.current.timeline.scene_clips)

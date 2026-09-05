@@ -26,18 +26,27 @@ the completed slides are assembled and their final media duration is checked bef
 Parallel Search is called directly. When it returns no results, inspected website evidence may
 ground the script instead; the activity log reports the separate source counts truthfully.
 
-Authored presentations currently run in the local API's background executor, not Cloud Tasks.
-Keep the API running. Restarted/interrupted work is shown as failed and requires explicit Retry;
-completed slides are reused. There are three generation attempts, shared account admission with
+Locally, authored presentations run in the API's background executor; keep the API running.
+On the configured Firestore deployment, the same authored pipeline runs through authenticated
+Cloud Tasks, one completed slide per request followed by a separate assembly request. A private
+Cloud Storage checkpoint preserves completed scripts, narration, recordings, and compositions.
+Checksummed, project-confined files are restored before continuation on another instance.
+Duplicate task deliveries are rejected by a compare-and-swap claim and attempt/step identity.
+Expired worker leases require explicit retry; unsaved paid work is never automatically repeated.
+Restarted/interrupted local work also requires explicit Retry; completed slides are reused.
+There are three generation attempts, shared account admission with
 Product Demo, and no automatic whole-job paid retries. `/generation/presentation` is the full
 presentation's status/retry endpoint; `/generation/presentation-preview` remains the short preview.
 Completed full presentations with attempts remaining also expose **Rebuild from saved slides**.
 This explicit action consumes another generation attempt, keeps existing exports, and reuses valid
 saved work. Invalidated copy can require new Google narration calls. Rebuilding is rejected once
 the saved timeline has been edited; create a new project instead of overwriting those edits.
-Cloud requests fail clearly rather than silently using a different presentation pipeline.
+Cloud requests require the same task queue and invoker configuration as Product Demo. Final
+exports and timeline media use the existing private Cloud Storage/Firestore repositories, not
+ephemeral SQLite. Each task has a 900-second delivery deadline and a 960-second recovery lease.
 Authenticated recording only receives the current session for exact configured
-`DEMO_CAPTURE_AUTH_ORIGINS`; the presentation executor keeps that token in memory, not slide files.
+`DEMO_CAPTURE_AUTH_ORIGINS`; local execution keeps it in memory and cloud execution encrypts it
+with `DEMO_JOB_TOKEN_KEY` in private job metadata. It is never saved into the slide-file checkpoint.
 
 ## Job visibility and admission
 
@@ -60,7 +69,9 @@ a provider call is making progress. Historical generation times have not yet cal
 
 Generation uses Cloud Tasks with the existing API image, Firestore, and private Cloud Storage. Set `DEMO_GENERATION_TASK_URL` to the API's HTTPS origin, `DEMO_TASK_QUEUE`, `DEMO_TASK_LOCATION`, and `DEMO_TASK_INVOKER_SERVICE_ACCOUNT`. The API runtime needs task-enqueue permission, and the task identity needs invocation permission on the API. The task endpoint also verifies Google's OIDC signature, audience, verified email, and exact service account; user sessions cannot invoke it.
 
-Use a 900-second API request timeout for stage delivery. Keep the services at minimum zero and maximum one instance. No Cloud Run configuration is changed by the local implementation. Configure the queue's dispatch concurrency to one for the current low-cost deployment. The API must have sufficient CPU/memory for the same browser/render work it previously performed synchronously.
+Use a 900-second API request timeout for stage delivery. Keep the services at minimum zero and maximum one instance. Configure the queue's dispatch concurrency to one for the current low-cost deployment. The QHD presentation worker uses the API service's two CPUs and 8 GiB memory allowance; the previous 4 GiB allowance was exhausted during a real slide render. Deployment updates preserve this runtime configuration. Monitor peak memory and generation latency before increasing workload concurrency.
+
+Fixed-duration presentation captures retain the complete observed action sequence and its final result. If navigation exceeds the slide budget, the recording and its interaction timestamps are fitted together to the authored duration. Older cached recordings with missing planned interactions are re-recorded on an explicitly requested rebuild or retry. Product Demo's continuous recording behavior is unchanged.
 
 For authenticated self-capture only, inject `DEMO_JOB_TOKEN_KEY` as a Fernet key from Secret Manager and retain it across revisions. The session is encrypted in the private job input record, never returned in status responses or task payloads. Public website generation does not store a session. Locally a key is created under the ignored artifact directory with restrictive creation permissions. Expired or revoked sessions still cannot authenticate to the captured site.
 

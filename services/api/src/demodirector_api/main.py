@@ -417,6 +417,19 @@ def create_app(
                     ),
                 )
         if dispatcher is not None:
+            if firestore_client is not None:
+                from demodirector_api.cloud_presentation import (
+                    CloudPresentationCache,
+                    CloudPresentationDispatcher,
+                    CloudPresentationJobs,
+                )
+
+                assert isinstance(dispatcher, CloudGenerationDispatcher)
+                application.state.presentation_jobs = CloudPresentationJobs(
+                    generation, records, Path.cwd(), database_path, artifact_root,
+                    CloudPresentationDispatcher(dispatcher.client, dispatcher.settings),
+                    CloudPresentationCache(cloud_bucket),
+                )
             vault = CaptureTokenVault(artifact_root, firestore_client is not None)
             application.state.generation_jobs = GenerationJobs(
                 records,

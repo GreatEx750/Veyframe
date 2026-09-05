@@ -58,6 +58,25 @@ Agent Engine is not required for the current implementation: the ADK coordinator
 inside the API and has no durable agent session of its own. If durable ADK sessions are introduced,
 deploy that coordinator to Agent Engine rather than adding state to Cloud Run.
 
+### Full authored Presentation Demo
+
+For the QHD nine-slide pipeline, update the API memory allowance to 8 GiB before generation;
+the initial 4 GiB configuration above was exhausted in a real cloud render. Retain two CPUs,
+minimum zero/maximum one instance, concurrency two, and the 900-second request timeout.
+Each slide is a separate authenticated Cloud Tasks request; assembly is the final request.
+Set `DEMO_GENERATION_TASK_URL` to the API origin and grant the existing task identity invocation
+access to that API. Keep `DEMO_JOB_TOKEN_KEY` in Secret Manager for scoped authenticated captures.
+These generation settings extend the bootstrap configuration above; image-only GitHub deployments
+preserve them. See `generation-jobs.md` for the complete checkpoint and retry semantics.
+
+Slide scripts, narration, recordings and compositions are content-addressed private Storage
+objects with a committed Firestore manifest. Final projects, timelines and exports also use
+Firestore and Storage. A new API instance can resume saved work without the previous filesystem.
+Recipe records use named maps, not directly nested arrays, to satisfy
+[Firestore's value constraints](https://docs.cloud.google.com/firestore/docs/reference/rest/v1/Value).
+Cloud Run counts writable filesystem data toward instance memory as well as process allocations;
+monitor both during [memory sizing](https://docs.cloud.google.com/run/docs/configuring/services/memory-limits).
+
 ## Smoke verification
 
 Check `/health`, complete signup/verification/login/logout with a disposable account, enter the

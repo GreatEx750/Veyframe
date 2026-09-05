@@ -135,8 +135,13 @@ class PresentationJobs:
             }
             token = session_token if f"{origin.scheme}://{origin.netloc}" in allowed else None
             # Kept only in worker memory; retry supplies the current authenticated session.
-            self.pool.submit(self._run, project, preview, token)
+            self._dispatch(project, preview, token, job)
             return job
+
+    def _dispatch(
+        self, project: Project, preview: bool, token: str | None, job: GenerationJob
+    ) -> None:
+        self.pool.submit(self._run, project, preview, token)
 
     def _recipes(
         self,

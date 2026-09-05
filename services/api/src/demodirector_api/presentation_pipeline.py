@@ -48,7 +48,8 @@ from demodirector_worker.renderer import FFmpegRenderer
 from pydantic import HttpUrl
 
 from demodirector_api.activity_cards import ActivityCardDirector
-from demodirector_api.exports import SQLiteExportRepository, StoredExport
+from demodirector_api.exports import ExportService, SQLiteExportRepository, StoredExport
+from demodirector_api.generation import DemoGenerationService
 from demodirector_api.parallel_search import (
     ParallelSearchAdapter,
     ParallelSearchSettings,
@@ -170,10 +171,18 @@ def run_presentation(
     *,
     preview: bool = True,
     session_token: str | None = None,
+    generation: DemoGenerationService | None = None,
+    slide_limit: int | None = None,
 ) -> dict[str, object]:
     output.mkdir(parents=True, exist_ok=True)
     renderer = AuthoredSlideRenderer(output)
-    projects = SQLiteProjectRepository(db)
+    export_service = generation.exports if generation else None
+    if export_service is not None and not isinstance(export_service, ExportService):
+        raise ValueError("Presentation requires the configured export storage service")
+    projects = generation.projects if generation else SQLiteProjectRepository(db)
+    sources_repository = (
+        generation.research_sources if generation else SQLiteResearchSourceRepository(db)
+    )
     recipes = recipes or RECIPES
     research_path = output / "research.json"
     if not research_path.exists():
@@ -192,7 +201,7 @@ def run_presentation(
                 domain=urlsplit(str(project.website_url)).hostname or "",
             ),
         )
-        SQLiteResearchSourceRepository(db).replace_partner_sources(project.id, sources)
+        sources_repository.replace_partner_sources(project.id, sources)
         research_path.write_text(
             json.dumps([s.model_dump(mode="json") for s in sources], indent=2), "utf-8"
         )
@@ -201,7 +210,7 @@ def run_presentation(
     ]
     inspected = [
         s
-        for s in SQLiteResearchSourceRepository(db).list_for_project(project.id)
+        for s in sources_repository.list_for_project(project.id)
         if s.source_type == "website"
     ]
     research = [s.model_dump(mode="json") for s in [*partner_sources, *inspected]]
@@ -393,6 +402,13 @@ def run_presentation(
                         product = None
                 else:
                     product = None
+                expected_interactions = sum(
+                    action.type in {"click", "fill", "select"}
+                    for action in scene.capture_plan.actions
+                )
+                if len(capture.interaction_events) != expected_interactions:
+                    # Older captures could trim late actions when navigation was slow.
+                    product = None
             if product is None:
                 progress(f"Slide {number}: record website actions")
                 product, capture = renderer.capture(
@@ -492,6 +508,8 @@ def run_presentation(
             f"Slide {number}/{slide_count}: completed and verified 2560 × 1440, "
             f"narration audio, {duration_ms / 1000:g} seconds"
         )
+        if slide_limit is not None and number >= slide_limit:
+            return {"completed_slides": number}
     # The existing product renderer joins the already authored slide clips without re-framing.
     final_audio = output / "narration" / "complete.wav"
     concat = output / "narration" / "concat.txt"
@@ -529,7 +547,9 @@ def run_presentation(
         ],
     )
     progress(f"Assemble: DemoDirector FFmpeg renderer, {slide_count} completed slides")
-    exports = root / "artifacts" / "exports"
+    exports = (
+        export_service.artifact_directory if export_service else root / "artifacts" / "exports"
+    )
     output_name = f"presentation-{slide_count}-slides-{project.id}-{uuid4().hex[:8]}.mp4"
     render_result = FFmpegRenderer(root / "artifacts", exports).render(
         timeline, RenderConfig(width=2560, height=1440, output_filename=output_name)
@@ -556,7 +576,9 @@ def run_presentation(
     shutil.copy2(final, output / ("first-five-slides.mp4" if preview else "presentation-120s.mp4"))
     timeline_path = output / "timeline.json"
     timeline_path.write_text(timeline.model_dump_json(indent=2), "utf-8")
-    timelines = SQLiteTimelineRepository(db)
+    timelines = generation.timelines if generation else SQLiteTimelineRepository(db)
+    if generation:
+        timeline = generation.timeline_media_store.persist(timeline)
     if timelines.current(project.id) is None:
         timelines.initialize(timeline)
     export_id = str(uuid4())
@@ -575,7 +597,11 @@ def run_presentation(
         retryable=False,
         created_at=datetime.now(UTC),
     )
-    SQLiteExportRepository(db).save(StoredExport(export, str(final), None))
+    if export_service:
+        reference = export_service.artifact_store.persist(final, project.id, export_id)
+        export_service.repository.save(StoredExport(export, reference, None))
+    else:
+        SQLiteExportRepository(db).save(StoredExport(export, str(final), None))
     projects.update(
         project.model_copy(
             update={
