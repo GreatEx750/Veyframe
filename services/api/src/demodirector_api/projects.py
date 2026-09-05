@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import uuid4
 
 from demodirector_contracts import Project
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, model_validator
 
 from demodirector_api.auth_routes import CurrentIdentity
 from demodirector_api.repositories import ProjectRepository
@@ -25,6 +26,14 @@ class ProjectCreate(BaseModel):
     requested_duration_seconds: int = Field(gt=0, le=600)
     cta: NonEmptyString
     brand_kit_id: NonEmptyString | None = None
+    demo_mode: Literal["product_demo", "presentation_demo"] = "product_demo"
+    zoom_enabled: bool = True
+
+    @model_validator(mode="after")
+    def presentation_demo_uses_mvp_duration(self) -> ProjectCreate:
+        if self.demo_mode == "presentation_demo" and self.requested_duration_seconds != 120:
+            raise ValueError("Presentation Demo must be exactly 120 seconds for the MVP")
+        return self
 
 
 class ProjectUpdate(BaseModel):
@@ -38,6 +47,8 @@ class ProjectUpdate(BaseModel):
     requested_duration_seconds: int | None = Field(default=None, gt=0, le=600)
     cta: NonEmptyString | None = None
     brand_kit_id: NonEmptyString | None = None
+    demo_mode: Literal["product_demo", "presentation_demo"] | None = None
+    zoom_enabled: bool | None = None
 
     @model_validator(mode="after")
     def contains_an_update(self) -> ProjectUpdate:
@@ -107,7 +118,18 @@ def update_project(
         **payload.model_dump(exclude_unset=True),
         "updated_at": datetime.now(UTC),
     }
-    updated = Project.model_validate(updated_values)
+    try:
+        updated = Project.model_validate(updated_values)
+    except ValidationError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=jsonable_encoder(
+                [
+                    {key: value for key, value in issue.items() if key != "ctx"}
+                    for issue in error.errors(include_url=False)
+                ]
+            ),
+        ) from error
     if repository.update(updated) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     return updated

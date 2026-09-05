@@ -7,7 +7,7 @@ from demodirector_api.google_ai import FakeGoogleAIService
 from demodirector_api.main import create_app
 from demodirector_api.repositories import SQLiteTimelineRepository
 from demodirector_api.timeline_edits import TimelineEditError, TimelineEditService
-from demodirector_contracts import EditOperation, Timeline
+from demodirector_contracts import EditOperation, Timeline, VideoPresentationConfig
 from fastapi.testclient import TestClient
 
 
@@ -56,6 +56,46 @@ def timeline() -> Timeline:
                 }
             ],
             "audio_clips": [],
+        }
+    )
+
+
+def presentation_timeline() -> Timeline:
+    return Timeline.model_validate(
+        {
+            "project_id": "project-presentation",
+            "duration_ms": 120_000,
+            "demo_mode": "presentation_demo",
+            "presentation_pack_id": "presentation-story@1",
+            "scene_clips": [
+                {
+                    "id": "presentation-capture",
+                    "scene_id": "presentation-capture",
+                    "start_ms": 0,
+                    "end_ms": 120_000,
+                    "source_uri": "presentation.webm",
+                }
+            ],
+            "zoom_clips": [
+                {
+                    "id": "presentation-zoom",
+                    "start_ms": 8_000,
+                    "end_ms": 10_000,
+                    "scale": 1.5,
+                    "target_rect": {"x": 100, "y": 100, "width": 300, "height": 180},
+                    "easing": "ease_in_out",
+                    "source": "auto",
+                }
+            ],
+            "cursor_events": [
+                {
+                    "timestamp_ms": 8_000,
+                    "event_type": "click",
+                    "x": 640,
+                    "y": 360,
+                    "viewport": {"width": 1280, "height": 720},
+                }
+            ],
         }
     )
 
@@ -142,6 +182,47 @@ def test_targeted_edit_keeps_unrelated_tracks_identical(tmp_path: Path) -> None:
     assert updated.zoom_clips[0].focus_y == 300
 
 
+def test_left_edge_trim_advances_source_without_breaking_adjacent_timing(
+    tmp_path: Path,
+) -> None:
+    repository = SQLiteTimelineRepository(tmp_path / "timeline.db")
+    service = TimelineEditService(repository)
+    original = timeline().model_copy(
+        update={
+            "scene_clips": [
+                timeline().scene_clips[0].model_copy(
+                    update={"source_uri": "continuous.webm"}
+                ),
+                timeline().scene_clips[1].model_copy(
+                    update={
+                        "source_uri": "continuous.webm",
+                        "source_start_ms": 4_000,
+                    }
+                ),
+            ]
+        }
+    )
+
+    applied = service.apply(
+        original,
+        0,
+        [
+            operation(
+                "trim_scene",
+                "scene-workflow",
+                {"start_ms": 5_000, "end_ms": 10_000},
+            )
+        ],
+        "Trim the workflow's first second",
+    )
+
+    opening, workflow = applied.current.timeline.scene_clips
+    assert (opening.start_ms, opening.end_ms, opening.source_start_ms) == (0, 4_000, 0)
+    assert (workflow.start_ms, workflow.end_ms) == (4_000, 9_000)
+    assert workflow.source_start_ms == 5_000
+    assert applied.current.timeline.duration_ms == 9_000
+
+
 def test_presentation_template_is_saved_as_an_undoable_typed_edit(tmp_path: Path) -> None:
     repository = SQLiteTimelineRepository(tmp_path / "timeline.db")
     service = TimelineEditService(repository)
@@ -162,6 +243,83 @@ def test_presentation_template_is_saved_as_an_undoable_typed_edit(tmp_path: Path
 
     assert applied.current.timeline.presentation.template == "spotlight"
     assert undone.current.timeline.presentation.template == "edge_to_edge"
+
+
+def test_recording_frame_edit_preserves_disabled_zoom_and_saved_zoom_clips(
+    tmp_path: Path,
+) -> None:
+    repository = SQLiteTimelineRepository(tmp_path / "timeline.db")
+    service = TimelineEditService(repository)
+    original = timeline().model_copy(
+        update={
+            "presentation": VideoPresentationConfig(
+                template="edge_to_edge",
+                zoom_enabled=False,
+            )
+        }
+    )
+
+    applied = service.apply(
+        original,
+        0,
+        [operation("change_presentation", "project-1", {"template": "spotlight"})],
+        "Change recording frame",
+    )
+
+    assert applied.current.timeline.presentation.template == "spotlight"
+    assert applied.current.timeline.presentation.zoom_enabled is False
+    assert applied.current.timeline.zoom_clips == original.zoom_clips
+
+
+def test_presentation_zoom_toggle_is_typed_undoable_and_keeps_zoom_clips(
+    tmp_path: Path,
+) -> None:
+    repository = SQLiteTimelineRepository(tmp_path / "timeline.db")
+    service = TimelineEditService(repository)
+    original = presentation_timeline()
+
+    applied = service.apply(
+        original,
+        0,
+        [
+            operation(
+                "change_presentation",
+                original.project_id,
+                {"zoom_enabled": False},
+            )
+        ],
+        "Disable smooth zoom",
+    )
+    undone = repository.undo(original.project_id)
+
+    assert applied.current.timeline.presentation.zoom_enabled is False
+    assert applied.current.timeline.zoom_clips == original.zoom_clips
+    assert undone.current.timeline.presentation.zoom_enabled is True
+
+
+@pytest.mark.parametrize("kind", ["trim_scene", "delete_scene"])
+def test_presentation_rejects_duration_changing_scene_edits(
+    tmp_path: Path,
+    kind: str,
+) -> None:
+    repository = SQLiteTimelineRepository(tmp_path / "timeline.db")
+    service = TimelineEditService(repository)
+    original = presentation_timeline()
+    arguments: dict[str, object] = (
+        {"start_ms": 0, "end_ms": 110_000} if kind == "trim_scene" else {}
+    )
+
+    with pytest.raises(TimelineEditError, match="authored two-minute scene timing"):
+        service.apply(
+            original,
+            0,
+            [operation(kind, "presentation-capture", arguments)],
+            "Change presentation duration",
+        )
+
+    state = repository.current(original.project_id)
+    assert state is not None
+    assert state.current.timeline == original
 
 
 def test_timeline_apply_and_undo_api(tmp_path: Path) -> None:

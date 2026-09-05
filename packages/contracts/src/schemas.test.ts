@@ -4,6 +4,8 @@ import {
   captureActionSchema,
   demoGenerationResultSchema,
   editOperationSchema,
+  interactionEventSchema,
+  projectSchema,
   sceneSchema,
   timelineSchema,
   videoPresentationSchema,
@@ -19,6 +21,20 @@ const validAction = {
 } as const;
 
 describe("shared client contracts", () => {
+  it("keeps captured interaction coordinates inside their viewport", () => {
+    const edgeEvent = {
+      timestamp_ms: 0,
+      event_type: "click",
+      x: 1280,
+      y: 720,
+      viewport: { width: 1280, height: 720 },
+    } as const;
+
+    expect(interactionEventSchema.safeParse(edgeEvent).success).toBe(true);
+    expect(interactionEventSchema.safeParse({ ...edgeEvent, x: 1281 }).success).toBe(false);
+    expect(interactionEventSchema.safeParse({ ...edgeEvent, y: 721 }).success).toBe(false);
+  });
+
   it("accepts only completed one-click generation results", () => {
     const project = {
       id: "project-1",
@@ -132,13 +148,112 @@ describe("shared client contracts", () => {
         audio_clips: [],
       }).success,
     ).toBe(false);
+    expect(timelineSchema.safeParse({
+      project_id: "project-1",
+      duration_ms: 1_500,
+      cursor_events: [{
+        timestamp_ms: 1_500,
+        event_type: "click",
+        x: 640,
+        y: 360,
+        viewport: { width: 1280, height: 720 },
+      }],
+    }).success).toBe(false);
   });
 
   it("validates presentation templates and gives timelines an edge-to-edge default", () => {
-    expect(videoPresentationSchema.parse({})).toEqual({ template: "edge_to_edge" });
+    expect(videoPresentationSchema.parse({})).toEqual({ template: "edge_to_edge", zoom_enabled: true });
     expect(videoPresentationSchema.safeParse({ template: "spotlight" }).success).toBe(true);
     expect(videoPresentationSchema.safeParse({ template: "generated_filter" }).success).toBe(false);
     expect(timelineSchema.parse({ project_id: "project-1", duration_ms: 1_000 }).presentation)
-      .toEqual({ template: "edge_to_edge" });
+      .toEqual({ template: "edge_to_edge", zoom_enabled: true });
+  });
+
+  it("defaults legacy projects and timelines to Product Demo with smooth zoom", () => {
+    const parsed = projectSchema.parse({
+      id: "project-legacy",
+      name: "Legacy demo",
+      website_url: "https://example.com",
+      product_summary: "A complete product workflow for a focused team.",
+      audience: "Product leaders",
+      tone: "Professional",
+      requested_duration_seconds: 30,
+      cta: "Try it",
+      created_at: "2026-09-04T12:00:00Z",
+      updated_at: "2026-09-04T12:00:00Z",
+    });
+
+    expect(parsed.demo_mode).toBe("product_demo");
+    expect(parsed.zoom_enabled).toBe(true);
+    expect(timelineSchema.parse({ project_id: parsed.id, duration_ms: 30_000 })).toMatchObject({
+      demo_mode: "product_demo",
+      presentation_pack_id: null,
+      presentation: { template: "edge_to_edge", zoom_enabled: true },
+    });
+  });
+
+  it("requires the shipped pack for Presentation Demo timelines", () => {
+    const presentationMedia = {
+      scene_clips: [{
+        id: "presentation-clip",
+        scene_id: "presentation-capture",
+        source_uri: "captures/presentation.webm",
+        start_ms: 0,
+        end_ms: 120_000,
+      }],
+      cursor_events: [{
+        timestamp_ms: 8_000,
+        event_type: "click",
+        x: 640,
+        y: 360,
+        viewport: { width: 1280, height: 720 },
+      }],
+    } as const;
+    expect(timelineSchema.safeParse({
+      project_id: "project-presentation",
+      duration_ms: 120_000,
+      demo_mode: "presentation_demo",
+    }).success).toBe(false);
+    expect(timelineSchema.parse({
+      project_id: "project-presentation",
+      duration_ms: 120_000,
+      demo_mode: "presentation_demo",
+      presentation_pack_id: "presentation-story@1",
+      presentation: { template: "edge_to_edge", zoom_enabled: false },
+      ...presentationMedia,
+    }).presentation.zoom_enabled).toBe(false);
+    expect(timelineSchema.safeParse({
+      project_id: "project-presentation",
+      duration_ms: 30_000,
+      demo_mode: "presentation_demo",
+      presentation_pack_id: "presentation-story@1",
+    }).success).toBe(false);
+    expect(timelineSchema.safeParse({
+      project_id: "project-presentation",
+      duration_ms: 120_000,
+      demo_mode: "presentation_demo",
+      presentation_pack_id: "presentation-story@1",
+      cursor_events: presentationMedia.cursor_events,
+    }).success).toBe(false);
+    expect(timelineSchema.safeParse({
+      project_id: "project-presentation",
+      duration_ms: 120_000,
+      demo_mode: "presentation_demo",
+      presentation_pack_id: "presentation-story@1",
+      scene_clips: presentationMedia.scene_clips,
+    }).success).toBe(false);
+    expect(projectSchema.safeParse({
+      id: "project-invalid",
+      name: "Invalid",
+      website_url: "https://example.com",
+      product_summary: "A complete product workflow for a focused team.",
+      audience: "Product leaders",
+      tone: "Professional",
+      requested_duration_seconds: 30,
+      cta: "Try it",
+      demo_mode: "runtime_slides",
+      created_at: "2026-09-04T12:00:00Z",
+      updated_at: "2026-09-04T12:00:00Z",
+    }).success).toBe(false);
   });
 });

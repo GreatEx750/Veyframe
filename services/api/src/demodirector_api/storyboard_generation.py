@@ -98,8 +98,20 @@ def build_storyboard_prompt(
         "product_understanding": understanding.model_dump(mode="json"),
         "sources": [source.model_dump(mode="json") for source in sources],
     }
+    mode_direction = (
+        "This is a Presentation Demo using the fixed presentation-story@1 pack and exactly "
+        "120 seconds. Plan authentic product actions and narration for the complete recording. "
+        "The deterministic renderer owns the first and final five seconds as the authored intro "
+        "and outro and keeps captured product footage visible between them. Do not invent slide "
+        "layouts, animation code, render expressions, or template geometry. Provide "
+        "project-specific copy through the typed scene fields only. "
+        if project.demo_mode == "presentation_demo"
+        else "This is a Product Demo: plan one continuous product walkthrough with narration, "
+        "captions, recorded pointer movement, and optional smooth camera direction. "
+    )
     return (
-        f"Create a timed storyboard with {MIN_SCENES}-{MAX_SCENES} scenes. Keep total duration "
+        mode_direction
+        + f"Create a timed storyboard with {MIN_SCENES}-{MAX_SCENES} scenes. Keep total duration "
         f"within {int(DURATION_TOLERANCE * 100)}% of the requested duration. Every scene must "
         "have grounded source IDs, narration, expected evidence, and a typed deterministic "
         "CapturePlan. Set scene order to the zero-based array index (0 through n-1). Interactive "
@@ -107,6 +119,8 @@ def build_storyboard_prompt(
         "use an inspected accessible name or visible label exactly as written in a website "
         "source; never paraphrase a control label. When a scene objective says to submit after "
         "filling a field, include a click action for the submit control after the fill action. "
+        "When inspected interactive controls support the story, include real click actions so "
+        "captured click feedback can be shown; never fabricate interaction coordinates. "
         "Use only the CaptureAction allowlist; never output code or shell commands.\n\n"
         + json.dumps(context, separators=(",", ":"))
     )

@@ -24,3 +24,4 @@ artifacts/*
 !artifacts/verification/
 artifacts/verification/*
 !artifacts/verification/golden-export-20s.mp4
+/apps/web/public/judge-demo.mp4

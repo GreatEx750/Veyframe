@@ -10,6 +10,7 @@ from demodirector_worker.auto_camera import (
     AutoCameraSettings,
     FocusCandidate,
 )
+from pydantic import ValidationError
 
 
 def interaction(
@@ -71,6 +72,11 @@ def test_manual_zoom_overrides_overlapping_generated_zoom() -> None:
     clips = AutoCameraService().generate([interaction(1_000)], 5_000, manual_clips=[manual])
 
     assert clips == [manual]
+
+
+def test_interaction_recorded_outside_the_viewport_is_rejected_before_planning() -> None:
+    with pytest.raises(ValidationError, match="y coordinate must fit within viewport"):
+        interaction(1_000, y=2_400)
 
 
 class BadSelector:

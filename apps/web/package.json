@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../../scripts/stage-judge-demo.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

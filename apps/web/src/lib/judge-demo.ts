@@ -22,6 +22,7 @@ export function judgeDemoTimeline(projectId: string): Timeline {
         start_ms: 0,
         end_ms: 20_000,
         source_uri: JUDGE_DEMO_VIDEO_URL,
+        source_start_ms: 0,
       },
     ],
     caption_clips: [],

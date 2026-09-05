@@ -105,6 +105,14 @@ def _validate_operation(
 ) -> None:
     kind = operation.operation_type
     arguments = operation.arguments
+    if timeline.demo_mode == "presentation_demo" and kind in {
+        "trim_scene",
+        "delete_scene",
+    }:
+        raise EditPlanValidationError(
+            "Presentation Demo keeps its authored two-minute scene timing; "
+            "duration-changing scene edits are unavailable."
+        )
     if kind == "trim_scene":
         scene = scenes_by_id.get(operation.target_id)
         if scene is None:
@@ -202,8 +210,10 @@ def _validate_operation(
         _text(arguments, "cta")
     elif kind == "change_presentation":
         _known(operation.target_id, {timeline.project_id}, "project")
-        _only(arguments, {"template"}, kind)
-        VideoPresentationConfig.model_validate(arguments)
+        _only(arguments, {"template", "zoom_enabled"}, kind)
+        VideoPresentationConfig.model_validate(
+            {**timeline.presentation.model_dump(), **arguments}
+        )
     else:
         raise EditPlanValidationError(f"Unsupported edit operation: {kind}")
 

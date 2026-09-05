@@ -266,7 +266,12 @@ def normalize_sources(
         try:
             source = ResearchSource.model_validate(
                 {
-                    "id": str(uuid5(NAMESPACE_URL, f"{project_id}:{result.url}")),
+                    "id": str(
+                        uuid5(
+                            NAMESPACE_URL,
+                            f"{project_id}:partner_search:{result.url}",
+                        )
+                    ),
                     "project_id": project_id,
                     "title": title,
                     "url": result.url,

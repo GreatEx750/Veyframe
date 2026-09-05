@@ -36,6 +36,8 @@ export const projectSchema = z
     requested_duration_seconds: z.number().int().positive(),
     cta: nonEmptyString,
     brand_kit_id: nonEmptyString.nullable().default(null),
+    demo_mode: z.enum(["product_demo", "presentation_demo"]).default("product_demo"),
+    zoom_enabled: z.boolean().default(true),
     status: z
       .enum([
         "draft",
@@ -53,7 +55,16 @@ export const projectSchema = z
     created_at: dateTime,
     updated_at: dateTime,
   })
-  .strict();
+  .strict()
+  .superRefine((project, context) => {
+    if (project.demo_mode === "presentation_demo" && project.requested_duration_seconds !== 120) {
+      context.addIssue({
+        code: "custom",
+        message: "Presentation Demo must be exactly 120 seconds for the MVP",
+        path: ["requested_duration_seconds"],
+      });
+    }
+  });
 
 export const userIdentitySchema = z
   .object({
@@ -438,7 +449,23 @@ export const interactionEventSchema = z
     bounding_box: boundingBoxSchema.nullable().default(null),
     viewport: viewportSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((event, context) => {
+    if (event.x !== null && event.x > event.viewport.width) {
+      context.addIssue({
+        code: "custom",
+        message: "x coordinate must fit within viewport",
+        path: ["x"],
+      });
+    }
+    if (event.y !== null && event.y > event.viewport.height) {
+      context.addIssue({
+        code: "custom",
+        message: "y coordinate must fit within viewport",
+        path: ["y"],
+      });
+    }
+  });
 
 export const captureActionResultSchema = z
   .object({
@@ -537,6 +564,7 @@ const timelineClipSchema = z
 export const sceneClipSchema = timelineClipSchema.safeExtend({
   scene_id: nonEmptyString,
   source_uri: nonEmptyString,
+  source_start_ms: milliseconds.default(0),
 });
 
 export const captionClipSchema = timelineClipSchema.safeExtend({
@@ -617,6 +645,7 @@ export const zoomClipSchema = timelineClipSchema.safeExtend({
 export const videoPresentationSchema = z
   .object({
     template: z.enum(["edge_to_edge", "soft_frame", "spotlight"]).default("edge_to_edge"),
+    zoom_enabled: z.boolean().default(true),
   })
   .strict();
 
@@ -624,6 +653,17 @@ export const timelineSchema = z
   .object({
     project_id: nonEmptyString,
     duration_ms: z.number().int().positive(),
+    demo_mode: z.enum(["product_demo", "presentation_demo"]).default("product_demo"),
+    presentation_pack_id: z.literal("presentation-story@1").nullable().default(null),
+    motion_plan_id: nonEmptyString.nullable().default(null),
+    motion_design_version: z.literal("motion-v1").nullable().default(null),
+    attention_plan_id: nonEmptyString.nullable().default(null),
+    attention_design_version: z.literal("attention-v1").nullable().default(null),
+    style_plan_id: nonEmptyString.nullable().default(null),
+    style_design_version: z.literal("style-v1").nullable().default(null),
+    visual_variant: z.enum(["editorial_story", "product_spotlight", "technical_proof"]).nullable().default(null),
+    long_form_plan_id: nonEmptyString.nullable().default(null),
+    long_form_version: z.literal("longform-v1").nullable().default(null),
     scene_clips: z.array(sceneClipSchema).default([]),
     caption_clips: z.array(captionClipSchema).default([]),
     zoom_clips: z.array(zoomClipSchema).default([]),
@@ -632,7 +672,7 @@ export const timelineSchema = z
     narration_overrides: z.record(nonEmptyString, nonEmptyString).default({}),
     voice_config: narrationVoiceConfigSchema.nullable().default(null),
     cta_text: nonEmptyString.nullable().default(null),
-    presentation: videoPresentationSchema.default({ template: "edge_to_edge" }),
+    presentation: videoPresentationSchema.default({ template: "edge_to_edge", zoom_enabled: true }),
   })
   .strict()
   .superRefine((timeline, context) => {
@@ -649,14 +689,82 @@ export const timelineSchema = z
       });
     });
     timeline.cursor_events.forEach((event, index) => {
-      if (event.timestamp_ms > timeline.duration_ms) {
+      if (event.timestamp_ms >= timeline.duration_ms) {
         context.addIssue({
           code: "custom",
-          message: "cursor timestamps may not exceed timeline duration",
+          message: "cursor timestamps must be earlier than timeline duration",
           path: ["cursor_events", index, "timestamp_ms"],
         });
       }
     });
+    if ((timeline.motion_plan_id === null) !== (timeline.motion_design_version === null)) {
+      context.addIssue({
+        code: "custom",
+        message: "motion plan ID and design version must be stored together",
+        path: ["motion_plan_id"],
+      });
+    }
+    if ((timeline.attention_plan_id === null) !== (timeline.attention_design_version === null)) {
+      context.addIssue({ code: "custom", message: "attention plan ID and version must be stored together" });
+    }
+    const styleValues = [timeline.style_plan_id, timeline.style_design_version, timeline.visual_variant];
+    if (styleValues.some((value) => value === null) !== styleValues.every((value) => value === null)) {
+      context.addIssue({ code: "custom", message: "style plan, version, and visual variant must be stored together" });
+    }
+    if ((timeline.long_form_plan_id === null) !== (timeline.long_form_version === null)) {
+      context.addIssue({ code: "custom", message: "long-form plan ID and version must be stored together" });
+    }
+    if (timeline.demo_mode === "presentation_demo" && timeline.presentation_pack_id === null) {
+      context.addIssue({
+        code: "custom",
+        message: "Presentation Demo requires the shipped presentation template pack",
+        path: ["presentation_pack_id"],
+      });
+    }
+    if (timeline.demo_mode === "presentation_demo" && timeline.duration_ms !== 120_000) {
+      context.addIssue({
+        code: "custom",
+        message: "Presentation Demo must be exactly 120 seconds for the MVP",
+        path: ["duration_ms"],
+      });
+    }
+    if (timeline.demo_mode === "presentation_demo") {
+      const orderedScenes = [...timeline.scene_clips].sort((left, right) => left.start_ms - right.start_ms);
+      let expectedStart = 0;
+      const hasCompleteProductCoverage = orderedScenes.length > 0 && orderedScenes.every((scene) => {
+        const isContiguous = scene.start_ms === expectedStart;
+        expectedStart = scene.end_ms;
+        return isContiguous;
+      }) && expectedStart === timeline.duration_ms;
+      if (!hasCompleteProductCoverage) {
+        context.addIssue({
+          code: "custom",
+          message: "Presentation Demo product footage must cover the complete timeline",
+          path: ["scene_clips"],
+        });
+      }
+      const hasVisibleClick = timeline.cursor_events.some((event) =>
+        event.event_type === "click"
+        && event.x !== null
+        && event.y !== null
+        && event.timestamp_ms > 5_000
+        && event.timestamp_ms < 115_000
+      );
+      if (!hasVisibleClick) {
+        context.addIssue({
+          code: "custom",
+          message: "Presentation Demo requires a captured click inside the visible product interval",
+          path: ["cursor_events"],
+        });
+      }
+    }
+    if (timeline.demo_mode === "product_demo" && timeline.presentation_pack_id !== null) {
+      context.addIssue({
+        code: "custom",
+        message: "Product Demo may not apply a presentation template pack",
+        path: ["presentation_pack_id"],
+      });
+    }
   });
 
 export const renderConfigSchema = z
@@ -681,6 +789,8 @@ export const renderResultSchema = z
     height: z.number().int().positive(),
     has_video: z.boolean(),
     has_audio: z.boolean(),
+    motion_composition_hash: z.string().regex(/^[a-f0-9]{64}$/).nullable().default(null),
+    long_form_composition_hash: z.string().regex(/^[a-f0-9]{64}$/).nullable().default(null),
     error: nonEmptyString.nullable().default(null),
   })
   .strict();

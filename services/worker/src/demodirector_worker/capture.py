@@ -126,6 +126,7 @@ class PlaywrightCaptureWorker:
                 error_message = _clear_error(error)
                 logs.append(error_message)
             finally:
+                capture_finished = time.monotonic()
                 page.close()
                 context.close()
                 if video is not None:
@@ -136,7 +137,7 @@ class PlaywrightCaptureWorker:
             scene_id=scene.id,
             status=status,
             retryable=retryable,
-            duration_ms=_elapsed_ms(started),
+            duration_ms=max(0, round((capture_finished - started) * 1_000)),
             raw_clip_path=raw_clip_path,
             screenshot_paths=screenshots,
             action_results=action_results,
@@ -241,6 +242,9 @@ class PlaywrightCaptureWorker:
         action: CaptureAction,
         started: float,
     ) -> InteractionEvent:
+        target = _locator(page, action) if action.locator else None
+        if target is not None:
+            target.scroll_into_view_if_needed()
         scroll = cast(
             dict[str, float],
             page.evaluate("() => ({ x: window.scrollX, y: window.scrollY })"),
@@ -254,8 +258,8 @@ class PlaywrightCaptureWorker:
         box_model: BoundingBox | None = None
         center_x: float | None = None
         center_y: float | None = None
-        if action.locator:
-            box = _locator(page, action).bounding_box()
+        if target is not None:
+            box = target.bounding_box()
             if box is None:
                 raise CaptureExecutionError(
                     f"The target for {action.description} is not visible in the viewport."
@@ -360,7 +364,7 @@ def _locator(page: Page, action: CaptureAction) -> Locator:
     if strategy == "placeholder":
         placeholder = page.get_by_placeholder(value, exact=True)
         if placeholder.count():
-            if action.type in {"assert_visible", "wait_for"} and placeholder.count() > 1:
+            if placeholder.count() > 1:
                 return _first_visible(placeholder) or placeholder.first
             return placeholder
         cleaned = _without_ui_metadata(value)

@@ -12,7 +12,7 @@ COPY services/worker /app/services/worker
 COPY services/api /app/services/api
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get install -y --no-install-recommends ffmpeg fonts-inter \
     && rm -rf /var/lib/apt/lists/* \
     && python -m pip install --no-cache-dir \
     /app/packages/contracts \

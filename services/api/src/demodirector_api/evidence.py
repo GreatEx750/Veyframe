@@ -4,9 +4,18 @@ import hashlib
 import json
 import re
 from datetime import UTC, datetime
+from typing import Literal
+from urllib.parse import urlsplit
 
 from demodirector_contracts import Project, Storyboard
-from demodirector_contracts.evidence import NarrationEvidence, StoryboardEvidence
+from demodirector_contracts.evidence import (
+    ContributionScene,
+    ContributionSource,
+    NarrationEvidence,
+    SourceContribution,
+    SourceContributionMap,
+    StoryboardEvidence,
+)
 
 from demodirector_api.generation_jobs import ApprovalNeeded
 from demodirector_api.records import RecordStore
@@ -20,6 +29,15 @@ from demodirector_api.repositories import (
 
 def normalized(text: str) -> str:
     return " ".join(re.findall(r"\w+", text.casefold()))
+
+
+def statement_id(scene_id: str, sentence: str) -> str:
+    digest = hashlib.sha256(normalized(sentence).encode()).hexdigest()[:12]
+    return f"{scene_id}-statement-{digest}"
+
+
+def safe_excerpt(text: str) -> str:
+    return " ".join(text.split())[:500]
 
 
 class EvidenceService:
@@ -63,7 +81,7 @@ class EvidenceService:
         fingerprint = hashlib.sha256(json.dumps(snapshot, sort_keys=True).encode()).hexdigest()
         claims: list[NarrationEvidence] = []
         for scene in sorted(board.scenes, key=lambda scene: scene.order):
-            for index, sentence in enumerate(re.split(r"(?<=[.!?])\s+", scene.narration.strip())):
+            for sentence in re.split(r"(?<=[.!?])\s+", scene.narration.strip()):
                 if not sentence.strip():
                     continue
                 text = normalized(sentence)
@@ -110,7 +128,7 @@ class EvidenceService:
                 claims.append(
                     NarrationEvidence.model_validate(
                         {
-                            "id": f"{scene.id}-claim-{index + 1}",
+                            "id": statement_id(scene.id, sentence),
                             "scene_id": scene.id,
                             "text": sentence,
                             "status": status,
@@ -130,6 +148,163 @@ class EvidenceService:
                 claim.status in {"unverified", "source_linked"} for claim in claims
             ),
             approved=approval is not None and approval[1]["fingerprint"] == fingerprint,
+        )
+
+    def contribution_map(self, project_id: str) -> SourceContributionMap:
+        project = self.projects.get(project_id)
+        board = self.boards.get_latest(project_id)
+        if project is None or board is None:
+            raise KeyError("Storyboard not found")
+        evidence = self.dashboard(project_id)
+        approval = self.records.get(f"storyboard-approval-{project_id}")
+        status: Literal["ready", "stale", "approval_required"] = (
+            "ready"
+            if evidence.approved
+            else "stale"
+            if approval is not None
+            else "approval_required"
+        )
+        saved_sources = sorted(self.sources.list_for_project(project_id), key=lambda item: item.id)
+        sources = [
+            ContributionSource(
+                id=f"brief:{project_id}",
+                project_id=project_id,
+                title="Project brief",
+                domain="Creator input",
+                origin="project_brief",
+                retrieval_state="saved",
+                retrieved_at=project.updated_at,
+                excerpt=safe_excerpt(
+                    f"{project.product_summary} Audience: {project.audience}. CTA: {project.cta}"
+                ),
+            ),
+            *[
+                ContributionSource(
+                    id=source.id,
+                    project_id=source.project_id,
+                    title=source.title,
+                    url=source.url,
+                    domain=urlsplit(str(source.url)).hostname or "Saved source",
+                    origin=(
+                        "website_inspection"
+                        if source.source_type == "website"
+                        else "parallel_search"
+                        if source.source_type == "partner_search"
+                        else "project_brief"
+                    ),
+                    retrieval_state="saved",
+                    retrieved_at=source.retrieved_at,
+                    excerpt=safe_excerpt(source.snippet),
+                )
+                for source in saved_sources
+            ],
+        ]
+        scenes = [
+            ContributionScene(id=scene.id, title=scene.title, order=scene.order)
+            for scene in sorted(board.scenes, key=lambda item: item.order)
+        ]
+        partial_evidence = not any(
+            source.source_type == "website" for source in saved_sources
+        ) or not any(source.source_type == "partner_search" for source in saved_sources)
+        if status != "ready":
+            return SourceContributionMap(
+                project_id=project_id,
+                storyboard_version=board.version,
+                fingerprint=evidence.fingerprint,
+                status=status,
+                partial_evidence=partial_evidence,
+                sources=sources,
+                scenes=scenes,
+                narration_statements=[],
+                contributions=[],
+            )
+
+        contributions = [
+            SourceContribution(
+                id=f"brief:{project_id}:brief_context",
+                project_id=project_id,
+                source_id=f"brief:{project_id}",
+                kind="brief_context",
+                scene_ids=[scene.id for scene in scenes],
+                usage_state="used" if scenes else "unused",
+                label="Used to frame the approved storyboard",
+            )
+        ]
+        board_scene_by_id = {scene.id: scene for scene in board.scenes}
+        for source in saved_sources:
+            linked_scene_ids = [
+                scene.id
+                for scene in sorted(board.scenes, key=lambda item: item.order)
+                if source.id in scene.source_ids
+            ]
+            if source.source_type == "website":
+                contributions.append(
+                    SourceContribution(
+                        id=f"{source.id}:website_structure",
+                        project_id=project_id,
+                        source_id=source.id,
+                        kind="website_structure",
+                        scene_ids=linked_scene_ids,
+                        usage_state="used" if linked_scene_ids else "unused",
+                        label=(
+                            "Used to plan page structure and capture steps"
+                            if linked_scene_ids
+                            else "Inspected page — not used in the final capture plan"
+                        ),
+                    )
+                )
+            else:
+                contributions.append(
+                    SourceContribution(
+                        id=f"{source.id}:research_context",
+                        project_id=project_id,
+                        source_id=source.id,
+                        kind="research_context",
+                        scene_ids=linked_scene_ids,
+                        usage_state="used" if linked_scene_ids else "unused",
+                        label=(
+                            "Research context used in approved scenes"
+                            if linked_scene_ids
+                            else "Research context — not used in the final script"
+                        ),
+                    )
+                )
+            supported = [
+                statement
+                for statement in evidence.claims
+                if statement.status in {"source_quote", "source_linked"}
+                and source.id in statement.source_ids
+            ]
+            if supported:
+                statement_scene_ids = list(
+                    dict.fromkeys(
+                        statement.scene_id
+                        for statement in supported
+                        if statement.scene_id in board_scene_by_id
+                    )
+                )
+                contributions.append(
+                    SourceContribution(
+                        id=f"{source.id}:factual_narration",
+                        project_id=project_id,
+                        source_id=source.id,
+                        kind="factual_narration",
+                        scene_ids=statement_scene_ids,
+                        narration_statement_ids=[statement.id for statement in supported],
+                        usage_state="used",
+                        label="Attributed in approved narration",
+                    )
+                )
+        return SourceContributionMap(
+            project_id=project_id,
+            storyboard_version=board.version,
+            fingerprint=evidence.fingerprint,
+            status="ready",
+            partial_evidence=partial_evidence,
+            sources=sources,
+            scenes=scenes,
+            narration_statements=evidence.claims,
+            contributions=contributions,
         )
 
     def approve(

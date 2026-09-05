@@ -110,6 +110,8 @@ class SQLiteProjectRepository:
                     requested_duration_seconds INTEGER NOT NULL,
                     cta TEXT NOT NULL,
                     brand_kit_id TEXT,
+                    demo_mode TEXT NOT NULL DEFAULT 'product_demo',
+                    zoom_enabled INTEGER NOT NULL DEFAULT 1,
                     status TEXT NOT NULL,
                     job_status TEXT NOT NULL,
                     owner_user_id TEXT NOT NULL DEFAULT 'system',
@@ -125,6 +127,14 @@ class SQLiteProjectRepository:
                 connection.execute(
                     "ALTER TABLE projects ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'system'"
                 )
+            if "demo_mode" not in columns:
+                connection.execute(
+                    "ALTER TABLE projects ADD COLUMN demo_mode TEXT NOT NULL DEFAULT 'product_demo'"
+                )
+            if "zoom_enabled" not in columns:
+                connection.execute(
+                    "ALTER TABLE projects ADD COLUMN zoom_enabled INTEGER NOT NULL DEFAULT 1"
+                )
 
     @staticmethod
     def _values(project: Project) -> tuple[object, ...]:
@@ -138,6 +148,8 @@ class SQLiteProjectRepository:
             project.requested_duration_seconds,
             project.cta,
             project.brand_kit_id,
+            project.demo_mode,
+            int(project.zoom_enabled),
             project.status,
             project.job_status,
             project.owner_user_id,
@@ -155,9 +167,9 @@ class SQLiteProjectRepository:
                 """
                 INSERT INTO projects (
                     id, name, website_url, product_summary, audience, tone,
-                    requested_duration_seconds, cta, brand_kit_id, status,
-                    job_status, owner_user_id, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    requested_duration_seconds, cta, brand_kit_id, demo_mode,
+                    zoom_enabled, status, job_status, owner_user_id, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 self._values(project),
             )
@@ -178,7 +190,8 @@ class SQLiteProjectRepository:
                 UPDATE projects SET
                     name = ?, website_url = ?, product_summary = ?, audience = ?,
                     tone = ?, requested_duration_seconds = ?, cta = ?, brand_kit_id = ?,
-                    status = ?, job_status = ?, owner_user_id = ?, created_at = ?, updated_at = ?
+                    demo_mode = ?, zoom_enabled = ?, status = ?, job_status = ?,
+                    owner_user_id = ?, created_at = ?, updated_at = ?
                 WHERE id = ?
                 """,
                 (*self._values(project)[1:], project.id),

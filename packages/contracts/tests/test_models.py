@@ -168,6 +168,7 @@ def test_valid_contract_fixture_crosses_the_shared_boundary() -> None:
         start_ms=0,
         end_ms=8000,
     )
+    assert scene_clip.source_start_ms == 0
     caption_clip = CaptionClip(
         id="caption-1",
         scene_id=scene.id,
@@ -302,9 +303,12 @@ def test_timeline_rejects_clip_beyond_its_duration() -> None:
         Timeline(project_id="project-1", duration_ms=1500, zoom_clips=[zoom])
 
 
-def test_timeline_rejects_cursor_event_beyond_its_duration() -> None:
+@pytest.mark.parametrize("timestamp_ms", [1_500, 1_501])
+def test_timeline_rejects_cursor_event_at_or_beyond_its_duration(
+    timestamp_ms: int,
+) -> None:
     event = InteractionEvent(
-        timestamp_ms=1_501,
+        timestamp_ms=timestamp_ms,
         event_type="click",
         x=640,
         y=360,
@@ -313,6 +317,35 @@ def test_timeline_rejects_cursor_event_beyond_its_duration() -> None:
 
     with pytest.raises(ValidationError, match="cursor timestamps"):
         Timeline(project_id="project-1", duration_ms=1_500, cursor_events=[event])
+
+
+def test_interaction_coordinates_must_fit_the_captured_viewport() -> None:
+    edge = InteractionEvent(
+        timestamp_ms=0,
+        event_type="click",
+        x=1_280,
+        y=720,
+        viewport=Viewport(width=1_280, height=720),
+    )
+
+    assert edge.x == 1_280
+    assert edge.y == 720
+    with pytest.raises(ValidationError, match="x coordinate must fit within viewport"):
+        InteractionEvent(
+            timestamp_ms=0,
+            event_type="click",
+            x=1_281,
+            y=360,
+            viewport=Viewport(width=1_280, height=720),
+        )
+    with pytest.raises(ValidationError, match="y coordinate must fit within viewport"):
+        InteractionEvent(
+            timestamp_ms=0,
+            event_type="click",
+            x=640,
+            y=721,
+            viewport=Viewport(width=1_280, height=720),
+        )
 
 
 def test_zoom_rejects_an_incomplete_mouse_focus_point() -> None:
@@ -346,6 +379,105 @@ def test_video_presentation_template_is_typed_and_defaults_safely() -> None:
     assert VideoPresentationConfig(template="spotlight").template == "spotlight"
     with pytest.raises(ValidationError, match="Input should be"):
         VideoPresentationConfig(template="model_filter")  # type: ignore[arg-type]
+
+
+def test_demo_mode_and_zoom_defaults_preserve_existing_projects_and_timelines() -> None:
+    now = datetime.now(UTC)
+    project = Project.model_validate(
+        {
+            "id": "project-legacy",
+            "name": "Legacy demo",
+            "website_url": "https://example.com",
+            "product_summary": "A complete product workflow for a focused team.",
+            "audience": "Product leaders",
+            "tone": "Professional",
+            "requested_duration_seconds": 30,
+            "cta": "Try it",
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+    timeline = Timeline(project_id=project.id, duration_ms=30_000)
+
+    assert project.demo_mode == "product_demo"
+    assert project.zoom_enabled is True
+    assert timeline.demo_mode == "product_demo"
+    assert timeline.presentation_pack_id is None
+    assert timeline.presentation.zoom_enabled is True
+
+
+def test_presentation_demo_requires_the_shipped_template_pack() -> None:
+    scene_clip = SceneClip(
+        id="presentation-clip",
+        scene_id="presentation-capture",
+        source_uri="captures/presentation.webm",
+        start_ms=0,
+        end_ms=120_000,
+    )
+    click = InteractionEvent(
+        timestamp_ms=8_000,
+        event_type="click",
+        x=640,
+        y=360,
+        viewport=Viewport(width=1280, height=720),
+    )
+    timeline = Timeline(
+        project_id="project-presentation",
+        duration_ms=120_000,
+        demo_mode="presentation_demo",
+        presentation_pack_id="presentation-story@1",
+        scene_clips=[scene_clip],
+        cursor_events=[click],
+        presentation=VideoPresentationConfig(zoom_enabled=False),
+    )
+
+    assert timeline.presentation_pack_id == "presentation-story@1"
+    assert timeline.presentation.zoom_enabled is False
+    with pytest.raises(ValidationError, match="presentation template pack"):
+        Timeline(
+            project_id="project-presentation",
+            duration_ms=120_000,
+            demo_mode="presentation_demo",
+        )
+    with pytest.raises(ValidationError, match="exactly 120 seconds"):
+        Timeline(
+            project_id="project-presentation",
+            duration_ms=30_000,
+            demo_mode="presentation_demo",
+            presentation_pack_id="presentation-story@1",
+        )
+    with pytest.raises(ValidationError, match="product footage must cover"):
+        Timeline(
+            project_id="project-presentation",
+            duration_ms=120_000,
+            demo_mode="presentation_demo",
+            presentation_pack_id="presentation-story@1",
+            cursor_events=[click],
+        )
+    with pytest.raises(ValidationError, match="captured click"):
+        Timeline(
+            project_id="project-presentation",
+            duration_ms=120_000,
+            demo_mode="presentation_demo",
+            presentation_pack_id="presentation-story@1",
+            scene_clips=[scene_clip],
+        )
+    with pytest.raises(ValidationError):
+        Project.model_validate(
+            {
+                "id": "project-invalid",
+                "name": "Invalid demo",
+                "website_url": "https://example.com",
+                "product_summary": "A complete product workflow for a focused team.",
+                "audience": "Product leaders",
+                "tone": "Professional",
+                "requested_duration_seconds": 30,
+                "cta": "Try it",
+                "demo_mode": "runtime_slides",
+                "created_at": datetime.now(UTC),
+                "updated_at": datetime.now(UTC),
+            }
+        )
 
 
 def test_contracts_reject_unknown_fields() -> None:

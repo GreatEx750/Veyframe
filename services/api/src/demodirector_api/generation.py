@@ -23,6 +23,7 @@ from demodirector_contracts import (
     Storyboard,
     Timeline,
     VideoExport,
+    VideoPresentationConfig,
     WebsiteInspection,
 )
 from demodirector_worker import AutoCameraService, CaptionService
@@ -108,6 +109,8 @@ class ExportCreator(Protocol):
         timeline: Timeline,
         quality: Literal["1440p", "1080p", "720p"],
     ) -> VideoExport: ...
+
+    def get(self, project_id: str, export_id: str) -> VideoExport | None: ...
 
 
 class DemoGenerationService:
@@ -428,6 +431,17 @@ def assemble_timeline(
     caption_style: CaptionStyleConfig,
     captions: CaptionService,
     camera: AutoCameraService,
+    motion_plan_id: str | None = None,
+    motion_design_version: Literal["motion-v1"] | None = None,
+    attention_plan_id: str | None = None,
+    attention_design_version: Literal["attention-v1"] | None = None,
+    style_plan_id: str | None = None,
+    style_design_version: Literal["style-v1"] | None = None,
+    visual_variant: Literal[
+        "editorial_story", "product_spotlight", "technical_proof"
+    ] | None = None,
+    long_form_plan_id: str | None = None,
+    long_form_version: Literal["longform-v1"] | None = None,
 ) -> Timeline:
     caption_tracks = captions.generate(narration.segments, caption_style)
     if capture.raw_clip_path is None:
@@ -480,8 +494,28 @@ def assemble_timeline(
         for event in capture.interaction_events
         if event.x is not None
         and event.y is not None
-        and event.timestamp_ms <= total_duration_ms
+        and event.timestamp_ms < total_duration_ms
     ]
+    visible_start_ms = 5_000 if project.demo_mode == "presentation_demo" else 0
+    visible_end_ms = (
+        total_duration_ms - 5_000
+        if project.demo_mode == "presentation_demo"
+        else total_duration_ms
+    )
+    if not any(
+        event.event_type == "click"
+        and event.timestamp_ms < visible_end_ms
+        and (
+            event.timestamp_ms > visible_start_ms
+            if project.demo_mode == "presentation_demo"
+            else event.timestamp_ms >= visible_start_ms
+        )
+        for event in usable_events
+    ):
+        raise DemoGenerationError(
+            "The recording has no visible captured click with coordinates; regenerate the "
+            "storyboard with a safe product interaction."
+        )
     zoom_clips = [
         clip.model_copy(update={"id": f"zoom-continuous-{index + 1}"})
         for index, clip in enumerate(camera.generate(usable_events, total_duration_ms))
@@ -502,6 +536,19 @@ def assemble_timeline(
     return Timeline(
         project_id=project.id,
         duration_ms=total_duration_ms,
+        demo_mode=project.demo_mode,
+        presentation_pack_id=(
+            "presentation-story@1" if project.demo_mode == "presentation_demo" else None
+        ),
+        motion_plan_id=motion_plan_id,
+        motion_design_version=motion_design_version,
+        attention_plan_id=attention_plan_id,
+        attention_design_version=attention_design_version,
+        style_plan_id=style_plan_id,
+        style_design_version=style_design_version,
+        visual_variant=visual_variant,
+        long_form_plan_id=long_form_plan_id,
+        long_form_version=long_form_version,
         scene_clips=scene_clips,
         caption_clips=caption_clips,
         zoom_clips=zoom_clips,
@@ -509,6 +556,7 @@ def assemble_timeline(
         audio_clips=audio_clips,
         voice_config=narration.voice_config,
         cta_text=project.cta,
+        presentation=VideoPresentationConfig(zoom_enabled=project.zoom_enabled),
     )
 
 

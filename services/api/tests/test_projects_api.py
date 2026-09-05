@@ -35,6 +35,8 @@ def test_create_read_and_patch_project(tmp_path: Path) -> None:
     assert created["id"]
     assert created["status"] == "draft"
     assert created["job_status"] == "idle"
+    assert created["demo_mode"] == "product_demo"
+    assert created["zoom_enabled"] is True
 
     get_response = client.get(f"/projects/{created['id']}")
     assert get_response.status_code == 200
@@ -50,6 +52,61 @@ def test_create_read_and_patch_project(tmp_path: Path) -> None:
     assert patched["cta"] == "Book a demo"
     assert patched["product_summary"] == created["product_summary"]
     assert patched["updated_at"] >= created["updated_at"]
+
+
+def test_create_and_patch_presentation_preferences(tmp_path: Path) -> None:
+    client = client_for(tmp_path / "projects.db")
+
+    created = client.post(
+        "/projects",
+        json=project_payload(
+            demo_mode="presentation_demo",
+            zoom_enabled=False,
+            requested_duration_seconds=120,
+        ),
+    ).json()
+
+    assert created["demo_mode"] == "presentation_demo"
+    assert created["zoom_enabled"] is False
+    patched = client.patch(
+        f"/projects/{created['id']}",
+        json={"demo_mode": "product_demo", "zoom_enabled": True},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["demo_mode"] == "product_demo"
+    assert patched.json()["zoom_enabled"] is True
+
+
+def test_create_rejects_unknown_demo_mode(tmp_path: Path) -> None:
+    response = client_for(tmp_path / "projects.db").post(
+        "/projects",
+        json=project_payload(demo_mode="runtime_layout"),
+    )
+
+    assert response.status_code == 422
+
+
+def test_create_rejects_non_two_minute_presentation_demo(tmp_path: Path) -> None:
+    response = client_for(tmp_path / "projects.db").post(
+        "/projects",
+        json=project_payload(demo_mode="presentation_demo", requested_duration_seconds=90),
+    )
+
+    assert response.status_code == 422
+
+
+def test_patch_rejects_presentation_demo_without_two_minute_duration(tmp_path: Path) -> None:
+    client = client_for(tmp_path / "projects.db")
+    created = client.post("/projects", json=project_payload()).json()
+
+    response = client.patch(
+        f"/projects/{created['id']}",
+        json={"demo_mode": "presentation_demo"},
+    )
+
+    assert response.status_code == 422
+    assert "exactly 120 seconds" in response.json()["detail"][0]["msg"]
+    assert client.get(f"/projects/{created['id']}").json()["demo_mode"] == "product_demo"
 
 
 def test_create_rejects_invalid_url(tmp_path: Path) -> None:

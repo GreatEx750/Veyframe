@@ -108,7 +108,13 @@ class FileRenderer:
     def __init__(self, output_directory: Path) -> None:
         self.output_directory = output_directory
 
-    def render(self, timeline: Timeline, config: RenderConfig) -> RenderResult:
+    def render(
+        self, timeline: Timeline, config: RenderConfig, motion_plan: object = None,
+        attention_plan: object = None,
+        style_plan: object = None,
+        longform_plan: object = None,
+    ) -> RenderResult:
+        del motion_plan, attention_plan, style_plan, longform_plan
         self.output_directory.mkdir(parents=True, exist_ok=True)
         output = self.output_directory / config.output_filename
         output.write_bytes(b"small mp4 fixture")
@@ -127,7 +133,13 @@ class FileRenderer:
 
 
 class FailingRenderer:
-    def render(self, timeline: Timeline, config: RenderConfig) -> RenderResult:
+    def render(
+        self, timeline: Timeline, config: RenderConfig, motion_plan: object = None,
+        attention_plan: object = None,
+        style_plan: object = None,
+        longform_plan: object = None,
+    ) -> RenderResult:
+        del motion_plan, attention_plan, style_plan, longform_plan
         del timeline, config
         raise RuntimeError("temporary encoder failure")
 

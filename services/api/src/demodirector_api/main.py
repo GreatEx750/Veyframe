@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from starlette.responses import Response
 
 from demodirector_api.ai_routes import router as ai_router
+from demodirector_api.attention_director import AttentionDirector, GoogleADKAttentionGateway
 from demodirector_api.auth import (
     AuthenticationError,
     AuthService,
@@ -81,6 +82,8 @@ from demodirector_api.google_ai import (
 from demodirector_api.health import HealthResponse
 from demodirector_api.inspection_routes import router as inspection_router
 from demodirector_api.job_routes import router as generation_router
+from demodirector_api.longform_director import GoogleADKLongFormGateway, LongFormDirector
+from demodirector_api.motion_director import ADKMotionDirector, GoogleADKMotionGateway
 from demodirector_api.optimization import OptimizationService
 from demodirector_api.optimization_routes import router as optimization_router
 from demodirector_api.parallel_search import (
@@ -116,6 +119,7 @@ from demodirector_api.research_tools import create_product_research_tool
 from demodirector_api.review_routes import router as review_router
 from demodirector_api.storyboard_generation import StoryboardGenerationService
 from demodirector_api.storyboard_routes import router as storyboard_router
+from demodirector_api.style_director import GoogleADKStyleGateway, StyleDirector
 from demodirector_api.timeline_edits import TimelineEditService
 from demodirector_api.timeline_routes import router as timeline_router
 from demodirector_api.understanding_routes import router as understanding_router
@@ -358,6 +362,27 @@ def create_app(
             exports=application.state.export_service,
             timeline_media_store=timeline_media_store,
         )
+        application.state.motion_director = ADKMotionDirector(
+            records,
+            GoogleADKMotionGateway(settings.model_name),
+        )
+        application.state.attention_director = AttentionDirector(
+            records,
+            GoogleADKAttentionGateway(settings.model_name),
+        )
+        application.state.style_director = StyleDirector(
+            records,
+            GoogleADKStyleGateway(settings.model_name),
+        )
+        application.state.longform_director = LongFormDirector(
+            records,
+            GoogleADKLongFormGateway(settings.model_name),
+        )
+    else:
+        application.state.motion_director = None
+        application.state.attention_director = None
+        application.state.style_director = None
+        application.state.longform_director = None
 
     research_tool = create_product_research_tool(projects, resolved_research_service)
     application.state.generation_jobs = None
@@ -384,7 +409,16 @@ def create_app(
             vault = CaptureTokenVault(artifact_root, firestore_client is not None)
             application.state.generation_jobs = GenerationJobs(
                 records,
-                GenerationStages(generation, records, vault, evidence_service),
+                GenerationStages(
+                    generation,
+                    records,
+                    vault,
+                    evidence_service,
+                    application.state.motion_director,
+                    application.state.attention_director,
+                    application.state.style_director,
+                    application.state.longform_director,
+                ),
                 dispatcher,
                 generation,
                 vault,

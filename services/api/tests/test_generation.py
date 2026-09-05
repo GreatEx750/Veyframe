@@ -188,7 +188,8 @@ class FakeCaptureWorker:
         self.scenes.append(scene)
         self.session_tokens.append(session_token)
         holds = [action for action in scene.capture_plan.actions if action.type == "wait_for"]
-        assert [hold.value for hold in holds] == [4_000] * 5
+        assert len(holds) == 5
+        assert sum(int(hold.value or 0) for hold in holds) == round(scene.duration_seconds * 1_000)
         return SceneCaptureResult(
             scene_id=scene.id,
             status="succeeded",
@@ -227,6 +228,44 @@ class FailingCaptureWorker(FakeCaptureWorker):
         )
 
 
+class CaptureWithoutClickWorker(FakeCaptureWorker):
+    def capture_scene(
+        self,
+        scene: Scene,
+        *,
+        session_token: str | None = None,
+    ) -> SceneCaptureResult:
+        captured = super().capture_scene(scene, session_token=session_token)
+        return captured.model_copy(
+            update={
+                "interaction_events": [
+                    event.model_copy(update={"event_type": "scroll"})
+                    for event in captured.interaction_events
+                ]
+            }
+        )
+
+
+class BoundaryClickWorker(FakeCaptureWorker):
+    def __init__(self, timestamp_ms: int) -> None:
+        super().__init__()
+        self.timestamp_ms = timestamp_ms
+
+    def capture_scene(
+        self,
+        scene: Scene,
+        *,
+        session_token: str | None = None,
+    ) -> SceneCaptureResult:
+        captured = super().capture_scene(scene, session_token=session_token)
+        event = captured.interaction_events[0].model_copy(
+            update={"timestamp_ms": self.timestamp_ms}
+        )
+        return captured.model_copy(
+            update={"duration_ms": 120_100, "interaction_events": [event]}
+        )
+
+
 class FakeNarrationService:
     def generate(
         self,
@@ -256,6 +295,7 @@ class FakeNarrationService:
 class FakeExportService:
     def __init__(self) -> None:
         self.timeline: Timeline | None = None
+        self.video: VideoExport | None = None
 
     def create(
         self,
@@ -265,7 +305,7 @@ class FakeExportService:
     ) -> VideoExport:
         assert quality == "1440p"
         self.timeline = timeline
-        return VideoExport(
+        self.video = VideoExport(
             id="export-one-click",
             project_id=project_id,
             status="succeeded",
@@ -273,7 +313,7 @@ class FakeExportService:
             filename="demo.mp4",
             width=2560,
             height=1440,
-            duration_ms=20_000,
+            duration_ms=timeline.duration_ms,
             size_bytes=1024,
             download_url=(
                 f"/projects/{project_id}/exports/export-one-click/download"
@@ -282,6 +322,12 @@ class FakeExportService:
             retryable=False,
             created_at=datetime.now(UTC),
         )
+        return self.video
+
+    def get(self, project_id: str, export_id: str) -> VideoExport | None:
+        if self.video is None or self.video.project_id != project_id or self.video.id != export_id:
+            return None
+        return self.video
 
 
 def build_service(tmp_path: Path, capture_worker: CaptureWorker) -> tuple[
@@ -351,6 +397,65 @@ def test_one_click_generation_persists_an_exact_timeline_and_export(tmp_path: Pa
     )
     assert exports.timeline == timeline
     assert projects.get("project-one-click") == result.project
+
+
+def test_timeline_snapshots_presentation_mode_and_bypasses_zoom_without_losing_events(
+    tmp_path: Path,
+) -> None:
+    capture = FakeCaptureWorker()
+    service, projects, timelines, _ = build_service(tmp_path, capture)
+    project = projects.get("project-one-click")
+    assert project is not None
+    projects.update(
+        project.model_copy(
+            update={
+                "demo_mode": "presentation_demo",
+                "zoom_enabled": False,
+                "requested_duration_seconds": 120,
+            }
+        )
+    )
+
+    service.generate("project-one-click")
+    state = timelines.current("project-one-click")
+
+    assert state is not None
+    timeline = state.current.timeline
+    assert timeline.duration_ms == 120_000
+    assert timeline.demo_mode == "presentation_demo"
+    assert timeline.presentation_pack_id == "presentation-story@1"
+    assert timeline.presentation.zoom_enabled is False
+    assert timeline.zoom_clips, "camera suggestions stay available for reversible re-enabling"
+    assert len(timeline.cursor_events) == 5
+    assert all(event.event_type == "click" for event in timeline.cursor_events)
+
+
+def test_generation_rejects_a_capture_without_real_click_proof(tmp_path: Path) -> None:
+    service, _, _, _ = build_service(tmp_path, CaptureWithoutClickWorker())
+
+    with pytest.raises(DemoGenerationError, match="captured click"):
+        service.generate("project-one-click")
+
+
+@pytest.mark.parametrize("timestamp_ms", [5_000, 115_000, 120_000])
+def test_presentation_generation_rejects_clicks_hidden_by_authored_boundaries(
+    tmp_path: Path,
+    timestamp_ms: int,
+) -> None:
+    service, projects, _, _ = build_service(tmp_path, BoundaryClickWorker(timestamp_ms))
+    project = projects.get("project-one-click")
+    assert project is not None
+    projects.update(
+        project.model_copy(
+            update={
+                "demo_mode": "presentation_demo",
+                "requested_duration_seconds": 120,
+            }
+        )
+    )
+
+    with pytest.raises(DemoGenerationError, match="visible captured click"):
+        service.generate(project.id)
 
 
 def test_one_click_generation_forwards_session_only_to_inspection_and_capture(

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from uuid import NAMESPACE_URL, uuid5
 
 import pytest
 from demodirector_api.parallel_search import (
@@ -132,3 +133,6 @@ def test_normalization_creates_stable_typed_sources_and_skips_invalid_results() 
     assert len(first) == 1
     assert first[0].source_type == "partner_search"
     assert first[0].snippet == "Feature one.\n\nFeature two."
+    assert first[0].id != str(
+        uuid5(NAMESPACE_URL, "project-1:https://example.com/docs")
+    )

@@ -38,7 +38,7 @@ export function GenerationProgress({ projectId }: { projectId: string }) {
     <p>You may close this browser. Reopen this page to see saved progress.</p>
     {error && <p role="alert">{error}</p>}
     <p role="status">{job?.message ?? "Loading saved job…"}</p>
-    {job && <><p>Stage: {job.stage} · {job.completed_stages.length}/7 completed</p><ul>{job.completed_stages.map((stage) => <li key={stage}>{stage} saved</li>)}</ul>
+    {job && <><p>Stage: {job.stage} · {job.completed_stages.length}/10 completed</p><ul>{job.completed_stages.map((stage) => <li key={stage}>{stage} saved</li>)}</ul>
       {job.status === "awaiting_retry" && <><p>Only the failed stage will run again. If its earlier provider call completed without saving, retrying may incur another charge.</p><button disabled={busy || job.attempts >= 3} onClick={() => void retry()} type="button">Approve retry of this stage</button></>}
       {job.status === "queued" && <><p>Local development requires the separate generation worker. Cloud runs use the configured task queue.</p><button type="button" disabled={busy} onClick={() => void retry()}>Ensure job is dispatched</button></>}
       {job.status === "awaiting_approval" && <Link href={`/projects/${projectId}/storyboard`}>Review evidence and approve storyboard</Link>}

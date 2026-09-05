@@ -81,7 +81,7 @@ def _apply_operation(timeline: Timeline, operation: EditOperation) -> Timeline:
         scene = next(clip for clip in timeline.scene_clips if clip.id == operation.target_id)
         start = cast(int, arguments["start_ms"])
         end = cast(int, arguments["end_ms"])
-        return _trim_scene(timeline, scene, end - start)
+        return _trim_scene(timeline, scene, start, end)
     if kind == "delete_scene":
         return _delete_scene(timeline, operation.target_id)
     if kind == "reorder_scene":
@@ -136,13 +136,24 @@ def _apply_operation(timeline: Timeline, operation: EditOperation) -> Timeline:
         return timeline.model_copy(update={"cta_text": str(arguments["cta"])})
     if kind == "change_presentation":
         return timeline.model_copy(
-            update={"presentation": VideoPresentationConfig.model_validate(arguments)}
+            update={
+                "presentation": VideoPresentationConfig.model_validate(
+                    {**timeline.presentation.model_dump(), **arguments}
+                )
+            }
         )
     raise TimelineEditError(f"Unsupported timeline edit operation: {kind}")
 
 
-def _trim_scene(timeline: Timeline, scene: SceneClip, new_duration: int) -> Timeline:
+def _trim_scene(
+    timeline: Timeline,
+    scene: SceneClip,
+    trim_start: int,
+    trim_end: int,
+) -> Timeline:
     old_duration = scene.end_ms - scene.start_ms
+    new_duration = trim_end - trim_start
+    leading_removed = trim_start - scene.start_ms
     removed = old_duration - new_duration
     new_end = scene.start_ms + new_duration
 
@@ -159,6 +170,11 @@ def _trim_scene(timeline: Timeline, scene: SceneClip, new_duration: int) -> Time
                 update={
                     "start_ms": start,
                     "end_ms": new_end if clip.id == scene.id else end,
+                    "source_start_ms": (
+                        clip.source_start_ms + leading_removed
+                        if clip.id == scene.id
+                        else clip.source_start_ms
+                    ),
                 }
             )
         )

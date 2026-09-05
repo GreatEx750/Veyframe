@@ -10,22 +10,25 @@
     "dev": "concurrently -k -n web,api \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "npm run dev --workspace @demodirector/web",
     "dev:api": "node scripts/python-runner.mjs -m uvicorn demodirector_api.main:app --app-dir services/api/src --reload --port 8000",
+    "templates:presentation": "node scripts/build-presentation-template-assets.mjs",
     "contracts:schema": "node scripts/python-runner.mjs scripts/export-contract-schema.py",
     "test": "npm run test:runner && npm run test:contracts && npm run test:web && npm run test:python",
-    "test:runner": "node --test scripts/python-runner.test.mjs",
+    "test:runner": "node --test scripts/*.test.mjs",
     "test:contracts": "npm run test --workspace @demodirector/contracts",
     "test:web": "npm run test --workspace @demodirector/web",
     "test:python": "node scripts/python-runner.mjs -m pytest",
-    "lint": "npm run lint:web && npm run lint:contracts && node scripts/python-runner.mjs -m ruff check packages/contracts/python packages/contracts/tests scripts/export-contract-schema.py services",
+    "lint": "npm run lint:web && npm run lint:contracts && node scripts/python-runner.mjs -m ruff check packages/contracts/python packages/contracts/tests test_support scripts/export-contract-schema.py services",
     "lint:web": "npm run lint --workspace @demodirector/web",
     "lint:contracts": "npm run lint --workspace @demodirector/contracts",
-    "typecheck": "npm run typecheck:web && npm run typecheck:contracts && node scripts/python-runner.mjs -m mypy packages/contracts/python packages/contracts/tests services/api/src services/api/tests services/worker/src services/worker/tests",
+    "typecheck": "npm run typecheck:web && npm run typecheck:contracts && node scripts/python-runner.mjs -m mypy packages/contracts/python packages/contracts/tests test_support services/api/src services/api/tests services/worker/src services/worker/tests",
     "typecheck:web": "npm run typecheck --workspace @demodirector/web",
     "typecheck:contracts": "npm run typecheck --workspace @demodirector/contracts",
     "compliance": "node scripts/python-runner.mjs scripts/check-production-repo.py"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@fontsource-variable/inter": "^5.3.0",
+    "concurrently": "^9.2.1",
+    "sharp": "^0.35.4"
   },
   "engines": {
     "node": ">=20.9.0"

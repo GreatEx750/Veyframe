@@ -19,3 +19,13 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+demodirector_worker = [
+  "templates/**/*.json",
+  "templates/**/*.md",
+  "templates/**/*.png",
+  "templates/**/*.svg",
+  "templates/**/*.txt",
+  "templates/**/*.woff2",
+]

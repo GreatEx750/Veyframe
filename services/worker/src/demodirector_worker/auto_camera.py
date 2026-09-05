@@ -143,6 +143,9 @@ class AutoCameraService:
         for event_index, event in enumerate(events):
             if event.event_type not in {"click", "fill", "select"} or event.bounding_box is None:
                 continue
+            box = event.bounding_box
+            if box.x >= event.viewport.width or box.y >= event.viewport.height:
+                continue
             start_ms = max(0, event.timestamp_ms - self.settings.lead_in_ms)
             if start_ms >= duration_ms:
                 continue

@@ -197,6 +197,45 @@ def test_fixture_scene_records_webm_and_safe_action_results(tmp_path: Path) -> N
     assert (stream["width"], stream["height"]) == (2560, 1440)
 
 
+def test_offscreen_interaction_is_recorded_inside_the_viewport(tmp_path: Path) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Offscreen target fixture</title>
+<div style="height: 2400px"></div>
+<button>Related article</button>""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="click",
+                        locator_strategy="role",
+                        locator="button:Related article",
+                        description="Open the related article",
+                    )
+                ],
+                success_assertions=[],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+    event = result.interaction_events[0]
+    assert event.bounding_box is not None
+    assert 0 <= event.bounding_box.y < event.viewport.height
+    assert event.bounding_box.y + event.bounding_box.height <= event.viewport.height
+
+
 def test_bad_locator_is_retryable_and_saves_failure_screenshot(tmp_path: Path) -> None:
     site = tmp_path / "site"
     write_fixture(site)
@@ -475,6 +514,44 @@ def test_placeholder_assertion_uses_a_visible_match_when_page_has_duplicates(
                         description="Assert a search field remains visible",
                     )
                 ],
+                timeout_seconds=2,
+            )
+        }
+    )
+
+    with fixture_server(site) as url:
+        plan = scene.capture_plan.model_copy(update={"start_url": HttpUrl(url)})
+        result = worker.capture_scene(scene.model_copy(update={"capture_plan": plan}))
+
+    assert result.status == "succeeded"
+
+
+def test_placeholder_fill_uses_a_visible_match_when_page_has_duplicates(
+    tmp_path: Path,
+) -> None:
+    site = tmp_path / "site"
+    site.mkdir()
+    (site / "index.html").write_text(
+        """<!doctype html><title>Duplicate search fixture</title>
+<input type="search" placeholder="Search Wikipedia">
+<input type="search" placeholder="Search Wikipedia">""",
+        encoding="utf-8",
+    )
+    worker = PlaywrightCaptureWorker(tmp_path / "artifacts")
+    scene = scene_for("https://example.com").model_copy(
+        update={
+            "capture_plan": CapturePlan(
+                start_url=HttpUrl("https://example.com"),
+                actions=[
+                    CaptureAction(
+                        type="fill",
+                        locator_strategy="placeholder",
+                        locator="Search Wikipedia",
+                        value="Artificial intelligence",
+                        description="Enter the article topic",
+                    )
+                ],
+                success_assertions=[],
                 timeout_seconds=2,
             )
         }

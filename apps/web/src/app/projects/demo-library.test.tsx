@@ -47,9 +47,11 @@ const projects = [
     product_summary: "Show the complete Northstar workflow.",
     audience: "Product leaders",
     tone: "Professional",
-    requested_duration_seconds: 20,
+    requested_duration_seconds: 120,
     cta: "Start a trial",
     brand_kit_id: null,
+    demo_mode: "presentation_demo",
+    zoom_enabled: true,
     status: "published",
     job_status: "succeeded",
     created_at: "2026-09-01T14:00:00Z",
@@ -87,6 +89,8 @@ describe("DemoLibrary", () => {
     expect(await screen.findByText("FlowSync Feature Tour")).toBeInTheDocument();
     expect(screen.getAllByText("Rendering").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Failed").length).toBeGreaterThan(0);
+    const presentationProject = screen.getByRole("link", { name: /Northstar Launch Demo/ });
+    expect(within(presentationProject).getByText("Presentation")).toBeInTheDocument();
   });
 
   it("searches and filters project cards", async () => {

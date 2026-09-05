@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -75,3 +76,65 @@ def test_sqlite_repository_lists_projects_by_most_recent_update(tmp_path: Path) 
     repository.create(newer)
 
     assert [project.id for project in repository.list()] == ["newer", "older"]
+
+
+def test_sqlite_repository_migrates_legacy_projects_with_safe_mode_defaults(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "legacy.db"
+    project = make_project()
+    with sqlite3.connect(database_path) as connection:
+        connection.execute(
+            """
+            CREATE TABLE projects (
+                id TEXT PRIMARY KEY, name TEXT NOT NULL, website_url TEXT NOT NULL,
+                product_summary TEXT NOT NULL, audience TEXT NOT NULL, tone TEXT NOT NULL,
+                requested_duration_seconds INTEGER NOT NULL, cta TEXT NOT NULL,
+                brand_kit_id TEXT, status TEXT NOT NULL, job_status TEXT NOT NULL,
+                owner_user_id TEXT NOT NULL DEFAULT 'system', created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO projects VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                project.id,
+                project.name,
+                str(project.website_url),
+                project.product_summary,
+                project.audience,
+                project.tone,
+                project.requested_duration_seconds,
+                project.cta,
+                project.brand_kit_id,
+                project.status,
+                project.job_status,
+                project.owner_user_id,
+                project.created_at.isoformat(),
+                project.updated_at.isoformat(),
+            ),
+        )
+
+    migrated = SQLiteProjectRepository(database_path).get(project.id)
+
+    assert migrated is not None
+    assert migrated.demo_mode == "product_demo"
+    assert migrated.zoom_enabled is True
+
+
+def test_sqlite_repository_round_trips_presentation_preferences(tmp_path: Path) -> None:
+    repository = SQLiteProjectRepository(tmp_path / "projects.db")
+    project = make_project().model_copy(
+        update={
+            "demo_mode": "presentation_demo",
+            "zoom_enabled": False,
+            "requested_duration_seconds": 120,
+        }
+    )
+
+    repository.create(project)
+
+    assert repository.get(project.id) == project

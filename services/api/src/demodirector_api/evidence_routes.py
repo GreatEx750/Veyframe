@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from demodirector_contracts.evidence import StoryboardEvidence
+from demodirector_contracts.evidence import SourceContributionMap, StoryboardEvidence
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -29,6 +29,18 @@ class ApprovalRequest(BaseModel):
 def evidence(project_id: str, service: Evidence) -> StoryboardEvidence:
     try:
         return service.dashboard(project_id)
+    except KeyError as error:
+        raise HTTPException(404, "Storyboard not found") from error
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+
+
+@router.get(
+    "/projects/{project_id}/source-contributions", response_model=SourceContributionMap
+)
+def source_contributions(project_id: str, service: Evidence) -> SourceContributionMap:
+    try:
+        return service.contribution_map(project_id)
     except KeyError as error:
         raise HTTPException(404, "Storyboard not found") from error
     except ValueError as error:

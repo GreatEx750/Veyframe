@@ -5,7 +5,7 @@ type Context = { params: Promise<{ projectId: string; path: string[] }> };
 async function proxy(request: Request, context: Context) {
   const { projectId, path } = await context.params;
   const suffix = path.join("/");
-  const allowed = /^(exports\/[^/]+\/reviews(\/latest)?|optimizations(\/[^/]+(\/(apply|cancel))?)?|evidence|storyboard-approval)$/.test(suffix);
+  const allowed = /^(exports\/[^/]+\/reviews(\/latest)?|optimizations(\/[^/]+(\/(apply|cancel))?)?|evidence|source-contributions|storyboard-approval)$/.test(suffix);
   if (!allowed || path.some((p) => p === "." || p === ".." || /[?#\\]/.test(p))) return NextResponse.json({ detail: "Not found" }, { status: 404 });
   try {
     const response = await fetch(new URL(`/projects/${encodeURIComponent(projectId)}/${path.map(encodeURIComponent).join("/")}`, process.env.API_BASE_URL ?? "http://localhost:8000"), {

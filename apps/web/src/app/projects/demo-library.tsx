@@ -178,7 +178,7 @@ export function DemoLibrary() {
                 </div>
                 <div className="demo-card-body">
                   <h3>{project.name}</h3>
-                  <p><i className={`status-dot status-${project.status}`} />{statusLabels[project.status]} <span>Web</span></p>
+                  <p><i className={`status-dot status-${project.status}`} />{statusLabels[project.status]} <span>{project.demo_mode === "presentation_demo" ? "Presentation" : "Product"}</span></p>
                 </div>
               </Link>
               <footer>

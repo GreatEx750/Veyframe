@@ -7,8 +7,29 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
-from demodirector_contracts.evidence import StoryboardEvidence
-from demodirector_contracts.jobs import GenerationJob
+from demodirector_contracts.attention import (
+    AttentionPlan,
+    AttentionRequest,
+    AttentionRunStep,
+    CompiledAttentionPlan,
+)
+from demodirector_contracts.editorial import (
+    CompiledEditorialComposition,
+    EditorialTemplateCatalog,
+    EditorialTemplatePlan,
+    ProductPresenceReport,
+)
+from demodirector_contracts.evidence import SourceContributionMap, StoryboardEvidence
+from demodirector_contracts.jobs import GenerationJob, GenerationTrace
+from demodirector_contracts.longform import (
+    ChapterCheckpoint,
+    CompiledLongFormPlan,
+    LongFormADKRun,
+    LongFormADKStep,
+    LongFormDirectionRequest,
+    LongFormValidationReport,
+    LongFormVideoPlan,
+)
 from demodirector_contracts.models import (
     AuthError,
     BriefCoverageReport,
@@ -38,11 +59,50 @@ from demodirector_contracts.models import (
     VideoExport,
     ZoomClip,
 )
+from demodirector_contracts.motion import (
+    ADKMotionRun,
+    CompiledMotionComposition,
+    MotionDirectionPlan,
+    MotionDirectionRequest,
+    MotionTokenSet,
+)
 from demodirector_contracts.quality import OptimizationRun, VideoReview
+from demodirector_contracts.style import (
+    CompiledStyleDirection,
+    StyleDirectionPlan,
+    StyleDirectionRequest,
+    StyleRunStep,
+)
 
 CONTRACT_MODELS: tuple[type[BaseModel], ...] = (
+    AttentionRequest,
+    AttentionPlan,
+    AttentionRunStep,
+    CompiledAttentionPlan,
+    EditorialTemplateCatalog,
+    EditorialTemplatePlan,
+    ProductPresenceReport,
+    CompiledEditorialComposition,
     GenerationJob,
+    GenerationTrace,
+    LongFormVideoPlan,
+    LongFormADKRun,
+    LongFormADKStep,
+    LongFormDirectionRequest,
+    ChapterCheckpoint,
+    LongFormValidationReport,
+    CompiledLongFormPlan,
+    ADKMotionRun,
+    MotionDirectionRequest,
+    MotionDirectionPlan,
+    MotionTokenSet,
+    CompiledMotionComposition,
+    StyleDirectionRequest,
+    StyleDirectionPlan,
+    StyleRunStep,
+    CompiledStyleDirection,
     StoryboardEvidence,
+    SourceContributionMap,
     VideoReview,
     OptimizationRun,
     Project,

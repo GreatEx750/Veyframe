@@ -12,6 +12,10 @@ from urllib.parse import quote
 from uuid import uuid4
 
 from demodirector_contracts import RenderConfig, RenderResult, Timeline, VideoExport
+from demodirector_contracts.attention import AttentionPlan
+from demodirector_contracts.longform import LongFormVideoPlan
+from demodirector_contracts.motion import MotionDirectionPlan
+from demodirector_contracts.style import StyleDirectionPlan
 
 from demodirector_api.records import RecordStore
 from demodirector_api.repositories import TimelineRepository
@@ -22,7 +26,15 @@ class ExportError(RuntimeError):
 
 
 class TimelineRenderer(Protocol):
-    def render(self, timeline: Timeline, config: RenderConfig) -> RenderResult: ...
+    def render(
+        self,
+        timeline: Timeline,
+        config: RenderConfig,
+        motion_plan: MotionDirectionPlan | None = None,
+        attention_plan: AttentionPlan | None = None,
+        style_plan: StyleDirectionPlan | None = None,
+        longform_plan: LongFormVideoPlan | None = None,
+    ) -> RenderResult: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -314,6 +326,8 @@ class ExportService:
             raise ExportError("Export timeline does not belong to the requested project.")
         if quality not in {"1440p", "1080p", "720p"}:
             raise ExportError("Export quality must be 1440p, 1080p, or 720p.")
+        if timeline.long_form_plan_id is not None and quality != "1440p":
+            raise ExportError("Three-minute directed exports require 1440p.")
         export_id = str(uuid4())
         filename = f"demodirector-{project_id}-{export_id}.mp4"
         dimensions = {
@@ -323,6 +337,74 @@ class ExportService:
         }
         width, height = dimensions[quality]
         try:
+            motion_plan: MotionDirectionPlan | None = None
+            if timeline.motion_plan_id is not None:
+                if self.records is None:
+                    raise ExportError("Motion plan storage is unavailable.")
+                stored_plan = self.records.get(f"motion-plan-{timeline.motion_plan_id}")
+                if stored_plan is None:
+                    raise ExportError("The validated motion plan is unavailable.")
+                motion_plan = MotionDirectionPlan.model_validate(stored_plan[1])
+                if (
+                    motion_plan.project_id != project_id
+                    or motion_plan.duration_ms != timeline.duration_ms
+                    or motion_plan.design_tokens.version != timeline.motion_design_version
+                ):
+                    raise ExportError("The validated motion plan does not match this timeline.")
+            attention_plan: AttentionPlan | None = None
+            if timeline.attention_plan_id is not None:
+                if self.records is None:
+                    raise ExportError("Attention plan storage is unavailable.")
+                stored_attention = self.records.get(
+                    f"attention-plan-{timeline.attention_plan_id}"
+                )
+                if stored_attention is None:
+                    raise ExportError("The validated attention plan is unavailable.")
+                attention_plan = AttentionPlan.model_validate(stored_attention[1])
+                if (
+                    attention_plan.project_id != project_id
+                    or attention_plan.duration_ms != timeline.duration_ms
+                    or motion_plan is None
+                    or attention_plan.parent_run_id != motion_plan.run_id
+                ):
+                    raise ExportError("The validated attention plan does not match this timeline.")
+            style_plan: StyleDirectionPlan | None = None
+            if timeline.style_plan_id is not None:
+                if self.records is None:
+                    raise ExportError("Style plan storage is unavailable.")
+                stored_style = self.records.get(f"style-plan-{timeline.style_plan_id}")
+                if stored_style is None:
+                    raise ExportError("The validated style plan is unavailable.")
+                style_plan = StyleDirectionPlan.model_validate(stored_style[1])
+                if (
+                    style_plan.project_id != project_id
+                    or style_plan.version != timeline.style_design_version
+                    or style_plan.decision.selected_variant != timeline.visual_variant
+                    or motion_plan is None
+                    or style_plan.parent_run_id != motion_plan.run_id
+                ):
+                    raise ExportError("The validated style plan does not match this timeline.")
+            longform_plan: LongFormVideoPlan | None = None
+            if timeline.long_form_plan_id is not None:
+                if self.records is None:
+                    raise ExportError("Long-form plan storage is unavailable.")
+                stored_longform = self.records.get(
+                    f"longform-plan-{timeline.long_form_plan_id}"
+                )
+                if stored_longform is None:
+                    raise ExportError("The validated long-form plan is unavailable.")
+                longform_plan = LongFormVideoPlan.model_validate(stored_longform[1])
+                if (
+                    longform_plan.project_id != project_id
+                    or longform_plan.version != timeline.long_form_version
+                    or longform_plan.duration_ms != timeline.duration_ms
+                    or motion_plan is None
+                    or style_plan is None
+                    or longform_plan.parent_motion_run_id != motion_plan.run_id
+                    or longform_plan.visual_variant
+                    != style_plan.decision.selected_variant
+                ):
+                    raise ExportError("The validated long-form plan does not match this timeline.")
             rendered = self.renderer.render(
                 self.timeline_media_store.materialize(timeline),
                 RenderConfig(
@@ -331,6 +413,10 @@ class ExportService:
                     fps=30,
                     output_filename=filename,
                 ),
+                motion_plan,
+                attention_plan,
+                style_plan,
+                longform_plan,
             )
             if rendered.status != "succeeded" or rendered.output_path is None:
                 raise ExportError(rendered.error or "Renderer did not produce an export file.")

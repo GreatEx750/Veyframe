@@ -55,6 +55,7 @@ ProjectStatus = Literal[
 ]
 ProjectJobStatus = Literal["idle", "queued", "running", "succeeded", "failed"]
 UserRole = Literal["customer", "judge_demo", "system"]
+DemoMode = Literal["product_demo", "presentation_demo"]
 
 
 class ContractModel(BaseModel):
@@ -86,11 +87,19 @@ class Project(ContractModel):
     requested_duration_seconds: int = Field(gt=0)
     cta: NonEmptyString
     brand_kit_id: NonEmptyString | None = None
+    demo_mode: DemoMode = "product_demo"
+    zoom_enabled: bool = True
     status: ProjectStatus = "draft"
     job_status: ProjectJobStatus = "idle"
     owner_user_id: NonEmptyString = "system"
     created_at: datetime
     updated_at: datetime
+
+    @model_validator(mode="after")
+    def presentation_demo_uses_mvp_duration(self) -> Project:
+        if self.demo_mode == "presentation_demo" and self.requested_duration_seconds != 120:
+            raise ValueError("Presentation Demo must be exactly 120 seconds for the MVP")
+        return self
 
 
 class UserIdentity(ContractModel):
@@ -369,6 +378,14 @@ class InteractionEvent(ContractModel):
     bounding_box: BoundingBox | None = None
     viewport: Viewport
 
+    @model_validator(mode="after")
+    def coordinates_fit_viewport(self) -> InteractionEvent:
+        if self.x is not None and self.x > self.viewport.width:
+            raise ValueError("x coordinate must fit within viewport")
+        if self.y is not None and self.y > self.viewport.height:
+            raise ValueError("y coordinate must fit within viewport")
+        return self
+
 
 class CaptureActionResult(ContractModel):
     action_index: int = Field(ge=0)
@@ -453,6 +470,7 @@ class TimelineClip(ContractModel):
 class SceneClip(TimelineClip):
     scene_id: NonEmptyString
     source_uri: NonEmptyString
+    source_start_ms: Milliseconds = 0
 
 
 class CaptionClip(TimelineClip):
@@ -505,11 +523,25 @@ class ZoomClip(TimelineClip):
 
 class VideoPresentationConfig(ContractModel):
     template: Literal["edge_to_edge", "soft_frame", "spotlight"] = "edge_to_edge"
+    zoom_enabled: bool = True
 
 
 class Timeline(ContractModel):
     project_id: NonEmptyString
     duration_ms: int = Field(gt=0)
+    demo_mode: DemoMode = "product_demo"
+    presentation_pack_id: Literal["presentation-story@1"] | None = None
+    motion_plan_id: NonEmptyString | None = None
+    motion_design_version: Literal["motion-v1"] | None = None
+    attention_plan_id: NonEmptyString | None = None
+    attention_design_version: Literal["attention-v1"] | None = None
+    style_plan_id: NonEmptyString | None = None
+    style_design_version: Literal["style-v1"] | None = None
+    visual_variant: Literal[
+        "editorial_story", "product_spotlight", "technical_proof"
+    ] | None = None
+    long_form_plan_id: NonEmptyString | None = None
+    long_form_version: Literal["longform-v1"] | None = None
     scene_clips: list[SceneClip] = Field(default_factory=list)
     caption_clips: list[CaptionClip] = Field(default_factory=list)
     zoom_clips: list[ZoomClip] = Field(default_factory=list)
@@ -525,8 +557,54 @@ class Timeline(ContractModel):
         clips = self.scene_clips + self.caption_clips + self.zoom_clips + self.audio_clips
         if any(clip.end_ms > self.duration_ms for clip in clips):
             raise ValueError("clip time range must fit within the timeline duration")
-        if any(event.timestamp_ms > self.duration_ms for event in self.cursor_events):
-            raise ValueError("cursor timestamps may not exceed timeline duration")
+        if any(event.timestamp_ms >= self.duration_ms for event in self.cursor_events):
+            raise ValueError("cursor timestamps must be earlier than timeline duration")
+        if (self.motion_plan_id is None) != (self.motion_design_version is None):
+            raise ValueError("motion plan ID and design version must be stored together")
+        if (self.attention_plan_id is None) != (self.attention_design_version is None):
+            raise ValueError("attention plan ID and design version must be stored together")
+        style_values = (
+            self.style_plan_id,
+            self.style_design_version,
+            self.visual_variant,
+        )
+        if any(value is None for value in style_values) != all(
+            value is None for value in style_values
+        ):
+            raise ValueError("style plan, version, and visual variant must be stored together")
+        if (self.long_form_plan_id is None) != (self.long_form_version is None):
+            raise ValueError("long-form plan ID and version must be stored together")
+        if self.demo_mode == "presentation_demo" and self.presentation_pack_id is None:
+            raise ValueError("Presentation Demo requires the shipped presentation template pack")
+        if self.demo_mode == "presentation_demo" and self.duration_ms != 120_000:
+            raise ValueError("Presentation Demo must be exactly 120 seconds for the MVP")
+        if self.demo_mode == "presentation_demo":
+            ordered_scenes = sorted(self.scene_clips, key=lambda clip: clip.start_ms)
+            expected_start = 0
+            for scene in ordered_scenes:
+                if scene.start_ms != expected_start:
+                    raise ValueError(
+                        "Presentation Demo product footage must cover the complete timeline"
+                    )
+                expected_start = scene.end_ms
+            if not ordered_scenes or expected_start != self.duration_ms:
+                raise ValueError(
+                    "Presentation Demo product footage must cover the complete timeline"
+                )
+            has_visible_click = any(
+                event.event_type == "click"
+                and event.x is not None
+                and event.y is not None
+                and 5_000 < event.timestamp_ms < 115_000
+                for event in self.cursor_events
+            )
+            if not has_visible_click:
+                raise ValueError(
+                    "Presentation Demo requires a captured click inside the visible "
+                    "product interval"
+                )
+        if self.demo_mode == "product_demo" and self.presentation_pack_id is not None:
+            raise ValueError("Product Demo may not apply a presentation template pack")
         return self
 
 
@@ -546,6 +624,10 @@ class RenderResult(ContractModel):
     height: int = Field(gt=0)
     has_video: bool
     has_audio: bool
+    motion_composition_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    long_form_composition_hash: str | None = Field(
+        default=None, pattern=r"^[a-f0-9]{64}$"
+    )
     error: NonEmptyString | None = None
 
 

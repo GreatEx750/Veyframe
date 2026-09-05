@@ -1,5 +1,523 @@
 {
   "$defs": {
+    "ADKMotionRun": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_name": {
+          "const": "demodirector_motion_director",
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "input_artifact_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 120,
+          "minItems": 1,
+          "title": "Input Artifact Ids",
+          "type": "array"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "output_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Plan Id"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "retry_count": {
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Retry Count",
+          "type": "integer"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "validation_status": {
+          "enum": [
+            "pending",
+            "passed",
+            "failed"
+          ],
+          "title": "Validation Status",
+          "type": "string"
+        },
+        "workflow_runs": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Workflow Runs",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "session_id",
+        "agent_name",
+        "model",
+        "status",
+        "started_at",
+        "retry_count",
+        "workflow_runs",
+        "input_artifact_ids",
+        "validation_status",
+        "message"
+      ],
+      "title": "ADKMotionRun",
+      "type": "object"
+    },
+    "AnimatedCallout": {
+      "additionalProperties": false,
+      "properties": {
+        "callout_type": {
+          "enum": [
+            "label_connector",
+            "spotlight",
+            "numbered_step",
+            "feature_card",
+            "status_badge",
+            "metric_card",
+            "before_after"
+          ],
+          "title": "Callout Type",
+          "type": "string"
+        },
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "placement": {
+          "enum": [
+            "top_left",
+            "top_right",
+            "bottom_left",
+            "bottom_right"
+          ],
+          "title": "Placement",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "target_id": {
+          "minLength": 1,
+          "title": "Target Id",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 72,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_id",
+        "callout_type",
+        "placement",
+        "start_ms",
+        "end_ms",
+        "text",
+        "id"
+      ],
+      "title": "AnimatedCallout",
+      "type": "object"
+    },
+    "AttentionPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "callouts": {
+          "items": {
+            "$ref": "#/$defs/AnimatedCallout"
+          },
+          "maxItems": 40,
+          "title": "Callouts",
+          "type": "array"
+        },
+        "caption_emphasis": {
+          "items": {
+            "$ref": "#/$defs/CaptionEmphasis"
+          },
+          "maxItems": 80,
+          "title": "Caption Emphasis",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 600000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "manual_override_of": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Override Of"
+        },
+        "narration_statement_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 120,
+          "title": "Narration Statement Ids",
+          "type": "array"
+        },
+        "parent_run_id": {
+          "minLength": 1,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "targets": {
+          "items": {
+            "$ref": "#/$defs/TargetObservation"
+          },
+          "maxItems": 120,
+          "title": "Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "parent_run_id",
+        "duration_ms",
+        "targets",
+        "narration_statement_ids",
+        "summary",
+        "callouts",
+        "caption_emphasis",
+        "created_at"
+      ],
+      "title": "AttentionPlan",
+      "type": "object"
+    },
+    "AttentionRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 600000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "narration_statement_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 120,
+          "title": "Narration Statement Ids",
+          "type": "array"
+        },
+        "parent_run_id": {
+          "minLength": 1,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "target_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 120,
+          "title": "Target Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "project_id",
+        "job_id",
+        "parent_run_id",
+        "duration_ms",
+        "target_ids",
+        "narration_statement_ids",
+        "created_at"
+      ],
+      "title": "AttentionRequest",
+      "type": "object"
+    },
+    "AttentionRunStep": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted_cue_count": {
+          "minimum": 0,
+          "title": "Accepted Cue Count",
+          "type": "integer"
+        },
+        "agent_name": {
+          "const": "demodirector_attention_director",
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "input_target_count": {
+          "minimum": 0,
+          "title": "Input Target Count",
+          "type": "integer"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "output_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Plan Id"
+        },
+        "parent_run_id": {
+          "minLength": 1,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "proposed_cue_count": {
+          "minimum": 0,
+          "title": "Proposed Cue Count",
+          "type": "integer"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "validation_status": {
+          "enum": [
+            "pending",
+            "passed",
+            "failed"
+          ],
+          "title": "Validation Status",
+          "type": "string"
+        },
+        "workflow_runs": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Workflow Runs",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "parent_run_id",
+        "session_id",
+        "agent_name",
+        "model",
+        "status",
+        "started_at",
+        "workflow_runs",
+        "input_target_count",
+        "proposed_cue_count",
+        "accepted_cue_count",
+        "validation_status",
+        "message"
+      ],
+      "title": "AttentionRunStep",
+      "type": "object"
+    },
     "AudioClip": {
       "additionalProperties": false,
       "properties": {
@@ -37,6 +555,41 @@
         "source_uri"
       ],
       "title": "AudioClip",
+      "type": "object"
+    },
+    "AudioMixPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "ducking_db": {
+          "default": -8,
+          "maximum": -3,
+          "minimum": -18,
+          "title": "Ducking Db",
+          "type": "number"
+        },
+        "fade_ms": {
+          "default": 500,
+          "maximum": 2000,
+          "minimum": 100,
+          "title": "Fade Ms",
+          "type": "integer"
+        },
+        "music_lufs": {
+          "default": -28,
+          "maximum": -20,
+          "minimum": -40,
+          "title": "Music Lufs",
+          "type": "number"
+        },
+        "narration_lufs": {
+          "default": -16,
+          "maximum": -12,
+          "minimum": -24,
+          "title": "Narration Lufs",
+          "type": "number"
+        }
+      },
+      "title": "AudioMixPlan",
       "type": "object"
     },
     "AuthError": {
@@ -180,6 +733,50 @@
       "title": "CaptionClip",
       "type": "object"
     },
+    "CaptionEmphasis": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "statement_id": {
+          "minLength": 1,
+          "title": "Statement Id",
+          "type": "string"
+        },
+        "style": {
+          "enum": [
+            "weight",
+            "underline",
+            "accent"
+          ],
+          "title": "Style",
+          "type": "string"
+        },
+        "word": {
+          "maxLength": 32,
+          "minLength": 1,
+          "title": "Word",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement_id",
+        "word",
+        "start_ms",
+        "end_ms",
+        "style"
+      ],
+      "title": "CaptionEmphasis",
+      "type": "object"
+    },
     "CaptureAction": {
       "additionalProperties": false,
       "properties": {
@@ -317,6 +914,94 @@
       "title": "CaptureActionResult",
       "type": "object"
     },
+    "CaptureChapter": {
+      "additionalProperties": false,
+      "properties": {
+        "account_ref": {
+          "minLength": 1,
+          "title": "Account Ref",
+          "type": "string"
+        },
+        "cursor_continuity_key": {
+          "minLength": 1,
+          "title": "Cursor Continuity Key",
+          "type": "string"
+        },
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "order": {
+          "maximum": 7,
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "project_state_ref": {
+          "minLength": 1,
+          "title": "Project State Ref",
+          "type": "string"
+        },
+        "section_ids": {
+          "items": {
+            "enum": [
+              "hook",
+              "problem",
+              "promise",
+              "product_walkthrough",
+              "trust_technology",
+              "editing_control",
+              "finished_result",
+              "closing"
+            ],
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Section Ids",
+          "type": "array"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "style_version": {
+          "const": "style-v1",
+          "default": "style-v1",
+          "title": "Style Version",
+          "type": "string"
+        },
+        "viewport": {
+          "$ref": "#/$defs/Viewport"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "order",
+        "section_ids",
+        "start_ms",
+        "end_ms",
+        "viewport",
+        "account_ref",
+        "project_state_ref",
+        "cursor_continuity_key"
+      ],
+      "title": "CaptureChapter",
+      "type": "object"
+    },
     "CapturePlan": {
       "additionalProperties": false,
       "properties": {
@@ -352,6 +1037,781 @@
         "timeout_seconds"
       ],
       "title": "CapturePlan",
+      "type": "object"
+    },
+    "ChapterCheckpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_ref": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Ref"
+        },
+        "artifact_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Sha256"
+        },
+        "attempt": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "chapter_id": {
+          "minLength": 1,
+          "title": "Chapter Id",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "replaces_checkpoint_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Replaces Checkpoint Id"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "captured",
+            "failed",
+            "approved"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "plan_id",
+        "chapter_id",
+        "status",
+        "attempt",
+        "created_at"
+      ],
+      "title": "ChapterCheckpoint",
+      "type": "object"
+    },
+    "CollisionReport": {
+      "additionalProperties": false,
+      "properties": {
+        "callout_id": {
+          "minLength": 1,
+          "title": "Callout Id",
+          "type": "string"
+        },
+        "inside_safe_area": {
+          "title": "Inside Safe Area",
+          "type": "boolean"
+        },
+        "overlaps_caption": {
+          "title": "Overlaps Caption",
+          "type": "boolean"
+        },
+        "overlaps_target": {
+          "title": "Overlaps Target",
+          "type": "boolean"
+        },
+        "placement": {
+          "enum": [
+            "top_left",
+            "top_right",
+            "bottom_left",
+            "bottom_right"
+          ],
+          "title": "Placement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "callout_id",
+        "placement",
+        "inside_safe_area",
+        "overlaps_caption",
+        "overlaps_target"
+      ],
+      "title": "CollisionReport",
+      "type": "object"
+    },
+    "CompiledAttentionPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "callouts": {
+          "items": {
+            "$ref": "#/$defs/CompiledCallout"
+          },
+          "title": "Callouts",
+          "type": "array"
+        },
+        "collisions": {
+          "items": {
+            "$ref": "#/$defs/CollisionReport"
+          },
+          "title": "Collisions",
+          "type": "array"
+        },
+        "deterministic_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Deterministic Hash",
+          "type": "string"
+        },
+        "fps": {
+          "exclusiveMinimum": 0,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "plan_id",
+        "width",
+        "height",
+        "fps",
+        "callouts",
+        "collisions",
+        "deterministic_hash"
+      ],
+      "title": "CompiledAttentionPlan",
+      "type": "object"
+    },
+    "CompiledCallout": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor_x": {
+          "minimum": 0,
+          "title": "Anchor X",
+          "type": "integer"
+        },
+        "anchor_y": {
+          "minimum": 0,
+          "title": "Anchor Y",
+          "type": "integer"
+        },
+        "callout_type": {
+          "enum": [
+            "label_connector",
+            "spotlight",
+            "numbered_step",
+            "feature_card",
+            "status_badge",
+            "metric_card",
+            "before_after"
+          ],
+          "title": "Callout Type",
+          "type": "string"
+        },
+        "end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "End Frame",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "placement": {
+          "enum": [
+            "top_left",
+            "top_right",
+            "bottom_left",
+            "bottom_right"
+          ],
+          "title": "Placement",
+          "type": "string"
+        },
+        "start_frame": {
+          "minimum": 0,
+          "title": "Start Frame",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "callout_type",
+        "placement",
+        "anchor_x",
+        "anchor_y",
+        "start_frame",
+        "end_frame"
+      ],
+      "title": "CompiledCallout",
+      "type": "object"
+    },
+    "CompiledEditorialComposition": {
+      "additionalProperties": false,
+      "properties": {
+        "deterministic_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Deterministic Hash",
+          "type": "string"
+        },
+        "fps": {
+          "maximum": 60,
+          "minimum": 12,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "height": {
+          "maximum": 2160,
+          "minimum": 180,
+          "title": "Height",
+          "type": "integer"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "product_presence": {
+          "$ref": "#/$defs/ProductPresenceReport"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "scenes": {
+          "items": {
+            "$ref": "#/$defs/CompiledEditorialScene"
+          },
+          "title": "Scenes",
+          "type": "array"
+        },
+        "width": {
+          "maximum": 3840,
+          "minimum": 320,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "plan_id",
+        "width",
+        "height",
+        "fps",
+        "scenes",
+        "product_presence",
+        "deterministic_hash"
+      ],
+      "title": "CompiledEditorialComposition",
+      "type": "object"
+    },
+    "CompiledEditorialScene": {
+      "additionalProperties": false,
+      "properties": {
+        "end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "End Frame",
+          "type": "integer"
+        },
+        "safe_margin_x": {
+          "exclusiveMinimum": 0,
+          "title": "Safe Margin X",
+          "type": "integer"
+        },
+        "safe_margin_y": {
+          "exclusiveMinimum": 0,
+          "title": "Safe Margin Y",
+          "type": "integer"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "start_frame": {
+          "minimum": 0,
+          "title": "Start Frame",
+          "type": "integer"
+        },
+        "template_id": {
+          "enum": [
+            "hook",
+            "framed_product",
+            "feature_callout",
+            "split_explanation",
+            "proof_safety",
+            "closing"
+          ],
+          "title": "Template Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_id",
+        "template_id",
+        "start_frame",
+        "end_frame",
+        "safe_margin_x",
+        "safe_margin_y"
+      ],
+      "title": "CompiledEditorialScene",
+      "type": "object"
+    },
+    "CompiledLongFormPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "beat_count": {
+          "maximum": 30,
+          "minimum": 20,
+          "title": "Beat Count",
+          "type": "integer"
+        },
+        "chapter_count": {
+          "maximum": 8,
+          "minimum": 2,
+          "title": "Chapter Count",
+          "type": "integer"
+        },
+        "deterministic_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Deterministic Hash",
+          "type": "string"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project_id",
+        "plan_id",
+        "chapter_count",
+        "beat_count",
+        "deterministic_hash"
+      ],
+      "title": "CompiledLongFormPlan",
+      "type": "object"
+    },
+    "CompiledMotionComposition": {
+      "additionalProperties": false,
+      "properties": {
+        "cues": {
+          "items": {
+            "$ref": "#/$defs/CompiledMotionCue"
+          },
+          "title": "Cues",
+          "type": "array"
+        },
+        "design_version": {
+          "const": "motion-v1",
+          "title": "Design Version",
+          "type": "string"
+        },
+        "deterministic_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Deterministic Hash",
+          "type": "string"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "fps": {
+          "maximum": 60,
+          "minimum": 12,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "height": {
+          "maximum": 2160,
+          "minimum": 180,
+          "title": "Height",
+          "type": "integer"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "width": {
+          "maximum": 3840,
+          "minimum": 320,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "plan_id",
+        "design_version",
+        "width",
+        "height",
+        "fps",
+        "duration_ms",
+        "cues",
+        "deterministic_hash"
+      ],
+      "title": "CompiledMotionComposition",
+      "type": "object"
+    },
+    "CompiledMotionCue": {
+      "additionalProperties": false,
+      "properties": {
+        "cue_id": {
+          "minLength": 1,
+          "title": "Cue Id",
+          "type": "string"
+        },
+        "easing": {
+          "enum": [
+            "linear",
+            "standard",
+            "emphasized"
+          ],
+          "title": "Easing",
+          "type": "string"
+        },
+        "end_frame": {
+          "exclusiveMinimum": 0,
+          "title": "End Frame",
+          "type": "integer"
+        },
+        "layer": {
+          "enum": [
+            "background",
+            "product",
+            "mask",
+            "cursor",
+            "callout",
+            "captions",
+            "transition"
+          ],
+          "title": "Layer",
+          "type": "string"
+        },
+        "layer_index": {
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Layer Index",
+          "type": "integer"
+        },
+        "primitive": {
+          "enum": [
+            "fade_slide",
+            "scale_settle",
+            "stagger_text",
+            "highlight_reveal",
+            "browser_frame_move",
+            "background_dim"
+          ],
+          "title": "Primitive",
+          "type": "string"
+        },
+        "start_frame": {
+          "minimum": 0,
+          "title": "Start Frame",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "cue_id",
+        "primitive",
+        "layer",
+        "layer_index",
+        "start_frame",
+        "end_frame",
+        "easing"
+      ],
+      "title": "CompiledMotionCue",
+      "type": "object"
+    },
+    "CompiledStyleDirection": {
+      "additionalProperties": false,
+      "properties": {
+        "deterministic_hash": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Deterministic Hash",
+          "type": "string"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "integer"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "safe_margin_x": {
+          "exclusiveMinimum": 0,
+          "title": "Safe Margin X",
+          "type": "integer"
+        },
+        "safe_margin_y": {
+          "exclusiveMinimum": 0,
+          "title": "Safe Margin Y",
+          "type": "integer"
+        },
+        "variant_id": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Variant Id",
+          "type": "string"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "plan_id",
+        "variant_id",
+        "width",
+        "height",
+        "safe_margin_x",
+        "safe_margin_y",
+        "deterministic_hash"
+      ],
+      "title": "CompiledStyleDirection",
+      "type": "object"
+    },
+    "CondensedInterval": {
+      "additionalProperties": false,
+      "properties": {
+        "actual_elapsed_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Actual Elapsed Ms",
+          "type": "integer"
+        },
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "label": {
+          "default": "Time compressed",
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start_ms",
+        "end_ms",
+        "actual_elapsed_ms"
+      ],
+      "title": "CondensedInterval",
+      "type": "object"
+    },
+    "ContributionScene": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "order": {
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "order"
+      ],
+      "title": "ContributionScene",
+      "type": "object"
+    },
+    "ContributionSource": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "minLength": 1,
+          "title": "Domain",
+          "type": "string"
+        },
+        "excerpt": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "project_brief",
+            "website_inspection",
+            "parallel_search"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "retrieval_state": {
+          "enum": [
+            "saved",
+            "partial"
+          ],
+          "title": "Retrieval State",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retrieved At"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "title",
+        "domain",
+        "origin",
+        "retrieval_state",
+        "excerpt"
+      ],
+      "title": "ContributionSource",
       "type": "object"
     },
     "CoverageRequirement": {
@@ -487,6 +1947,251 @@
       "title": "EditOperation",
       "type": "object"
     },
+    "EditorialScene": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "anyOf": [
+            {
+              "maxLength": 180,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body"
+        },
+        "crop": {
+          "$ref": "#/$defs/RenderSafeCrop"
+        },
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "eyebrow": {
+          "anyOf": [
+            {
+              "maxLength": 32,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Eyebrow"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "product_clip_ref": {
+          "pattern": "^scene:[A-Za-z0-9._:-]+$",
+          "title": "Product Clip Ref",
+          "type": "string"
+        },
+        "product_treatment": {
+          "enum": [
+            "full_focus",
+            "framed_product",
+            "split_explanation",
+            "moving_background"
+          ],
+          "title": "Product Treatment",
+          "type": "string"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "section": {
+          "enum": [
+            "hook",
+            "problem",
+            "promise",
+            "product_walkthrough",
+            "trust_technology",
+            "editing_control",
+            "finished_result",
+            "closing"
+          ],
+          "title": "Section",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "template_id": {
+          "enum": [
+            "hook",
+            "framed_product",
+            "feature_callout",
+            "split_explanation",
+            "proof_safety",
+            "closing"
+          ],
+          "title": "Template Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_id",
+        "section",
+        "template_id",
+        "product_clip_ref",
+        "product_treatment",
+        "start_ms",
+        "end_ms",
+        "title",
+        "crop",
+        "id"
+      ],
+      "title": "EditorialScene",
+      "type": "object"
+    },
+    "EditorialTemplateCatalog": {
+      "additionalProperties": false,
+      "properties": {
+        "template_ids": {
+          "items": {
+            "enum": [
+              "hook",
+              "framed_product",
+              "feature_callout",
+              "split_explanation",
+              "proof_safety",
+              "closing"
+            ],
+            "type": "string"
+          },
+          "title": "Template Ids",
+          "type": "array"
+        },
+        "version": {
+          "const": "editorial-v1",
+          "default": "editorial-v1",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "title": "EditorialTemplateCatalog",
+      "type": "object"
+    },
+    "EditorialTemplatePlan": {
+      "additionalProperties": false,
+      "properties": {
+        "catalog_version": {
+          "const": "editorial-v1",
+          "title": "Catalog Version",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "design_version": {
+          "const": "motion-v1",
+          "title": "Design Version",
+          "type": "string"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 600000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "motion_plan_id": {
+          "minLength": 1,
+          "title": "Motion Plan Id",
+          "type": "string"
+        },
+        "product_clip_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Product Clip Refs",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "scenes": {
+          "items": {
+            "$ref": "#/$defs/EditorialScene"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Scenes",
+          "type": "array"
+        },
+        "summary": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "run_id",
+        "motion_plan_id",
+        "catalog_version",
+        "design_version",
+        "duration_ms",
+        "scene_ids",
+        "product_clip_refs",
+        "summary",
+        "scenes",
+        "created_at"
+      ],
+      "title": "EditorialTemplatePlan",
+      "type": "object"
+    },
     "GenerationJob": {
       "additionalProperties": false,
       "properties": {
@@ -504,7 +2209,10 @@
               "research",
               "understanding",
               "storyboard",
+              "motion",
               "capture",
+              "attention",
+              "style",
               "narration",
               "render",
               "done"
@@ -565,7 +2273,10 @@
             "research",
             "understanding",
             "storyboard",
+            "motion",
             "capture",
+            "attention",
+            "style",
             "narration",
             "render",
             "done"
@@ -619,6 +2330,213 @@
         "message"
       ],
       "title": "GenerationJob",
+      "type": "object"
+    },
+    "GenerationTrace": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "stages": {
+          "items": {
+            "$ref": "#/$defs/GenerationTraceStage"
+          },
+          "title": "Stages",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "awaiting_approval",
+            "awaiting_retry",
+            "failed",
+            "succeeded"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "status",
+        "created_at",
+        "updated_at",
+        "stages"
+      ],
+      "title": "GenerationTrace",
+      "type": "object"
+    },
+    "GenerationTraceStage": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "contributions": {
+          "items": {
+            "$ref": "#/$defs/StageContribution"
+          },
+          "title": "Contributions",
+          "type": "array"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "inspection",
+            "research",
+            "adk_coordination",
+            "understanding",
+            "storyboard",
+            "capture",
+            "narration",
+            "auto_camera",
+            "captions",
+            "render"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "output_href": {
+          "anyOf": [
+            {
+              "pattern": "^(?:/|#)[^\\s]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Href"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "retry_count": {
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Retry Count",
+          "type": "integer"
+        },
+        "sequence": {
+          "minimum": 0,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "service": {
+          "minLength": 1,
+          "title": "Service",
+          "type": "string"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "running",
+            "succeeded",
+            "failed",
+            "not_used"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "kind",
+        "sequence",
+        "attempt",
+        "retry_count",
+        "status",
+        "label",
+        "service",
+        "message"
+      ],
+      "title": "GenerationTraceStage",
       "type": "object"
     },
     "InteractionEvent": {
@@ -810,6 +2728,617 @@
       "title": "LogoutResult",
       "type": "object"
     },
+    "LongFormADKRun": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_name": {
+          "const": "demodirector_longform_director",
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "output_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Plan Id"
+        },
+        "parent_motion_run_id": {
+          "minLength": 1,
+          "title": "Parent Motion Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "runner_completed": {
+          "title": "Runner Completed",
+          "type": "boolean"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "step_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "title": "Step Ids",
+          "type": "array"
+        },
+        "workflow_runs": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Workflow Runs",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "parent_motion_run_id",
+        "session_id",
+        "agent_name",
+        "model",
+        "status",
+        "runner_completed",
+        "workflow_runs",
+        "started_at",
+        "message"
+      ],
+      "title": "LongFormADKRun",
+      "type": "object"
+    },
+    "LongFormADKStep": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 160,
+          "title": "Artifact Refs",
+          "type": "array"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "narrative",
+            "template",
+            "attention",
+            "style"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "output_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Sha256"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "tool_call_count": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Tool Call Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "run_id",
+        "project_id",
+        "kind",
+        "status",
+        "tool_call_count",
+        "created_at"
+      ],
+      "title": "LongFormADKStep",
+      "type": "object"
+    },
+    "LongFormDirectionRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 160,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "parallel_source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "title": "Parallel Source Refs",
+          "type": "array"
+        },
+        "parent_motion_run_id": {
+          "minLength": 1,
+          "title": "Parent Motion Run Id",
+          "type": "string"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "product_clip_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Product Clip Refs",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "research_status": {
+          "enum": [
+            "complete",
+            "degraded"
+          ],
+          "title": "Research Status",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "target_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 160,
+          "title": "Target Ids",
+          "type": "array"
+        },
+        "visual_variant": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Visual Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan_id",
+        "run_id",
+        "project_id",
+        "job_id",
+        "parent_motion_run_id",
+        "visual_variant",
+        "research_status",
+        "evidence_refs",
+        "product_clip_refs",
+        "created_at"
+      ],
+      "title": "LongFormDirectionRequest",
+      "type": "object"
+    },
+    "LongFormValidationReport": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_ms": {
+          "const": 180000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "fps": {
+          "const": 30,
+          "title": "Fps",
+          "type": "integer"
+        },
+        "has_audio": {
+          "title": "Has Audio",
+          "type": "boolean"
+        },
+        "has_captions": {
+          "title": "Has Captions",
+          "type": "boolean"
+        },
+        "height": {
+          "const": 1440,
+          "title": "Height",
+          "type": "integer"
+        },
+        "issues": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "narration_word_count": {
+          "maximum": 430,
+          "minimum": 350,
+          "title": "Narration Word Count",
+          "type": "integer"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "plan_id": {
+          "minLength": 1,
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "product_presence_percent": {
+          "maximum": 100,
+          "minimum": 90,
+          "title": "Product Presence Percent",
+          "type": "number"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "synchronized": {
+          "title": "Synchronized",
+          "type": "boolean"
+        },
+        "visual_beat_count": {
+          "maximum": 30,
+          "minimum": 20,
+          "title": "Visual Beat Count",
+          "type": "integer"
+        },
+        "width": {
+          "const": 2560,
+          "title": "Width",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "plan_id",
+        "duration_ms",
+        "width",
+        "height",
+        "fps",
+        "narration_word_count",
+        "visual_beat_count",
+        "product_presence_percent",
+        "has_audio",
+        "has_captions",
+        "synchronized",
+        "passed"
+      ],
+      "title": "LongFormValidationReport",
+      "type": "object"
+    },
+    "LongFormVideoPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "adk_run_id": {
+          "minLength": 1,
+          "title": "Adk Run Id",
+          "type": "string"
+        },
+        "audio_mix": {
+          "$ref": "#/$defs/AudioMixPlan"
+        },
+        "beats": {
+          "items": {
+            "$ref": "#/$defs/VisualBeat"
+          },
+          "maxItems": 30,
+          "minItems": 20,
+          "title": "Beats",
+          "type": "array"
+        },
+        "chapters": {
+          "items": {
+            "$ref": "#/$defs/CaptureChapter"
+          },
+          "maxItems": 8,
+          "minItems": 2,
+          "title": "Chapters",
+          "type": "array"
+        },
+        "condensed_intervals": {
+          "items": {
+            "$ref": "#/$defs/CondensedInterval"
+          },
+          "maxItems": 12,
+          "title": "Condensed Intervals",
+          "type": "array"
+        },
+        "create_action_ms": {
+          "maximum": 30000,
+          "minimum": 0,
+          "title": "Create Action Ms",
+          "type": "integer"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "const": 180000,
+          "default": 180000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 160,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "finished_glimpse_ms": {
+          "maximum": 45000,
+          "minimum": 0,
+          "title": "Finished Glimpse Ms",
+          "type": "integer"
+        },
+        "first_product_operation_ms": {
+          "maximum": 20000,
+          "minimum": 0,
+          "title": "First Product Operation Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "motion_version": {
+          "const": "motion-v1",
+          "default": "motion-v1",
+          "title": "Motion Version",
+          "type": "string"
+        },
+        "parallel_source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "title": "Parallel Source Refs",
+          "type": "array"
+        },
+        "parent_motion_run_id": {
+          "minLength": 1,
+          "title": "Parent Motion Run Id",
+          "type": "string"
+        },
+        "product_clip_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Product Clip Refs",
+          "type": "array"
+        },
+        "product_presence_percent": {
+          "maximum": 100,
+          "minimum": 90,
+          "title": "Product Presence Percent",
+          "type": "number"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "research_status": {
+          "enum": [
+            "complete",
+            "degraded"
+          ],
+          "title": "Research Status",
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/NarrativeSection"
+          },
+          "maxItems": 8,
+          "minItems": 8,
+          "title": "Sections",
+          "type": "array"
+        },
+        "style_version": {
+          "const": "style-v1",
+          "default": "style-v1",
+          "title": "Style Version",
+          "type": "string"
+        },
+        "target_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 160,
+          "title": "Target Ids",
+          "type": "array"
+        },
+        "version": {
+          "const": "longform-v1",
+          "default": "longform-v1",
+          "title": "Version",
+          "type": "string"
+        },
+        "visual_variant": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Visual Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "adk_run_id",
+        "parent_motion_run_id",
+        "visual_variant",
+        "research_status",
+        "evidence_refs",
+        "product_clip_refs",
+        "sections",
+        "beats",
+        "chapters",
+        "first_product_operation_ms",
+        "create_action_ms",
+        "finished_glimpse_ms",
+        "product_presence_percent",
+        "created_at"
+      ],
+      "title": "LongFormVideoPlan",
+      "type": "object"
+    },
     "MediaEvidence": {
       "additionalProperties": false,
       "properties": {
@@ -952,6 +3481,389 @@
       "title": "MissingRequirementRepairResult",
       "type": "object"
     },
+    "MotionCue": {
+      "additionalProperties": false,
+      "properties": {
+        "easing": {
+          "enum": [
+            "linear",
+            "standard",
+            "emphasized"
+          ],
+          "title": "Easing",
+          "type": "string"
+        },
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "layer": {
+          "enum": [
+            "background",
+            "product",
+            "mask",
+            "cursor",
+            "callout",
+            "captions",
+            "transition"
+          ],
+          "title": "Layer",
+          "type": "string"
+        },
+        "primitive": {
+          "enum": [
+            "fade_slide",
+            "scale_settle",
+            "stagger_text",
+            "highlight_reveal",
+            "browser_frame_move",
+            "background_dim"
+          ],
+          "title": "Primitive",
+          "type": "string"
+        },
+        "product_clip_ref": {
+          "pattern": "^scene:[A-Za-z0-9._:-]+$",
+          "title": "Product Clip Ref",
+          "type": "string"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        }
+      },
+      "required": [
+        "scene_id",
+        "primitive",
+        "layer",
+        "start_ms",
+        "end_ms",
+        "easing",
+        "product_clip_ref",
+        "id"
+      ],
+      "title": "MotionCue",
+      "type": "object"
+    },
+    "MotionDirectionPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "cues": {
+          "items": {
+            "$ref": "#/$defs/MotionCue"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Cues",
+          "type": "array"
+        },
+        "design_tokens": {
+          "$ref": "#/$defs/MotionTokenSet"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 600000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "editorial_plan": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EditorialTemplatePlan"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "product_clip_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Product Clip Refs",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "request_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Request Fingerprint",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "summary": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "run_id",
+        "request_fingerprint",
+        "design_tokens",
+        "duration_ms",
+        "scene_ids",
+        "product_clip_refs",
+        "summary",
+        "cues",
+        "created_at"
+      ],
+      "title": "MotionDirectionPlan",
+      "type": "object"
+    },
+    "MotionDirectionRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "maximum": 600000,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "evidence_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Evidence Fingerprint",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "product_clip_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Product Clip Refs",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "source_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Source Ids",
+          "type": "array"
+        },
+        "storyboard_id": {
+          "minLength": 1,
+          "title": "Storyboard Id",
+          "type": "string"
+        },
+        "storyboard_version": {
+          "exclusiveMinimum": 0,
+          "title": "Storyboard Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "job_id",
+        "storyboard_id",
+        "storyboard_version",
+        "duration_ms",
+        "evidence_fingerprint",
+        "source_ids",
+        "scene_ids",
+        "product_clip_refs",
+        "created_at"
+      ],
+      "title": "MotionDirectionRequest",
+      "type": "object"
+    },
+    "MotionTokenSet": {
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "const": "#86E1A8",
+          "default": "#86E1A8",
+          "title": "Accent",
+          "type": "string"
+        },
+        "background": {
+          "const": "#111214",
+          "default": "#111214",
+          "title": "Background",
+          "type": "string"
+        },
+        "body_size": {
+          "default": 32,
+          "maximum": 48,
+          "minimum": 18,
+          "title": "Body Size",
+          "type": "integer"
+        },
+        "deliberate_ms": {
+          "default": 1200,
+          "maximum": 1800,
+          "minimum": 700,
+          "title": "Deliberate Ms",
+          "type": "integer"
+        },
+        "emphasized_easing": {
+          "const": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "default": "cubic-bezier(0.16, 1, 0.3, 1)",
+          "title": "Emphasized Easing",
+          "type": "string"
+        },
+        "fast_ms": {
+          "default": 200,
+          "maximum": 400,
+          "minimum": 100,
+          "title": "Fast Ms",
+          "type": "integer"
+        },
+        "font_family": {
+          "const": "Inter",
+          "default": "Inter",
+          "title": "Font Family",
+          "type": "string"
+        },
+        "layer_order": {
+          "items": {
+            "enum": [
+              "background",
+              "product",
+              "mask",
+              "cursor",
+              "callout",
+              "captions",
+              "transition"
+            ],
+            "type": "string"
+          },
+          "title": "Layer Order",
+          "type": "array"
+        },
+        "normal_ms": {
+          "default": 600,
+          "maximum": 900,
+          "minimum": 300,
+          "title": "Normal Ms",
+          "type": "integer"
+        },
+        "standard_easing": {
+          "const": "cubic-bezier(0.22, 1, 0.36, 1)",
+          "default": "cubic-bezier(0.22, 1, 0.36, 1)",
+          "title": "Standard Easing",
+          "type": "string"
+        },
+        "surface": {
+          "const": "#1B1D20",
+          "default": "#1B1D20",
+          "title": "Surface",
+          "type": "string"
+        },
+        "text": {
+          "const": "#F5F6F7",
+          "default": "#F5F6F7",
+          "title": "Text",
+          "type": "string"
+        },
+        "title_size": {
+          "default": 64,
+          "maximum": 96,
+          "minimum": 32,
+          "title": "Title Size",
+          "type": "integer"
+        },
+        "version": {
+          "const": "motion-v1",
+          "default": "motion-v1",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "title": "MotionTokenSet",
+      "type": "object"
+    },
     "NarrationEvidence": {
       "additionalProperties": false,
       "properties": {
@@ -1032,6 +3944,116 @@
         }
       },
       "title": "NarrationVoiceConfig",
+      "type": "object"
+    },
+    "NarrativeSection": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "enum": [
+            "hook",
+            "problem",
+            "promise",
+            "product_walkthrough",
+            "trust_technology",
+            "editing_control",
+            "finished_result",
+            "closing"
+          ],
+          "title": "Id",
+          "type": "string"
+        },
+        "narration": {
+          "maxLength": 1800,
+          "minLength": 1,
+          "title": "Narration",
+          "type": "string"
+        },
+        "order": {
+          "maximum": 7,
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "product_clip_ref": {
+          "minLength": 1,
+          "title": "Product Clip Ref",
+          "type": "string"
+        },
+        "product_visible": {
+          "const": true,
+          "default": true,
+          "title": "Product Visible",
+          "type": "boolean"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "order",
+        "start_ms",
+        "end_ms",
+        "narration",
+        "source_refs",
+        "product_clip_ref"
+      ],
+      "title": "NarrativeSection",
+      "type": "object"
+    },
+    "NormalizedRect": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Height",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Width",
+          "type": "number"
+        },
+        "x": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "NormalizedRect",
       "type": "object"
     },
     "OptimizationProposal": {
@@ -1244,6 +4266,62 @@
       "title": "OptimizationRun",
       "type": "object"
     },
+    "PresenceViolation": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "start_ms",
+        "end_ms"
+      ],
+      "title": "PresenceViolation",
+      "type": "object"
+    },
+    "ProductPresenceReport": {
+      "additionalProperties": false,
+      "properties": {
+        "duration_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "percentage": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Percentage",
+          "type": "number"
+        },
+        "violating_intervals": {
+          "items": {
+            "$ref": "#/$defs/PresenceViolation"
+          },
+          "title": "Violating Intervals",
+          "type": "array"
+        },
+        "visible_product_ms": {
+          "minimum": 0,
+          "title": "Visible Product Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "duration_ms",
+        "visible_product_ms",
+        "percentage"
+      ],
+      "title": "ProductPresenceReport",
+      "type": "object"
+    },
     "Project": {
       "additionalProperties": false,
       "properties": {
@@ -1273,6 +4351,15 @@
         "cta": {
           "minLength": 1,
           "title": "Cta",
+          "type": "string"
+        },
+        "demo_mode": {
+          "default": "product_demo",
+          "enum": [
+            "product_demo",
+            "presentation_demo"
+          ],
+          "title": "Demo Mode",
           "type": "string"
         },
         "id": {
@@ -1344,6 +4431,11 @@
           "minLength": 1,
           "title": "Website Url",
           "type": "string"
+        },
+        "zoom_enabled": {
+          "default": true,
+          "title": "Zoom Enabled",
+          "type": "boolean"
         }
       },
       "required": [
@@ -1485,6 +4577,32 @@
           "title": "Height",
           "type": "integer"
         },
+        "long_form_composition_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Long Form Composition Hash"
+        },
+        "motion_composition_hash": {
+          "anyOf": [
+            {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Motion Composition Hash"
+        },
         "output_path": {
           "anyOf": [
             {
@@ -1534,6 +4652,43 @@
         "has_audio"
       ],
       "title": "RenderResult",
+      "type": "object"
+    },
+    "RenderSafeCrop": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Height",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Width",
+          "type": "number"
+        },
+        "x": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "title": "RenderSafeCrop",
       "type": "object"
     },
     "ResearchSource": {
@@ -1773,6 +4928,12 @@
           "title": "Scene Id",
           "type": "string"
         },
+        "source_start_ms": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Source Start Ms",
+          "type": "integer"
+        },
         "source_uri": {
           "minLength": 1,
           "title": "Source Uri",
@@ -1928,6 +5089,215 @@
       "title": "SignupResult",
       "type": "object"
     },
+    "SourceContribution": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "brief_context",
+            "website_structure",
+            "research_context",
+            "factual_narration"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "narration_statement_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Narration Statement Ids",
+          "type": "array"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "source_id": {
+          "minLength": 1,
+          "title": "Source Id",
+          "type": "string"
+        },
+        "usage_state": {
+          "enum": [
+            "used",
+            "unused"
+          ],
+          "title": "Usage State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "source_id",
+        "kind",
+        "usage_state",
+        "label"
+      ],
+      "title": "SourceContribution",
+      "type": "object"
+    },
+    "SourceContributionMap": {
+      "additionalProperties": false,
+      "properties": {
+        "contributions": {
+          "items": {
+            "$ref": "#/$defs/SourceContribution"
+          },
+          "title": "Contributions",
+          "type": "array"
+        },
+        "fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Fingerprint",
+          "type": "string"
+        },
+        "narration_statements": {
+          "items": {
+            "$ref": "#/$defs/NarrationEvidence"
+          },
+          "title": "Narration Statements",
+          "type": "array"
+        },
+        "partial_evidence": {
+          "title": "Partial Evidence",
+          "type": "boolean"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "scenes": {
+          "items": {
+            "$ref": "#/$defs/ContributionScene"
+          },
+          "title": "Scenes",
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/ContributionSource"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "ready",
+            "stale",
+            "approval_required"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "storyboard_version": {
+          "exclusiveMinimum": 0,
+          "title": "Storyboard Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "project_id",
+        "storyboard_version",
+        "fingerprint",
+        "status",
+        "partial_evidence",
+        "sources",
+        "scenes",
+        "narration_statements",
+        "contributions"
+      ],
+      "title": "SourceContributionMap",
+      "type": "object"
+    },
+    "StageContribution": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "enum": [
+            "pages_inspected",
+            "controls_observed",
+            "sources_saved",
+            "workflow_runs",
+            "validated_motion_plans",
+            "motion_cues",
+            "templates_assigned",
+            "product_presence",
+            "attention_targets",
+            "callouts_proposed",
+            "callouts_accepted",
+            "style_recommendations",
+            "style_overrides",
+            "longform_plans",
+            "director_steps",
+            "parallel_sources_linked",
+            "chapters_planned",
+            "features_understood",
+            "claims_attributed",
+            "scenes_planned",
+            "actions_planned",
+            "actions_executed",
+            "interactions_recorded",
+            "recordings_created",
+            "narration_segments",
+            "zooms_created",
+            "captions_created",
+            "exports_created",
+            "output_width",
+            "output_height",
+            "output_duration",
+            "adk_plan_consumed"
+          ],
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "unit": {
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "minimum": 0,
+          "title": "Value",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "value",
+        "unit"
+      ],
+      "title": "StageContribution",
+      "type": "object"
+    },
     "Storyboard": {
       "additionalProperties": false,
       "properties": {
@@ -2039,9 +5409,450 @@
       "title": "StoryboardEvidence",
       "type": "object"
     },
+    "StyleDirectionDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "recommended",
+            "accepted",
+            "overridden"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "recommended_variant": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Recommended Variant",
+          "type": "string"
+        },
+        "selected_variant": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Selected Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "recommended_variant",
+        "selected_variant",
+        "outcome",
+        "decided_at"
+      ],
+      "title": "StyleDirectionDecision",
+      "type": "object"
+    },
+    "StyleDirectionPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 120,
+          "minItems": 1,
+          "title": "Allowed Evidence Refs",
+          "type": "array"
+        },
+        "audience": {
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "decision": {
+          "$ref": "#/$defs/StyleDirectionDecision"
+        },
+        "defaults": {
+          "items": {
+            "$ref": "#/$defs/VariantSceneDefaults"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Defaults",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "manual_override_of": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Override Of"
+        },
+        "overrides": {
+          "items": {
+            "$ref": "#/$defs/VariantOverride"
+          },
+          "maxItems": 80,
+          "title": "Overrides",
+          "type": "array"
+        },
+        "parent_run_id": {
+          "minLength": 1,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "recommendation_evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 40,
+          "minItems": 1,
+          "title": "Recommendation Evidence Refs",
+          "type": "array"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        },
+        "version": {
+          "const": "style-v1",
+          "default": "style-v1",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "parent_run_id",
+        "audience",
+        "purpose",
+        "scene_ids",
+        "allowed_evidence_refs",
+        "recommendation_evidence_refs",
+        "rationale",
+        "decision",
+        "defaults",
+        "created_at"
+      ],
+      "title": "StyleDirectionPlan",
+      "type": "object"
+    },
+    "StyleDirectionRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "audience": {
+          "minLength": 1,
+          "title": "Audience",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 120,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "parent_run_id": {
+          "minLength": 1,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "purpose": {
+          "minLength": 1,
+          "title": "Purpose",
+          "type": "string"
+        },
+        "scene_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 80,
+          "minItems": 1,
+          "title": "Scene Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "project_id",
+        "job_id",
+        "parent_run_id",
+        "audience",
+        "purpose",
+        "scene_ids",
+        "evidence_refs",
+        "created_at"
+      ],
+      "title": "StyleDirectionRequest",
+      "type": "object"
+    },
+    "StyleRunStep": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_name": {
+          "const": "demodirector_style_director",
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "elapsed_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Elapsed Ms"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "job_id": {
+          "minLength": 1,
+          "title": "Job Id",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "output_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Plan Id"
+        },
+        "parent_run_id": {
+          "minLength": 1,
+          "title": "Parent Run Id",
+          "type": "string"
+        },
+        "project_id": {
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "running",
+            "succeeded",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "validation_status": {
+          "enum": [
+            "pending",
+            "passed",
+            "failed"
+          ],
+          "title": "Validation Status",
+          "type": "string"
+        },
+        "workflow_runs": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Workflow Runs",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "project_id",
+        "job_id",
+        "parent_run_id",
+        "session_id",
+        "agent_name",
+        "model",
+        "status",
+        "started_at",
+        "workflow_runs",
+        "validation_status",
+        "message"
+      ],
+      "title": "StyleRunStep",
+      "type": "object"
+    },
+    "TargetObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "locator_fingerprint": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Locator Fingerprint",
+          "type": "string"
+        },
+        "rect": {
+          "$ref": "#/$defs/NormalizedRect"
+        },
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "timestamp_ms": {
+          "minimum": 0,
+          "title": "Timestamp Ms",
+          "type": "integer"
+        },
+        "viewport": {
+          "$ref": "#/$defs/Viewport"
+        }
+      },
+      "required": [
+        "id",
+        "scene_id",
+        "locator_fingerprint",
+        "timestamp_ms",
+        "rect",
+        "viewport"
+      ],
+      "title": "TargetObservation",
+      "type": "object"
+    },
     "Timeline": {
       "additionalProperties": false,
       "properties": {
+        "attention_design_version": {
+          "anyOf": [
+            {
+              "const": "attention-v1",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attention Design Version"
+        },
+        "attention_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attention Plan Id"
+        },
         "audio_clips": {
           "items": {
             "$ref": "#/$defs/AudioClip"
@@ -2076,10 +5887,71 @@
           "title": "Cursor Events",
           "type": "array"
         },
+        "demo_mode": {
+          "default": "product_demo",
+          "enum": [
+            "product_demo",
+            "presentation_demo"
+          ],
+          "title": "Demo Mode",
+          "type": "string"
+        },
         "duration_ms": {
           "exclusiveMinimum": 0,
           "title": "Duration Ms",
           "type": "integer"
+        },
+        "long_form_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Long Form Plan Id"
+        },
+        "long_form_version": {
+          "anyOf": [
+            {
+              "const": "longform-v1",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Long Form Version"
+        },
+        "motion_design_version": {
+          "anyOf": [
+            {
+              "const": "motion-v1",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Motion Design Version"
+        },
+        "motion_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Motion Plan Id"
         },
         "narration_overrides": {
           "additionalProperties": {
@@ -2095,6 +5967,19 @@
         "presentation": {
           "$ref": "#/$defs/VideoPresentationConfig"
         },
+        "presentation_pack_id": {
+          "anyOf": [
+            {
+              "const": "presentation-story@1",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Presentation Pack Id"
+        },
         "project_id": {
           "minLength": 1,
           "title": "Project Id",
@@ -2106,6 +5991,49 @@
           },
           "title": "Scene Clips",
           "type": "array"
+        },
+        "style_design_version": {
+          "anyOf": [
+            {
+              "const": "style-v1",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style Design Version"
+        },
+        "style_plan_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style Plan Id"
+        },
+        "visual_variant": {
+          "anyOf": [
+            {
+              "enum": [
+                "editorial_story",
+                "product_spotlight",
+                "technical_proof"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Visual Variant"
         },
         "voice_config": {
           "anyOf": [
@@ -2210,6 +6138,79 @@
         "updated_at"
       ],
       "title": "UserProfile",
+      "type": "object"
+    },
+    "VariantOverride": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "minLength": 1,
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "variant_id": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Variant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_id",
+        "variant_id"
+      ],
+      "title": "VariantOverride",
+      "type": "object"
+    },
+    "VariantSceneDefaults": {
+      "additionalProperties": false,
+      "properties": {
+        "callout_density": {
+          "enum": [
+            "low",
+            "medium"
+          ],
+          "title": "Callout Density",
+          "type": "string"
+        },
+        "motion_pace": {
+          "enum": [
+            "calm",
+            "deliberate",
+            "precise"
+          ],
+          "title": "Motion Pace",
+          "type": "string"
+        },
+        "product_scale": {
+          "enum": [
+            "composed",
+            "large",
+            "evidence_focused"
+          ],
+          "title": "Product Scale",
+          "type": "string"
+        },
+        "variant_id": {
+          "enum": [
+            "editorial_story",
+            "product_spotlight",
+            "technical_proof"
+          ],
+          "title": "Variant Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "variant_id",
+        "product_scale",
+        "callout_density",
+        "motion_pace"
+      ],
+      "title": "VariantSceneDefaults",
       "type": "object"
     },
     "VideoExport": {
@@ -2344,6 +6345,11 @@
           ],
           "title": "Template",
           "type": "string"
+        },
+        "zoom_enabled": {
+          "default": true,
+          "title": "Zoom Enabled",
+          "type": "boolean"
         }
       },
       "title": "VideoPresentationConfig",
@@ -2650,6 +6656,107 @@
       "title": "Viewport",
       "type": "object"
     },
+    "VisualBeat": {
+      "additionalProperties": false,
+      "properties": {
+        "end_ms": {
+          "exclusiveMinimum": 0,
+          "title": "End Ms",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "product_clip_ref": {
+          "minLength": 1,
+          "title": "Product Clip Ref",
+          "type": "string"
+        },
+        "purpose": {
+          "enum": [
+            "hook",
+            "problem",
+            "promise",
+            "product_operation",
+            "create_action",
+            "finished_glimpse",
+            "walkthrough",
+            "evidence",
+            "control",
+            "result",
+            "closing"
+          ],
+          "title": "Purpose",
+          "type": "string"
+        },
+        "section_id": {
+          "enum": [
+            "hook",
+            "problem",
+            "promise",
+            "product_walkthrough",
+            "trust_technology",
+            "editing_control",
+            "finished_result",
+            "closing"
+          ],
+          "title": "Section Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "start_ms": {
+          "minimum": 0,
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "target_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Id"
+        },
+        "template_id": {
+          "enum": [
+            "hook",
+            "framed_product",
+            "feature_callout",
+            "split_explanation",
+            "proof_safety",
+            "closing"
+          ],
+          "title": "Template Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "section_id",
+        "start_ms",
+        "end_ms",
+        "purpose",
+        "template_id",
+        "product_clip_ref"
+      ],
+      "title": "VisualBeat",
+      "type": "object"
+    },
     "ZoomClip": {
       "additionalProperties": false,
       "properties": {
@@ -2750,10 +6857,88 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "oneOf": [
     {
+      "$ref": "#/$defs/AttentionRequest"
+    },
+    {
+      "$ref": "#/$defs/AttentionPlan"
+    },
+    {
+      "$ref": "#/$defs/AttentionRunStep"
+    },
+    {
+      "$ref": "#/$defs/CompiledAttentionPlan"
+    },
+    {
+      "$ref": "#/$defs/EditorialTemplateCatalog"
+    },
+    {
+      "$ref": "#/$defs/EditorialTemplatePlan"
+    },
+    {
+      "$ref": "#/$defs/ProductPresenceReport"
+    },
+    {
+      "$ref": "#/$defs/CompiledEditorialComposition"
+    },
+    {
       "$ref": "#/$defs/GenerationJob"
     },
     {
+      "$ref": "#/$defs/GenerationTrace"
+    },
+    {
+      "$ref": "#/$defs/LongFormVideoPlan"
+    },
+    {
+      "$ref": "#/$defs/LongFormADKRun"
+    },
+    {
+      "$ref": "#/$defs/LongFormADKStep"
+    },
+    {
+      "$ref": "#/$defs/LongFormDirectionRequest"
+    },
+    {
+      "$ref": "#/$defs/ChapterCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/LongFormValidationReport"
+    },
+    {
+      "$ref": "#/$defs/CompiledLongFormPlan"
+    },
+    {
+      "$ref": "#/$defs/ADKMotionRun"
+    },
+    {
+      "$ref": "#/$defs/MotionDirectionRequest"
+    },
+    {
+      "$ref": "#/$defs/MotionDirectionPlan"
+    },
+    {
+      "$ref": "#/$defs/MotionTokenSet"
+    },
+    {
+      "$ref": "#/$defs/CompiledMotionComposition"
+    },
+    {
+      "$ref": "#/$defs/StyleDirectionRequest"
+    },
+    {
+      "$ref": "#/$defs/StyleDirectionPlan"
+    },
+    {
+      "$ref": "#/$defs/StyleRunStep"
+    },
+    {
+      "$ref": "#/$defs/CompiledStyleDirection"
+    },
+    {
       "$ref": "#/$defs/StoryboardEvidence"
+    },
+    {
+      "$ref": "#/$defs/SourceContributionMap"
     },
     {
       "$ref": "#/$defs/VideoReview"
@@ -2845,8 +7030,34 @@
   ],
   "title": "DemoDirector shared contracts",
   "x-contracts": [
+    "AttentionRequest",
+    "AttentionPlan",
+    "AttentionRunStep",
+    "CompiledAttentionPlan",
+    "EditorialTemplateCatalog",
+    "EditorialTemplatePlan",
+    "ProductPresenceReport",
+    "CompiledEditorialComposition",
     "GenerationJob",
+    "GenerationTrace",
+    "LongFormVideoPlan",
+    "LongFormADKRun",
+    "LongFormADKStep",
+    "LongFormDirectionRequest",
+    "ChapterCheckpoint",
+    "LongFormValidationReport",
+    "CompiledLongFormPlan",
+    "ADKMotionRun",
+    "MotionDirectionRequest",
+    "MotionDirectionPlan",
+    "MotionTokenSet",
+    "CompiledMotionComposition",
+    "StyleDirectionRequest",
+    "StyleDirectionPlan",
+    "StyleRunStep",
+    "CompiledStyleDirection",
     "StoryboardEvidence",
+    "SourceContributionMap",
     "VideoReview",
     "OptimizationRun",
     "Project",

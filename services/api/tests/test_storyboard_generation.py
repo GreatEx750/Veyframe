@@ -6,6 +6,7 @@ from demodirector_api.google_ai import FakeGoogleAIService
 from demodirector_api.storyboard_generation import (
     StoryboardGenerationService,
     StoryboardValidationError,
+    build_storyboard_prompt,
 )
 from demodirector_contracts import ProductUnderstanding, Project, ResearchSource
 
@@ -121,6 +122,25 @@ def test_storyboard_service_accepts_grounded_timed_scene_plan() -> None:
     assert len(result.scenes) == 5
     assert result.total_duration_seconds == 90
     assert "CaptureAction allowlist" in fake.prompts[0]
+
+
+def test_storyboard_prompt_distinguishes_fixed_presentation_from_product_capture() -> None:
+    product_prompt = build_storyboard_prompt(project(), understanding(), [source()])
+    presentation = project().model_copy(
+        update={"demo_mode": "presentation_demo", "requested_duration_seconds": 120}
+    )
+    presentation_prompt = build_storyboard_prompt(
+        presentation,
+        understanding(),
+        [source()],
+    )
+
+    assert "one continuous product walkthrough" in product_prompt
+    assert "presentation-story@1" in presentation_prompt
+    assert "exactly 120 seconds" in presentation_prompt
+    assert "first and final five seconds" in presentation_prompt
+    assert "Do not invent slide layouts" in presentation_prompt
+    assert "real click actions" in presentation_prompt
 
 
 def test_storyboard_service_canonicalizes_one_based_scene_order() -> None:

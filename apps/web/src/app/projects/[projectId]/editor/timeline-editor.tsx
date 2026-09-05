@@ -2,18 +2,30 @@
 
 import {
   editPlanSchema,
-  projectResearchResponseSchema,
+  attentionPlanSchema,
+  generationTraceSchema,
+  motionDirectionPlanSchema,
+  styleDirectionPlanSchema,
+  longFormVideoPlanSchema,
+  chapterCheckpointsSchema,
+  chapterCheckpointSchema,
   projectSchema,
-  runtimeProvenanceSchema,
+  sourceContributionMapSchema,
   timelineHistoryStateSchema,
   timelineSchema,
   videoExportSchema,
   type EditPlan,
+  type AttentionPlan,
   type EditOperation,
   type Project,
-  type ProjectResearchResponse,
-  type RuntimeProvenance,
+  type GenerationTrace,
+  type MotionDirectionPlan,
+  type StyleDirectionPlan,
+  type VisualVariantId,
+  type LongFormVideoPlan,
+  type ChapterCheckpoint,
   type SceneClip,
+  type SourceContributionMap,
   type Timeline,
   type VideoExport,
   type ZoomClip,
@@ -35,7 +47,7 @@ type TimelineEditorProps = {
   initialTimeline?: Timeline;
 };
 
-type EditorMode = "setup" | "sources" | "quality" | "layout" | "cut" | "zoom" | "overlay" | "captions" | "audio" | "adjust";
+type EditorMode = "setup" | "sources" | "quality" | "layout" | "style" | "story" | "cut" | "zoom" | "callouts" | "overlay" | "captions" | "audio" | "adjust";
 type PresentationTemplate = Timeline["presentation"]["template"];
 
 const editorModes: Array<{ id: EditorMode; label: string }> = [
@@ -43,8 +55,11 @@ const editorModes: Array<{ id: EditorMode; label: string }> = [
   { id: "sources", label: "Sources" },
   { id: "quality", label: "Quality" },
   { id: "layout", label: "Layout" },
+  { id: "style", label: "Style" },
+  { id: "story", label: "Story" },
   { id: "cut", label: "Cut" },
   { id: "zoom", label: "Zoom" },
+  { id: "callouts", label: "Callouts" },
   { id: "overlay", label: "Overlay" },
   { id: "captions", label: "Captions" },
   { id: "audio", label: "Audio" },
@@ -96,6 +111,7 @@ function shiftTime(startMs: number, endMs: number, boundary: number, delta: numb
 }
 
 export function deleteSceneFromTimeline(timeline: Timeline, sceneId: string): Timeline {
+  if (timeline.demo_mode === "presentation_demo") return timeline;
   const scene = timeline.scene_clips.find((clip) => clip.scene_id === sceneId);
   if (!scene || timeline.scene_clips.length <= 1) return timeline;
   const removedDuration = scene.end_ms - scene.start_ms;
@@ -127,6 +143,7 @@ export function deleteSceneFromTimeline(timeline: Timeline, sceneId: string): Ti
 }
 
 export function duplicateSceneInTimeline(timeline: Timeline, sceneId: string): Timeline {
+  if (timeline.demo_mode === "presentation_demo") return timeline;
   const scene = timeline.scene_clips.find((clip) => clip.scene_id === sceneId);
   if (!scene) return timeline;
   const duration = scene.end_ms - scene.start_ms;
@@ -179,6 +196,30 @@ export function duplicateSceneInTimeline(timeline: Timeline, sceneId: string): T
   });
 }
 
+export function splitSceneInTimeline(
+  timeline: Timeline,
+  sceneId: string,
+  splitAtMs: number,
+): Timeline {
+  if (timeline.demo_mode === "presentation_demo") return timeline;
+  const scene = timeline.scene_clips.find((clip) => clip.scene_id === sceneId);
+  if (!scene || splitAtMs <= scene.start_ms || splitAtMs >= scene.end_ms) return timeline;
+  const first = { ...scene, end_ms: splitAtMs };
+  const second: SceneClip = {
+    ...scene,
+    id: `${scene.id}-split`,
+    scene_id: `${scene.scene_id}-split`,
+    start_ms: splitAtMs,
+    source_start_ms: scene.source_start_ms + (splitAtMs - scene.start_ms),
+  };
+  return timelineSchema.parse({
+    ...timeline,
+    scene_clips: timeline.scene_clips.flatMap((clip) =>
+      clip.id === scene.id ? [first, second] : [clip],
+    ),
+  });
+}
+
 export function TimelineEditor({ projectId, initialProject, initialTimeline }: TimelineEditorProps) {
   const [generatedExport] = useState(() => loadGeneratedExport(projectId));
   const [exportStale, setExportStale] = useState(() => loadExportStale(projectId));
@@ -200,8 +241,20 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
   const [exporting, setExporting] = useState(false);
   const [savingZoom, setSavingZoom] = useState(false);
   const [videoExport, setVideoExport] = useState<VideoExport | null>(generatedExport);
-  const [research, setResearch] = useState<ProjectResearchResponse | null>(null);
-  const [runtimeProvenance, setRuntimeProvenance] = useState<RuntimeProvenance | null>(null);
+  const [sourceMap, setSourceMap] = useState<SourceContributionMap | null>(null);
+  const [generationTrace, setGenerationTrace] = useState<GenerationTrace | null>(null);
+  const [motionPlan, setMotionPlan] = useState<MotionDirectionPlan | null>(null);
+  const [attentionPlan, setAttentionPlan] = useState<AttentionPlan | null>(null);
+  const [stylePlan, setStylePlan] = useState<StyleDirectionPlan | null>(null);
+  const [selectedStyleSceneId, setSelectedStyleSceneId] = useState<string | null>(null);
+  const [savingStyle, setSavingStyle] = useState(false);
+  const [longFormPlan, setLongFormPlan] = useState<LongFormVideoPlan | null>(null);
+  const [chapterCheckpoints, setChapterCheckpoints] = useState<ChapterCheckpoint[]>([]);
+  const [retryingChapterId, setRetryingChapterId] = useState<string | null>(null);
+  const [selectedCalloutId, setSelectedCalloutId] = useState<string | null>(null);
+  const [savingCallout, setSavingCallout] = useState(false);
+  const [traceError, setTraceError] = useState<string | null>(null);
+  const [selectedContributionId, setSelectedContributionId] = useState<string | null>(null);
   const [sourcesLoading, setSourcesLoading] = useState(false);
   const [sourcesError, setSourcesError] = useState<string | null>(null);
   const [previewPlaying, setPreviewPlaying] = useState(false);
@@ -288,27 +341,100 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
     let active = true;
 
     void Promise.all([
-      fetch(`/api/projects/${projectId}/research`, { cache: "no-store" }),
-      fetch("/api/runtime/provenance", { cache: "no-store" }),
-    ]).then(async ([researchResponse, runtimeResponse]) => {
-      const parsedResearch = projectResearchResponseSchema.safeParse(await researchResponse.json());
-      const parsedRuntime = runtimeProvenanceSchema.safeParse(await runtimeResponse.json());
-      if (!researchResponse.ok || !parsedResearch.success || !runtimeResponse.ok || !parsedRuntime.success) {
+      fetch(`/api/projects/${projectId}/quality-api/source-contributions`, { cache: "no-store" }),
+      fetch(`/api/projects/${projectId}/generation/trace`, { cache: "no-store" }),
+    ]).then(async ([contributionResponse, traceResponse]) => {
+      const parsedContributions = sourceContributionMapSchema.safeParse(await contributionResponse.json());
+      if (!contributionResponse.ok || !parsedContributions.success) {
         throw new Error("Invalid source provenance");
       }
       if (!active) return;
-      setResearch(parsedResearch.data);
-      setRuntimeProvenance(parsedRuntime.data);
+      setSourceMap(parsedContributions.data);
+      if (traceResponse.status === 404) {
+        setGenerationTrace(null);
+      } else {
+        const parsedTrace = generationTraceSchema.safeParse(await traceResponse.json());
+        if (!traceResponse.ok || !parsedTrace.success) {
+          setTraceError("Generation activity is temporarily unavailable.");
+        } else {
+          setGenerationTrace(parsedTrace.data);
+        }
+      }
     }).catch(() => {
       if (active) setSourcesError("Source details are temporarily unavailable. The saved project is unchanged.");
     }).finally(() => {
       if (active) setSourcesLoading(false);
     });
+    void fetch(`/api/projects/${projectId}/generation/motion-plan`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok || !active) return;
+        const parsed = motionDirectionPlanSchema.safeParse(await response.json());
+        if (parsed.success && active) setMotionPlan(parsed.data);
+      })
+      .catch(() => undefined);
 
     return () => {
       active = false;
     };
   }, [activeMode, projectId]);
+
+  useEffect(() => {
+    if (activeMode !== "sources" && activeMode !== "story") return;
+    let active = true;
+    void Promise.all([
+      fetch(`/api/projects/${projectId}/generation/long-form-plan`, { cache: "no-store" }),
+      fetch(`/api/projects/${projectId}/generation/long-form-checkpoints`, { cache: "no-store" }),
+    ]).then(async ([planResponse, checkpointsResponse]) => {
+      if (!active || planResponse.status === 404) return;
+      const parsedPlan = longFormVideoPlanSchema.safeParse(await planResponse.json());
+      const parsedCheckpoints = chapterCheckpointsSchema.safeParse(await checkpointsResponse.json());
+      if (planResponse.ok && checkpointsResponse.ok && parsedPlan.success && parsedCheckpoints.success) {
+        setLongFormPlan(parsedPlan.data);
+        setChapterCheckpoints(parsedCheckpoints.data);
+      }
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [activeMode, projectId]);
+
+  useEffect(() => {
+    if (activeMode !== "sources" && activeMode !== "style") return;
+    let active = true;
+    void fetch(`/api/projects/${projectId}/generation/style-plan`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok || !active) return;
+        const parsed = styleDirectionPlanSchema.safeParse(await response.json());
+        if (!parsed.success || !active) return;
+        setStylePlan(parsed.data);
+        setSelectedStyleSceneId((current) => current ?? parsed.data.scene_ids[0] ?? null);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [activeMode, projectId]);
+
+  useEffect(() => {
+    if (activeMode !== "sources" && activeMode !== "callouts") return;
+    let active = true;
+    void fetch(`/api/projects/${projectId}/generation/attention-plan`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok || !active) return;
+        const parsed = attentionPlanSchema.safeParse(await response.json());
+        if (!parsed.success || !active) return;
+        setAttentionPlan(parsed.data);
+        setSelectedCalloutId((current) => current ?? parsed.data.callouts[0]?.id ?? null);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [activeMode, projectId]);
+
+  function navigateToMappedScene(sceneId: string) {
+    const startMs = [
+      ...activeTimeline.audio_clips,
+      ...activeTimeline.caption_clips,
+      ...activeTimeline.scene_clips,
+    ].filter((clip) => clip.scene_id === sceneId).map((clip) => clip.start_ms).sort((a, b) => a - b)[0] ?? 0;
+    setSelectedSceneId(sceneId);
+    setPlayheadMs(startMs);
+  }
 
   async function togglePreview() {
     const video = videoRef.current;
@@ -358,6 +484,8 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
     ? JUDGE_DEMO_VIDEO_URL
     : `/api/projects/${projectId}/exports/latest/video`;
   const selectedZoom = activeTimeline.zoom_clips.find((clip) => clip.id === selectedZoomId) ?? null;
+  const selectedCallout = attentionPlan?.callouts.find((item) => item.id === selectedCalloutId) ?? null;
+  const selectedCalloutTarget = attentionPlan?.targets.find((item) => item.id === selectedCallout?.target_id) ?? null;
 
   function persist(next: Timeline, message: string) {
     setTimeline(next);
@@ -365,40 +493,146 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
     setStatus(message);
   }
 
+  function updateSelectedCallout(changes: Partial<AttentionPlan["callouts"][number]>) {
+    if (!attentionPlan || !selectedCallout) return;
+    setAttentionPlan({
+      ...attentionPlan,
+      callouts: attentionPlan.callouts.map((item) => item.id === selectedCallout.id
+        ? { ...item, ...changes }
+        : item),
+    });
+  }
+
+  function updateSelectedTarget(axis: "x" | "y", value: number) {
+    if (!attentionPlan || !selectedCalloutTarget) return;
+    setAttentionPlan({
+      ...attentionPlan,
+      targets: attentionPlan.targets.map((item) => item.id === selectedCalloutTarget.id
+        ? { ...item, rect: { ...item.rect, [axis]: value } }
+        : item),
+    });
+  }
+
+  async function saveCallout(remove = false) {
+    if (!attentionPlan || !selectedCallout || !selectedCalloutTarget) return;
+    setSavingCallout(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/generation/attention-plan`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          callout_id: selectedCallout.id,
+          expected_timeline_version: timelineVersion,
+          text: selectedCallout.text,
+          placement: selectedCallout.placement,
+          start_ms: selectedCallout.start_ms,
+          end_ms: selectedCallout.end_ms,
+          target_x: selectedCalloutTarget.rect.x,
+          target_y: selectedCalloutTarget.rect.y,
+          remove,
+        }),
+      });
+      const parsed = attentionPlanSchema.safeParse(await response.json());
+      if (!response.ok || !parsed.success) throw new Error("Attention update failed");
+      setAttentionPlan(parsed.data);
+      setSelectedCalloutId(parsed.data.callouts[0]?.id ?? null);
+      const nextTimeline = { ...activeTimeline, attention_plan_id: parsed.data.id };
+      persist(nextTimeline, remove ? "Callout removed · export to update the video" : "Callout saved · export to update the video");
+      setTimelineVersion((version) => version + 1);
+    } catch {
+      setStatus("Callout could not be saved · reload and try again");
+    } finally {
+      setSavingCallout(false);
+    }
+  }
+
+  async function selectVisualStyle(
+    variantId: VisualVariantId,
+    sceneId?: string,
+    resetScene = false,
+  ) {
+    if (!stylePlan) return;
+    setSavingStyle(true);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/generation/style-plan`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expected_timeline_version: timelineVersion,
+          variant_id: variantId,
+          scene_id: sceneId,
+          reset_scene: resetScene,
+        }),
+      });
+      const parsed = styleDirectionPlanSchema.safeParse(await response.json());
+      if (!response.ok || !parsed.success) throw new Error("Style update failed");
+      setStylePlan(parsed.data);
+      const nextTimeline = timelineSchema.parse({
+        ...activeTimeline,
+        style_plan_id: parsed.data.id,
+        style_design_version: parsed.data.version,
+        visual_variant: parsed.data.decision.selected_variant,
+      });
+      persist(nextTimeline, resetScene ? "Scene style reset · export to update the video" : "Style saved · export to update the video");
+      setTimelineVersion((version) => version + 1);
+      setCanUndo(true);
+      setExportStale(true);
+      window.localStorage.setItem(exportStaleKey(projectId), "true");
+    } catch {
+      setStatus("Style could not be saved · reload and try again");
+    } finally {
+      setSavingStyle(false);
+    }
+  }
+
+  async function retryLongFormChapter(chapterId: string) {
+    setRetryingChapterId(chapterId);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/generation/long-form-chapters/${chapterId}/retry`, { method: "POST" });
+      const parsed = chapterCheckpointSchema.safeParse(await response.json());
+      if (!response.ok || !parsed.success) throw new Error("Chapter retry failed");
+      setChapterCheckpoints((current) => current.map((item) => item.chapter_id === chapterId ? parsed.data : item));
+      if (parsed.data.status === "captured") {
+        const timelineResponse = await fetch(`/api/projects/${projectId}/timeline`, { cache: "no-store" });
+        const parsedTimeline = timelineHistoryStateSchema.safeParse(await timelineResponse.json());
+        if (!timelineResponse.ok || !parsedTimeline.success) throw new Error("Updated timeline failed");
+        setTimeline(parsedTimeline.data.current.timeline);
+        setTimelineVersion(parsedTimeline.data.current.version);
+        setCanUndo(parsedTimeline.data.can_undo);
+        setCanRedo(parsedTimeline.data.can_redo);
+        setExportStale(true);
+        window.localStorage.setItem(exportStaleKey(projectId), "true");
+        setStatus("Chapter regenerated — approved chapters were kept");
+      } else {
+        setStatus("Chapter capture failed — earlier chapters are still saved");
+      }
+    } catch {
+      setStatus("Chapter could not be regenerated — reload and try again");
+    } finally {
+      setRetryingChapterId(null);
+    }
+  }
+
   function deleteSelectedScene() {
-    if (!selectedSceneId) return;
+    if (!selectedSceneId || activeTimeline.demo_mode === "presentation_demo") return;
     const next = deleteSceneFromTimeline(activeTimeline, selectedSceneId);
     persist(next, "Scene deleted · tracks updated");
     setSelectedSceneId(next.scene_clips[0]?.scene_id ?? null);
   }
 
   function duplicateSelectedScene() {
-    if (!selectedSceneId) return;
+    if (!selectedSceneId || activeTimeline.demo_mode === "presentation_demo") return;
     persist(duplicateSceneInTimeline(activeTimeline, selectedSceneId), "Scene duplicated");
   }
 
   function splitSelectedScene() {
+    if (activeTimeline.demo_mode === "presentation_demo") return;
     const scene = activeTimeline.scene_clips.find((clip) => clip.scene_id === selectedSceneId);
     if (!scene || playheadMs <= scene.start_ms || playheadMs >= scene.end_ms) {
       setStatus("Place the playhead inside the selected scene to split it.");
       return;
     }
-    const second: SceneClip = {
-      ...scene,
-      id: `${scene.id}-split`,
-      scene_id: `${scene.scene_id}-split`,
-      start_ms: playheadMs,
-    };
-    const first = { ...scene, end_ms: playheadMs };
-    persist(
-      timelineSchema.parse({
-        ...activeTimeline,
-        scene_clips: activeTimeline.scene_clips.flatMap((clip) =>
-          clip.id === scene.id ? [first, second] : [clip],
-        ),
-      }),
-      "Scene split at playhead",
-    );
+    persist(splitSceneInTimeline(activeTimeline, scene.scene_id, playheadMs), "Scene split at playhead");
   }
 
   function updateZoom(
@@ -458,15 +692,16 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
   async function applyEditorOperation(
     operation: EditOperation,
     successMessage: string,
+    options?: { pendingMessage: string; summary: string },
   ) {
     setSavingZoom(true);
-    setStatus(
+    setStatus(options?.pendingMessage ?? (
       operation.operation_type === "delete_zoom"
         ? "Removing zoom…"
         : operation.operation_type === "change_presentation"
-          ? "Applying video frame…"
-          : "Saving zoom…",
-    );
+          ? "Applying recording frame…"
+          : "Saving zoom…"
+    ));
     try {
       const response = await fetch(`/api/projects/${projectId}/timeline/apply`, {
         method: "POST",
@@ -474,11 +709,11 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
         body: JSON.stringify({
           expected_version: timelineVersion,
           base_timeline: activeTimeline,
-          summary: operation.operation_type === "delete_zoom"
+          summary: options?.summary ?? (operation.operation_type === "delete_zoom"
             ? "Remove zoom"
             : operation.operation_type === "change_presentation"
-              ? "Change video frame"
-              : "Update zoom framing",
+              ? "Change recording frame"
+              : "Update zoom framing"),
           operations: [operation],
         }),
       });
@@ -540,10 +775,28 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
       {
         operation_type: "change_presentation",
         target_id: projectId,
-        arguments: { template },
-        rationale: "Apply the user-selected video presentation frame.",
+        arguments: { ...activeTimeline.presentation, template },
+        rationale: "Apply the user-selected recording frame without changing zoom settings.",
       },
       `${template === "edge_to_edge" ? "Edge-to-edge" : template === "soft_frame" ? "Soft frame" : "Spotlight frame"} saved · export again to update the video`,
+      { pendingMessage: "Applying recording frame…", summary: "Change recording frame" },
+    );
+  }
+
+  async function toggleSmoothZoom() {
+    const zoomEnabled = !activeTimeline.presentation.zoom_enabled;
+    await applyEditorOperation(
+      {
+        operation_type: "change_presentation",
+        target_id: projectId,
+        arguments: { ...activeTimeline.presentation, zoom_enabled: zoomEnabled },
+        rationale: `${zoomEnabled ? "Include" : "Bypass"} saved smooth zoom clips without deleting camera edits.`,
+      },
+      `Smooth zoom ${zoomEnabled ? "enabled" : "disabled"} · export again to update the video`,
+      {
+        pendingMessage: `${zoomEnabled ? "Enabling" : "Disabling"} smooth zoom…`,
+        summary: `${zoomEnabled ? "Enable" : "Disable"} smooth zoom`,
+      },
     );
   }
 
@@ -671,7 +924,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
       <section className="editor-preview" id="editor-preview" aria-label="Synchronized preview">
         <div className="editor-preview-player">
-        <div className={`preview-stage preview-template-${videoExport ? "rendered" : timeline.presentation.template}`}>
+        <div className={`preview-stage preview-template-${videoExport ? "rendered" : timeline.presentation.template} preview-style-${stylePlan?.decision.selected_variant ?? timeline.visual_variant ?? "none"}`}>
           <div className="preview-video-frame">
             <video
             aria-label="Preview video"
@@ -705,6 +958,9 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
             <dl className="editor-detail-list">
               <dt>Project</dt><dd>{project?.name ?? "Demo project"}</dd>
               <dt>Source</dt><dd>{project ? domainLabel(project.website_url) : "Not available"}</dd>
+              <dt>Format</dt><dd>{timeline.demo_mode === "presentation_demo" ? "Presentation Demo" : "Product Demo"}</dd>
+              {timeline.demo_mode === "presentation_demo" && <><dt>Template sequence</dt><dd>Presentation Story v1</dd></>}
+              <dt>Smooth zoom</dt><dd>{timeline.presentation.zoom_enabled ? "On" : "Off"}</dd>
               <dt>Duration</dt><dd>{Math.round(timeline.duration_ms / 1_000)} seconds</dd>
               <dt>Scenes</dt><dd>{timeline.scene_clips.length}</dd>
             </dl>
@@ -712,62 +968,104 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
           {activeMode === "sources" && <>
             <div className="inspector-heading">
-              <h2>Research sources</h2>
-              <p>{research ? `${research.sources.length} saved` : "Project evidence"}</p>
+              <h2>Source map</h2>
+              <p>{sourceMap ? `${sourceMap.sources.length} saved` : "Approved project evidence"}</p>
             </div>
             {sourcesLoading && <p className="sources-state" role="status">Loading saved evidence and runtime details…</p>}
             {sourcesError && <p className="sources-state error" role="alert">{sourcesError}</p>}
-            {!sourcesLoading && !sourcesError && research && runtimeProvenance && <>
-              <section className="sources-section" aria-label="Saved evidence">
-                <h3>Saved evidence</h3>
-                {research.sources.length > 0 ? (
-                  <div className="source-list">
-                    {research.sources.map((source) => <article className="source-item" key={source.id}>
-                      <header>
-                        <span>{source.source_type === "partner_search" ? "Parallel Search" : source.source_type === "website" ? "Website inspection" : "Project brief"}</span>
-                        <time dateTime={source.retrieved_at}>{formatResearchDate(source.retrieved_at)}</time>
-                      </header>
-                      <a href={source.url} rel="noreferrer" target="_blank">{source.title}</a>
-                      <p>{source.snippet}</p>
-                    </article>)}
-                  </div>
-                ) : <p className="sources-state">No research sources have been saved for this project yet.</p>}
-              </section>
+            {!sourcesLoading && !sourcesError && sourceMap && <>
+              {sourceMap.status !== "ready" ? <section className="source-map-notice" role="alert">
+                <b>{sourceMap.status === "stale" ? "Source map needs approval" : "Approve the storyboard to map its sources"}</b>
+                <p>{sourceMap.status === "stale" ? "The storyboard or evidence changed. Old scene and narration links were removed." : "Usage links appear after you review and approve the exact narration."}</p>
+                <Link href={`/projects/${projectId}/storyboard`}>Review storyboard evidence</Link>
+              </section> : <>
+                {sourceMap.partial_evidence && <p className="source-map-partial" role="status">Some evidence groups are empty. This map uses only the evidence saved with the approved storyboard.</p>}
+                {selectedContributionId ? (() => {
+                  const contribution = sourceMap.contributions.find((item) => item.id === selectedContributionId);
+                  const source = sourceMap.sources.find((item) => item.id === contribution?.source_id);
+                  if (!contribution || !source) return null;
+                  const statements = sourceMap.narration_statements.filter((item) => contribution.narration_statement_ids.includes(item.id));
+                  return <section className="source-usage-detail" aria-label="Selected source contribution">
+                    <button className="source-back" onClick={() => setSelectedContributionId(null)} type="button">← All sources</button>
+                    <span>{originLabel(source.origin)}</span>
+                    <h3>{source.title}</h3>
+                    <p>{contribution.label}</p>
+                    {contribution.kind === "website_structure" && <small>Capture input — observed page structure, not an externally verified claim.</small>}
+                    <div className="source-reference-list">
+                      {contribution.scene_ids.map((sceneId) => {
+                        const scene = sourceMap.scenes.find((item) => item.id === sceneId);
+                        return scene ? <button key={sceneId} onClick={() => navigateToMappedScene(sceneId)} type="button"><b>Scene {scene.order + 1}</b><span>{scene.title}</span></button> : null;
+                      })}
+                      {statements.map((statement) => <button key={statement.id} onClick={() => navigateToMappedScene(statement.scene_id)} type="button"><b>Approved narration</b><span>{statement.text}</span></button>)}
+                    </div>
+                  </section>;
+                })() : <section className="sources-section" aria-label="Evidence contributions">
+                  <h3>Where each source was used</h3>
+                  {sourceMap.sources.length > 0 ? (["project_brief", "website_inspection", "parallel_search"] as const).map((origin) => {
+                    const originSources = sourceMap.sources.filter((source) => source.origin === origin);
+                    if (!originSources.length) return null;
+                    return <section className="source-group" aria-labelledby={`source-group-${origin}`} key={origin}>
+                      <h4 id={`source-group-${origin}`}>{originLabel(origin)}</h4>
+                      <div className="source-list">
+                        {originSources.map((source) => {
+                          const contributions = sourceMap.contributions.filter((item) => item.source_id === source.id);
+                          return <article className="source-item" id={`source-${source.id}`} key={source.id}>
+                            <header><span>{source.retrieval_state === "saved" ? "Saved" : "Partial"}</span>{source.retrieved_at && <time dateTime={source.retrieved_at}>{formatResearchDate(source.retrieved_at)}</time>}</header>
+                            {source.url ? <a href={source.url} rel="noreferrer" target="_blank">{source.title}</a> : <b>{source.title}</b>}
+                            <small>{source.domain}</small>
+                            <p>{source.excerpt}</p>
+                            <div className="source-contribution-list">{contributions.map((contribution) => <div data-usage={contribution.usage_state} key={contribution.id}><span>{contribution.label}</span>{contribution.usage_state === "used" && <button onClick={() => setSelectedContributionId(contribution.id)} type="button">Review usage</button>}</div>)}</div>
+                          </article>;
+                        })}
+                      </div>
+                    </section>;
+                  }) : <p className="sources-state">No saved evidence is available for this approved storyboard.</p>}
+                </section>}
+              </>}
 
-              <section className="sources-section" aria-label="Generation pipeline">
-                <h3>Generation pipeline</h3>
-                <ul className="pipeline-list">
-                  <PipelineRow
-                    detail={`Direct web research · ${runtimeProvenance.research.mode} mode · ${research.sources.filter((source) => source.source_type === "partner_search").length} saved`}
-                    label="Parallel Search"
-                    status={runtimeProvenance.research.status === "ready" ? "Ready" : "Unavailable"}
-                  />
-                  <PipelineRow
-                    detail={runtimeProvenance.ai.model}
-                    label="Gemini reasoning"
-                    status={runtimeProvenance.ai.status === "ready" ? "Ready" : "Unavailable"}
-                  />
-                  <PipelineRow
-                    detail={runtimeProvenance.ai.agent}
-                    label="Google ADK"
-                    status={runtimeProvenance.ai.status === "ready" ? "Ready" : "Unavailable"}
-                  />
-                  <PipelineRow
-                    detail={`${runtimeProvenance.ai.tts_model} · ${timeline.audio_clips.length} audio track${timeline.audio_clips.length === 1 ? "" : "s"}`}
-                    label="Gemini narration"
-                    status={timeline.audio_clips.length > 0 ? "Used" : "Not generated"}
-                  />
-                  <PipelineRow
-                    detail={`${timeline.scene_clips.length} continuous recording${timeline.scene_clips.length === 1 ? "" : "s"}`}
-                    label="Browser capture"
-                    status={timeline.scene_clips.length > 0 ? "Used" : "Not captured"}
-                  />
-                  <PipelineRow
-                    detail={videoExport ? `${videoExport.quality} · ${videoExport.width}×${videoExport.height}` : "No completed export"}
-                    label="FFmpeg render"
-                    status={videoExport?.status === "succeeded" ? "Used" : "Not rendered"}
-                  />
-                </ul>
+              <section className="sources-section" aria-label="Generation activity">
+                {motionPlan && <div className="motion-direction-summary" id="motion-direction">
+                  <span>Motion direction</span>
+                  <h3>{motionPlan.summary}</h3>
+                  <p>Google ADK planned {motionPlan.cues.length} validated cues with {motionPlan.design_tokens.font_family} and {motionPlan.design_tokens.version}.</p>
+                  {motionPlan.editorial_plan && <p>{motionPlan.editorial_plan.scenes.length} product-present templates · {motionPlan.editorial_plan.scenes.map((scene) => scene.template_id.replaceAll("_", " ")).join(" · ")}</p>}
+                </div>}
+                {attentionPlan && <div className="motion-direction-summary" id="attention-direction">
+                  <span>Attention direction</span>
+                  <h3>{attentionPlan.summary}</h3>
+                  <p>Google ADK accepted {attentionPlan.callouts.length} target-aware callouts from {attentionPlan.targets.length} recorded controls.</p>
+                </div>}
+                {stylePlan && <div className="motion-direction-summary" id="style-direction">
+                  <span>Google ADK style direction</span>
+                  <h3>{variantLabel(stylePlan.decision.selected_variant)}</h3>
+                  <p>{stylePlan.rationale}</p>
+                  <p>{variantDecisionLabel(stylePlan)} · {stylePlan.recommendation_evidence_refs.length} linked project inputs</p>
+                </div>}
+                {longFormPlan && <div className="motion-direction-summary" id="longform-direction">
+                  <span>Google ADK three-minute direction</span>
+                  <h3>{longFormPlan.sections.length} sections · {longFormPlan.beats.length} visual beats</h3>
+                  <p>Product operation at {formatTime(longFormPlan.first_product_operation_ms)} · Create by {formatTime(longFormPlan.create_action_ms)} · finished result by {formatTime(longFormPlan.finished_glimpse_ms)}</p>
+                  <p>{longFormPlan.parallel_source_refs.length} direct Parallel sources linked · {longFormPlan.chapters.length} restartable chapters</p>
+                </div>}
+                <div className="generation-activity-heading"><h3>Generation activity</h3>{generationTrace && <span>{traceStatusLabel(generationTrace.status)}</span>}</div>
+                {traceError && <p className="sources-state error" role="alert">{traceError}</p>}
+                {!traceError && !generationTrace && <p className="sources-state">No durable generation activity is available for this project.</p>}
+                {generationTrace && <div className="generation-trace-list">
+                  {generationTrace.stages.map((stage) => <details key={stage.id}>
+                    <summary>
+                      <span className={`trace-state trace-state-${stage.status}`} aria-hidden="true" />
+                      <span><b>{stage.label}</b><small>{stage.service}</small></span>
+                      <em><span className="visually-hidden">{stage.status.replace("_", " ")} · </span>{stage.status === "succeeded" || stage.status === "failed" ? formatElapsed(stage.elapsed_ms) : stage.status.replace("_", " ")}</em>
+                    </summary>
+                    <div className="trace-stage-detail">
+                      <p>{stage.message}</p>
+                      {stage.attempt > 0 && <span>Attempt {stage.attempt}{stage.retry_count > 0 ? ` · ${stage.retry_count} retr${stage.retry_count === 1 ? "y" : "ies"}` : ""}</span>}
+                      {stage.started_at && <span>{formatTraceDate(stage.started_at)}{stage.completed_at ? ` – ${formatTraceDate(stage.completed_at)}` : " – running"}</span>}
+                      {stage.contributions.length > 0 && <dl>{stage.contributions.map((item) => <div key={item.key}><dt>{item.label}</dt><dd>{item.value.toLocaleString()} {item.unit}</dd></div>)}</dl>}
+                      {stage.output_href && <Link href={stage.output_href}>Open saved output</Link>}
+                    </div>
+                  </details>)}
+                </div>}
               </section>
             </>}
           </>}
@@ -778,18 +1076,83 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
             <p className="camera-note">Recordings and exports use a native QHD canvas. Choose a frame in Overlay to change how the recording sits inside it.</p>
           </>}
 
+          {activeMode === "style" && <>
+            <div className="inspector-heading"><h2>Visual style</h2><p>{stylePlan ? variantDecisionLabel(stylePlan) : "Generation required"}</p></div>
+            {!stylePlan && <p className="camera-note">Generate the project first to receive a grounded style recommendation.</p>}
+            {stylePlan && <>
+              <p className="style-rationale">{stylePlan.rationale}</p>
+              <div className="style-options" aria-label="Visual style variants">
+                <StyleOption active={stylePlan.decision.selected_variant === "editorial_story"} description="Composed footage, explanation cards, and deliberate pacing." disabled={savingStyle} label="Editorial Story" onClick={() => void selectVisualStyle("editorial_story")} variant="editorial_story" />
+                <StyleOption active={stylePlan.decision.selected_variant === "product_spotlight"} description="Larger product footage, restrained callouts, and calm motion." disabled={savingStyle} label="Product Spotlight" onClick={() => void selectVisualStyle("product_spotlight")} variant="product_spotlight" />
+                <StyleOption active={stylePlan.decision.selected_variant === "technical_proof"} description="Validated sources, activity, controls, and measured output." disabled={savingStyle} label="Technical Proof" onClick={() => void selectVisualStyle("technical_proof")} variant="technical_proof" />
+              </div>
+              <div className="style-scene-controls">
+                <label htmlFor="style-scene">Scene override</label>
+                <select id="style-scene" onChange={(event) => setSelectedStyleSceneId(event.target.value)} value={selectedStyleSceneId ?? ""}>
+                  {stylePlan.scene_ids.map((sceneId, index) => <option key={sceneId} value={sceneId}>Scene {index + 1}</option>)}
+                </select>
+                <label htmlFor="style-scene-variant">Use style</label>
+                <select id="style-scene-variant" onChange={(event) => {
+                  if (selectedStyleSceneId) void selectVisualStyle(event.target.value as VisualVariantId, selectedStyleSceneId);
+                }} value={stylePlan.overrides.find((item) => item.scene_id === selectedStyleSceneId)?.variant_id ?? stylePlan.decision.selected_variant}>
+                  <option value="editorial_story">Editorial Story</option>
+                  <option value="product_spotlight">Product Spotlight</option>
+                  <option value="technical_proof">Technical Proof</option>
+                </select>
+                <button disabled={savingStyle || !stylePlan.overrides.some((item) => item.scene_id === selectedStyleSceneId)} onClick={() => selectedStyleSceneId && void selectVisualStyle(stylePlan.decision.selected_variant, selectedStyleSceneId, true)} type="button">Reset scene to {variantLabel(stylePlan.decision.selected_variant)}</button>
+              </div>
+              <p className="camera-note">Switching style keeps the recording, narration, captions, timing, and evidence unchanged. Changes are undoable and do not call a provider.</p>
+            </>}
+          </>}
+
+          {activeMode === "story" && <>
+            <div className="inspector-heading"><h2>Three-minute story</h2><p>{longFormPlan ? "3:00 proof-first" : "Not enabled"}</p></div>
+            {!longFormPlan && <p className="camera-note">Choose a 180-second project to create the proof-first chapter plan.</p>}
+            {longFormPlan && <>
+              <dl className="longform-milestones">
+                <div><dt>Product operates</dt><dd>{formatTime(longFormPlan.first_product_operation_ms)}</dd></div>
+                <div><dt>Create action</dt><dd>{formatTime(longFormPlan.create_action_ms)}</dd></div>
+                <div><dt>Finished glimpse</dt><dd>{formatTime(longFormPlan.finished_glimpse_ms)}</dd></div>
+                <div><dt>Product visible</dt><dd>{Math.round(longFormPlan.product_presence_percent)}%</dd></div>
+              </dl>
+              <div className="longform-sections" aria-label="Narrative sections">
+                {longFormPlan.sections.map((section) => <button key={section.id} onClick={() => setPlayheadMs(section.start_ms)} type="button"><span>{formatTime(section.start_ms)}</span><b>{section.id.replaceAll("_", " ")}</b><small>{Math.round((section.end_ms - section.start_ms) / 1_000)}s · product footage</small></button>)}
+              </div>
+              {longFormPlan.condensed_intervals.length > 0 && <div className="longform-chapters" aria-label="Time-compressed intervals">
+                <h3>Time compression</h3>
+                {longFormPlan.condensed_intervals.map((interval) => <div key={`${interval.start_ms}-${interval.end_ms}`}><span><b>{interval.label}</b><small>{formatTime(interval.start_ms)}–{formatTime(interval.end_ms)} · actual {(interval.actual_elapsed_ms / 1_000).toFixed(1)}s</small></span></div>)}
+              </div>}
+              <div className="longform-chapters" aria-label="Capture chapters" role="group">
+                <h3>Capture chapters</h3>
+                {longFormPlan.chapters.map((chapter) => {
+                  const checkpoint = chapterCheckpoints.find((item) => item.chapter_id === chapter.id);
+                  return <div key={chapter.id}><span><b>Chapter {chapter.order + 1}</b><small>{checkpoint?.status ?? "loading"} · attempt {checkpoint?.attempt ?? 0}</small></span><button disabled={!checkpoint || checkpoint.status === "pending" || retryingChapterId === chapter.id} onClick={() => void retryLongFormChapter(chapter.id)} type="button">{retryingChapterId === chapter.id ? "Queuing…" : "Regenerate"}</button></div>;
+                })}
+              </div>
+              <p className="camera-note">Regeneration replaces only the selected chapter checkpoint. Saved sources, narrative order, and other approved chapters remain unchanged.</p>
+            </>}
+          </>}
+
           {activeMode === "cut" && <>
             <div className="inspector-heading"><h2>Cut scene</h2><p>{selectedSceneId ?? "No scene selected"}</p></div>
-            <div className="cut-actions">
-              <button onClick={splitSelectedScene} type="button"><EditorModeIcon mode="cut" />Split at playhead</button>
-              <button disabled={timeline.scene_clips.length <= 1} onClick={deleteSelectedScene} type="button">Delete scene</button>
-              <button onClick={duplicateSelectedScene} type="button">Duplicate scene</button>
-            </div>
-            <p className="camera-note">Select a scene in the timeline, then place the playhead before splitting.</p>
+            {timeline.demo_mode === "presentation_demo" ? (
+              <p className="camera-note" role="note">The authored Presentation Demo sequence is fixed at 2:00, so scene timing is read-only.</p>
+            ) : <>
+              <div className="cut-actions">
+                <button onClick={splitSelectedScene} type="button"><EditorModeIcon mode="cut" />Split at playhead</button>
+                <button disabled={timeline.scene_clips.length <= 1} onClick={deleteSelectedScene} type="button">Delete scene</button>
+                <button onClick={duplicateSelectedScene} type="button">Duplicate scene</button>
+              </div>
+              <p className="camera-note">Select a scene in the timeline, then place the playhead before splitting.</p>
+            </>}
           </>}
 
           {activeMode === "zoom" && <>
             <div className="inspector-heading"><h2>{selectedZoom ? "Zoom clip" : "Select a zoom"}</h2><p>{selectedSceneId ?? "No scene selected"}</p></div>
+            <div className="zoom-master-control">
+              <div className="control-title"><b>Smooth zoom</b><button aria-checked={timeline.presentation.zoom_enabled} aria-describedby="smooth-zoom-editor-note" aria-label="Smooth zoom" className={`toggle ${timeline.presentation.zoom_enabled ? "is-on" : ""}`} disabled={savingZoom} onClick={() => void toggleSmoothZoom()} role="switch" type="button"><span /></button></div>
+              <p className="camera-note" id="smooth-zoom-editor-note">{timeline.presentation.zoom_enabled ? "Smooth zooms are included on export. Pointer movement and click indicators remain visible." : "Zooms are bypassed on export. Saved zoom clips are retained and remain editable."}</p>
+            </div>
             {selectedZoom ? <>
               <div
                 aria-label="Zoom target"
@@ -839,14 +1202,47 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
             </> : <p>Select a zoom on the timeline to edit its framing.</p>}
           </>}
 
+          {activeMode === "callouts" && <>
+            <div className="inspector-heading"><h2>Callouts</h2><p>{attentionPlan?.callouts.length ?? 0} saved</p></div>
+            {!attentionPlan && <p className="camera-note">Target-aware callouts appear after the recorded walkthrough is analyzed.</p>}
+            {attentionPlan && attentionPlan.callouts.length === 0 && <p className="camera-note">No reliable recorded target needed a callout.</p>}
+            {attentionPlan && attentionPlan.callouts.length > 0 && <>
+              <div className="callout-picker">
+                {attentionPlan.callouts.map((callout) => <button aria-pressed={callout.id === selectedCalloutId} key={callout.id} onClick={() => setSelectedCalloutId(callout.id)} type="button">{callout.text}</button>)}
+              </div>
+              {selectedCallout && selectedCalloutTarget && <div className="callout-editor">
+                <label htmlFor="callout-copy">Text</label>
+                <input id="callout-copy" maxLength={72} onChange={(event) => updateSelectedCallout({ text: event.target.value })} value={selectedCallout.text} />
+                <label htmlFor="callout-placement">Placement</label>
+                <select id="callout-placement" onChange={(event) => updateSelectedCallout({ placement: event.target.value as typeof selectedCallout.placement })} value={selectedCallout.placement}>
+                  <option value="top_left">Top left</option><option value="top_right">Top right</option><option value="bottom_left">Bottom left</option><option value="bottom_right">Bottom right</option>
+                </select>
+                <label htmlFor="callout-start">Start <span>{(selectedCallout.start_ms / 1_000).toFixed(1)}s</span></label>
+                <input id="callout-start" max={Math.max(0, selectedCallout.end_ms - 600)} min="0" onChange={(event) => updateSelectedCallout({ start_ms: Number(event.target.value) })} step="100" type="range" value={selectedCallout.start_ms} />
+                <label htmlFor="callout-end">End <span>{(selectedCallout.end_ms / 1_000).toFixed(1)}s</span></label>
+                <input id="callout-end" max={timeline.duration_ms} min={selectedCallout.start_ms + 600} onChange={(event) => updateSelectedCallout({ end_ms: Number(event.target.value) })} step="100" type="range" value={selectedCallout.end_ms} />
+                <label htmlFor="callout-target-x">Target horizontal <span>{Math.round(selectedCalloutTarget.rect.x * 100)}%</span></label>
+                <input id="callout-target-x" max={1 - selectedCalloutTarget.rect.width} min="0" onChange={(event) => updateSelectedTarget("x", Number(event.target.value))} step="0.01" type="range" value={selectedCalloutTarget.rect.x} />
+                <label htmlFor="callout-target-y">Target vertical <span>{Math.round(selectedCalloutTarget.rect.y * 100)}%</span></label>
+                <input id="callout-target-y" max={1 - selectedCalloutTarget.rect.height} min="0" onChange={(event) => updateSelectedTarget("y", Number(event.target.value))} step="0.01" type="range" value={selectedCalloutTarget.rect.y} />
+                <div className="camera-actions"><button disabled={savingCallout} onClick={() => void saveCallout()} type="button">{savingCallout ? "Saving…" : "Save callout"}</button><button className="danger" disabled={savingCallout} onClick={() => void saveCallout(true)} type="button">Remove</button></div>
+                <p className="camera-note">Changes create an undoable timeline version and apply to the next export.</p>
+              </div>}
+            </>}
+          </>}
+
           {activeMode === "overlay" && <>
-            <div className="inspector-heading"><h2>Video frame</h2><p>Presentation template</p></div>
-            <div className="template-list">
-              <TemplateButton active={timeline.presentation.template === "edge_to_edge"} label="Edge-to-edge" onClick={() => void applyPresentation("edge_to_edge")} template="edge_to_edge" />
-              <TemplateButton active={timeline.presentation.template === "soft_frame"} label="Soft frame" onClick={() => void applyPresentation("soft_frame")} template="soft_frame" />
-              <TemplateButton active={timeline.presentation.template === "spotlight"} label="Spotlight" onClick={() => void applyPresentation("spotlight")} template="spotlight" />
-            </div>
-            <p className="camera-note">Templates are rendered into the MP4. Export again after changing the frame.</p>
+            <div className="inspector-heading"><h2>Video frame</h2><p>Recording frame</p></div>
+            {timeline.demo_mode === "presentation_demo" ? (
+              <p className="camera-note">Presentation Story v1 controls framing and places the real product recording inside its authored layouts. No additional recording frame is applied.</p>
+            ) : <>
+              <div className="template-list">
+                <TemplateButton active={timeline.presentation.template === "edge_to_edge"} label="Edge-to-edge" onClick={() => void applyPresentation("edge_to_edge")} template="edge_to_edge" />
+                <TemplateButton active={timeline.presentation.template === "soft_frame"} label="Soft frame" onClick={() => void applyPresentation("soft_frame")} template="soft_frame" />
+                <TemplateButton active={timeline.presentation.template === "spotlight"} label="Spotlight" onClick={() => void applyPresentation("spotlight")} template="spotlight" />
+              </div>
+              <p className="camera-note">Frames are rendered into the MP4. Export again after changing the frame.</p>
+            </>}
           </>}
 
           {activeMode === "captions" && <>
@@ -880,6 +1276,8 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
             if (mode.id === "sources") {
               setSourcesLoading(true);
               setSourcesError(null);
+              setTraceError(null);
+              setSelectedContributionId(null);
             }
             setActiveMode(mode.id);
           }} type="button"><EditorModeIcon mode={mode.id} /><span>{mode.label}</span></button>)}
@@ -921,24 +1319,45 @@ function TemplateButton({
   );
 }
 
+function StyleOption({
+  active,
+  description,
+  disabled,
+  label,
+  onClick,
+  variant,
+}: {
+  active: boolean;
+  description: string;
+  disabled: boolean;
+  label: string;
+  onClick: () => void;
+  variant: VisualVariantId;
+}) {
+  return <button aria-pressed={active} disabled={disabled} onClick={onClick} type="button">
+    <span aria-hidden="true" className={`style-swatch style-swatch-${variant}`} />
+    <span><b>{label}</b><small>{description}</small></span>
+    <i aria-hidden="true">{active ? "✓" : ""}</i>
+  </button>;
+}
+
 function EditorModeIcon({ mode }: { mode: EditorMode }) {
   const paths: Record<EditorMode, React.ReactNode> = {
     quality: <><path d="m5 12 4 4L19 6" /><rect x="3" y="3" width="18" height="18" rx="2" /></>,
     setup: <><rect height="14" rx="2" width="16" x="4" y="5" /><path d="M8 3v4M16 3v4M8 17v4M16 17v4" /></>,
     sources: <><path d="M7 3h8l4 4v14H7z" /><path d="M15 3v5h5M10 12h6M10 16h6" /><path d="M4 7v12" /></>,
     layout: <><rect height="16" rx="2" width="18" x="3" y="4" /><path d="M9 4v16M9 10h12" /></>,
+    style: <><path d="M4 18 14 8l2 2L6 20H4z" /><path d="m13 5 2-2 6 6-2 2zM5 5h4M7 3v4" /></>,
+    story: <><path d="M5 4h14v16H5z" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
     cut: <><circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="m8.6 7.5 11 6.5M8.6 16.5 20 10M14 12l6 6" /></>,
     zoom: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6" /></>,
+    callouts: <><path d="M5 5h14v10H9l-4 4z" /><path d="M9 9h6M9 12h4" /></>,
     overlay: <><rect height="14" rx="2" width="18" x="3" y="5" /><rect height="8" rx="1" width="10" x="7" y="8" /></>,
     captions: <><rect height="14" rx="3" width="20" x="2" y="4" /><path d="m8 18-3 3v-3M6 9h5M13 9h5M6 13h8" /></>,
     audio: <><path d="M5 9v6M9 6v12M13 4v16M17 7v10M21 10v4" /></>,
     adjust: <><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></>,
   };
   return <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">{paths[mode]}</svg>;
-}
-
-function PipelineRow({ detail, label, status }: { detail: string; label: string; status: string }) {
-  return <li><div><b>{label}</b><span>{detail}</span></div><em>{status}</em></li>;
 }
 
 function TimelineTrack({ label, children }: { label: string; children: React.ReactNode }) {
@@ -967,4 +1386,40 @@ function domainLabel(value: string) {
 
 function formatResearchDate(value: string) {
   return new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(new Date(value));
+}
+
+function originLabel(origin: SourceContributionMap["sources"][number]["origin"]) {
+  if (origin === "project_brief") return "Project brief";
+  if (origin === "website_inspection") return "Website inspection";
+  return "Parallel Search";
+}
+
+function traceStatusLabel(status: GenerationTrace["status"]) {
+  if (status === "succeeded") return "Complete";
+  if (status === "awaiting_approval") return "Waiting for approval";
+  if (status === "awaiting_retry") return "Waiting to retry";
+  if (status === "failed") return "Failed";
+  return "In progress";
+}
+
+function variantLabel(variant: VisualVariantId) {
+  if (variant === "editorial_story") return "Editorial Story";
+  if (variant === "product_spotlight") return "Product Spotlight";
+  return "Technical Proof";
+}
+
+function variantDecisionLabel(plan: StyleDirectionPlan) {
+  if (plan.decision.outcome === "recommended") return "ADK recommendation";
+  if (plan.decision.outcome === "accepted") return "Recommendation accepted";
+  return "User override";
+}
+
+function formatElapsed(value: number | null) {
+  if (value === null) return "No timing";
+  if (value < 1_000) return `${value} ms`;
+  return `${(value / 1_000).toFixed(value < 10_000 ? 1 : 0)} s`;
+}
+
+function formatTraceDate(value: string) {
+  return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit", second: "2-digit" }).format(new Date(value));
 }
