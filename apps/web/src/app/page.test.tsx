@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
 
 const projectResponse = {
   id: "project-123",
-  name: "Untitled demo",
+  name: "Product team walkthrough",
   website_url: "https://example.com/",
   product_summary: "A focused workspace for modern product teams.",
   audience: "Product leaders",
@@ -26,6 +26,7 @@ const projectResponse = {
 };
 
 function completeForm() {
+  fireEvent.change(screen.getByLabelText(/Demo title/), { target: { value: `  ${projectResponse.name}  ` } });
   fireEvent.change(screen.getByLabelText(/Website URL/), { target: { value: "https://example.com" } });
   fireEvent.change(screen.getByLabelText(/Describe your video/), { target: { value: projectResponse.product_summary } });
   fireEvent.change(screen.getByLabelText("Target Audience"), { target: { value: "Product leaders" } });
@@ -38,126 +39,121 @@ afterEach(() => {
 });
 
 describe("Create Demo Studio", () => {
-  it("renders a complete editing workspace with tools, canvas, inspector, and timeline", () => {
+  it.each(["Product Demo", "Presentation Demo"])("opens the exact newly queued %s job", async (format) => {
+    const job = { id: "product-job", project_id: projectResponse.id, status: "queued",
+      stage: "inspection", completed_stages: [], attempts: 0, version: 1,
+      created_at: "2026-09-01T12:00:00Z", updated_at: "2026-09-01T12:00:00Z",
+      message: "Queued", lease_until: null, export_id: null, timeline_version: null };
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => projectResponse })
+      .mockResolvedValueOnce({ ok: true, json: async () => job }));
+    render(<Home />); completeForm();
+    fireEvent.click(screen.getByRole("radio", { name: format }));
+    fireEvent.submit(document.getElementById("demo-form")!);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/jobs?job=product-job"));
+  });
+  it("starts the authored five-slide pipeline from the presentation option", async () => {
+    const job = { id: "preview-job", project_id: projectResponse.id, status: "queued",
+      stage: "inspection", completed_stages: [], attempts: 1, version: 1,
+      created_at: "2026-09-01T12:00:00Z", updated_at: "2026-09-01T12:00:00Z",
+      message: "Queued: first five slides", lease_until: null, export_id: null, timeline_version: null };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => projectResponse })
+      .mockResolvedValueOnce({ ok: true, json: async () => job });
+    vi.stubGlobal("fetch", fetchMock);
     render(<Home />);
-    const projectControls = screen.getByRole("banner", { name: "Project controls" });
-    expect(projectControls).toBeInTheDocument();
+    completeForm();
+    fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Preview first five slides (61 seconds)" }));
+    fireEvent.submit(document.getElementById("demo-form")!);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/jobs?job=preview-job"));
+    expect(fetchMock).toHaveBeenCalledWith(`/api/projects/${projectResponse.id}/generation/presentation-preview`, expect.objectContaining({ method: "POST" }));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).name).toBe(projectResponse.name);
+  });
+  it("renders a setup form, example preview, and director settings", () => {
+    render(<Home />);
     expect(screen.getByRole("heading", { level: 1, name: "Create product demo" })).toBeInTheDocument();
-    expect(within(projectControls).getByText("New project — create to save")).toBeInTheDocument();
-    expect(within(projectControls).queryByText("Draft saved locally")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Project tools" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Demo setup" })).toBeInTheDocument();
     expect(screen.getByLabelText(/Website URL/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Demo title/)).toBeRequired();
     expect(screen.getByLabelText(/Describe your video/)).toBeInTheDocument();
-    expect(screen.getByText(/Mention the story, product moments, and ending/i)).toBeInTheDocument();
-    expect(within(screen.getByLabelText("Length")).getByRole("option", { name: "30 seconds" })).toHaveValue("30");
     expect(screen.getByLabelText("Studio preview")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Director settings" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Project timeline")).toBeInTheDocument();
     const navigation = screen.getByRole("navigation", { name: "Primary navigation" });
-    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Voice", "Settings"]);
-    expect(within(navigation).queryByText("Brand")).not.toBeInTheDocument();
-    expect(within(navigation).queryByText("Output")).not.toBeInTheDocument();
+    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Jobs", "Voice", "Settings"]);
   });
 
-  it("defaults to Product Demo with smooth zoom and always-visible click feedback", () => {
+  it("defaults to Product Demo with smooth zoom and configurable duration", () => {
     render(<Home />);
-
     expect(screen.getByRole("radio", { name: "Product Demo" })).toBeChecked();
-    expect(screen.getByRole("radio", { name: "Presentation Demo" })).not.toBeChecked();
-    expect(screen.getByLabelText("Length")).toBeEnabled();
     expect(screen.getByLabelText("Length")).toHaveValue("90");
     expect(screen.getByRole("switch", { name: "Smooth zoom" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByLabelText("Zoom intensity")).toBeEnabled();
     expect(screen.getByText("Both formats keep pointer movement and click feedback visible.")).toBeInTheDocument();
-    expect(within(screen.getByLabelText("Studio preview")).getByText(/Product Demo/)).toBeInTheDocument();
-
-    const timeline = within(screen.getByLabelText("Project timeline"));
-    expect(timeline.getByText("00:12 / 01:30")).toBeInTheDocument();
-    expect(timeline.getByText("1:30")).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "1. Intro, 0:00 to 0:06" })).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "6. Outro, 1:21 to 1:30" })).toBeInTheDocument();
-
     fireEvent.change(screen.getByLabelText("Length"), { target: { value: "30" } });
-    expect(timeline.getByText("00:12 / 00:30")).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "6. Outro, 0:27 to 0:30" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Length")).toHaveValue("30");
   });
 
-  it("locks Presentation Demo to the fixed two-minute format and restores the Product default", () => {
+  it("locks Presentation Demo to two minutes and restores the Product default", () => {
     render(<Home />);
-
     fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Create presentation demo" }),
-    ).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("banner", { name: "Project controls" })).getByText(
-        "New project — create to save",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Create presentation demo" })).toBeInTheDocument();
     expect(screen.getByLabelText("Length")).toBeDisabled();
     expect(screen.getByLabelText("Length")).toHaveValue("120");
-    expect(within(screen.getByLabelText("Length")).getByRole("option", { name: "2 minutes · fixed presentation format" })).toHaveValue("120");
-
-    const preview = within(screen.getByLabelText("Studio preview"));
-    const timeline = within(screen.getByLabelText("Project timeline"));
-    expect(preview.getByText("0:12 / 2:00")).toBeInTheDocument();
-    expect(timeline.getByText("00:12 / 02:00")).toBeInTheDocument();
-    expect(timeline.getByText("2:00")).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "1. Intro, 0:00 to 0:05" })).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "2. Problem + promise, 0:05 to 0:20" })).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "3. Product walkthrough, 0:20 to 1:20" })).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "5. Editing + result, 1:40 to 1:55" })).toBeInTheDocument();
-    expect(timeline.getByRole("button", { name: "6. Outro, 1:55 to 2:00" })).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole("radio", { name: "Product Demo" }));
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Create product demo" }),
-    ).toBeInTheDocument();
     expect(screen.getByLabelText("Length")).toBeEnabled();
     expect(screen.getByLabelText("Length")).toHaveValue("90");
-    expect(timeline.getByText("00:12 / 01:30")).toBeInTheDocument();
   });
 
-  it("previews authored Presentation bookends and framed product scenes", () => {
+  it("switches between playable Northstar examples with a fresh player", () => {
     render(<Home />);
-
     const preview = within(screen.getByLabelText("Studio preview"));
-    const timeline = within(screen.getByLabelText("Project timeline"));
-    expect(preview.getByLabelText("Full-screen product recording")).toBeInTheDocument();
-    expect(preview.getByLabelText("Mock product application")).toBeInTheDocument();
-    expect(preview.queryByLabelText("Authored presentation layout")).not.toBeInTheDocument();
-    expect(preview.getByText("EcoTrack")).toBeInTheDocument();
-
+    expect(preview.getByText("Example preview")).toBeInTheDocument();
+    const product = preview.getByLabelText("Northstar Product Demo example");
+    expect(product).toHaveAttribute("src", "/examples/northstar-product-20s.mp4");
+    expect(product).toHaveAttribute("controls");
+    expect(product).not.toHaveAttribute("autoplay");
     fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
-    expect(preview.queryByLabelText("Full-screen product recording")).not.toBeInTheDocument();
-    expect(preview.getByLabelText("Authored presentation layout")).toBeInTheDocument();
-    expect(preview.getByLabelText("Product recording aperture")).toBeInTheDocument();
-    expect(preview.getByLabelText("Mock product application")).toBeInTheDocument();
-    expect(preview.getByText("Problem + promise")).toBeInTheDocument();
-    expect(preview.getByText("EcoTrack")).toBeInTheDocument();
-
-    fireEvent.click(timeline.getByRole("button", { name: "1. Intro, 0:00 to 0:05" }));
-    expect(preview.getByLabelText("Authored intro title card")).toBeInTheDocument();
-    expect(preview.queryByLabelText("Product recording aperture")).not.toBeInTheDocument();
+    const presentation = preview.getByLabelText("Northstar Presentation Demo example");
+    expect(presentation).toHaveAttribute("src", "/examples/northstar-presentation-20s.mp4");
+    expect(presentation).toHaveAttribute("controls");
+    expect(product).not.toBeInTheDocument();
     expect(preview.queryByLabelText("Mock product application")).not.toBeInTheDocument();
-    expect(preview.queryByText("EcoTrack")).not.toBeInTheDocument();
+    expect(preview.queryByRole("button", { name: "Play preview" })).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(timeline.getByRole("button", { name: "6. Outro, 1:55 to 2:00" }));
-    expect(preview.getByLabelText("Authored outro title card")).toBeInTheDocument();
-    expect(preview.queryByLabelText("Product recording aperture")).not.toBeInTheDocument();
-    expect(preview.queryByLabelText("Mock product application")).not.toBeInTheDocument();
-    expect(preview.queryByText("EcoTrack")).not.toBeInTheDocument();
+  it("explains a failed example load and clears the error when switching format", () => {
+    render(<Home />);
+    fireEvent.error(screen.getByLabelText("Northstar Product Demo example"));
+    expect(screen.getByRole("alert")).toHaveTextContent("Example video couldn’t load");
+    expect(screen.getByRole("link", { name: "Open example video" })).toHaveAttribute("href", "/examples/northstar-product-20s.mp4");
+    fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows field-level validation without submitting an invalid brief", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     render(<Home />);
-    fireEvent.click(screen.getAllByRole("button", { name: "Create demo" })[1]);
+    fireEvent.click(screen.getByRole("button", { name: "Create demo" }));
     expect(await screen.findByText("Enter a valid website URL.")).toBeInTheDocument();
+    expect(screen.getByText("Add a title for your demo.")).toBeInTheDocument();
     expect(screen.getByText("Describe the video in at least 20 characters.")).toBeInTheDocument();
     expect(screen.getByText("Choose a target audience.")).toBeInTheDocument();
     expect(screen.getByText("Add a call to action.")).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a whitespace-only title and keeps the title when changing demo mode", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    render(<Home />);
+    completeForm();
+    fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
+    expect(screen.getByLabelText(/Demo title/)).toHaveValue(`  ${projectResponse.name}  `);
+    fireEvent.change(screen.getByLabelText(/Demo title/), { target: { value: "   " } });
+    fireEvent.submit(document.getElementById("demo-form")!);
+    expect(screen.getByLabelText(/Demo title/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Add a title for your demo.")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -193,13 +189,14 @@ describe("Create Demo Studio", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
     fireEvent.click(screen.getByRole("switch", { name: "Smooth zoom" }));
     expect(screen.getByLabelText("Zoom intensity")).toBeDisabled();
-    fireEvent.click(screen.getAllByRole("button", { name: "Create demo" })[1]);
-    await waitFor(() => expect(screen.getAllByRole("button", { name: "Generating demo…" })[0]).toBeDisabled());
+    fireEvent.click(screen.getByRole("button", { name: "Create demo" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Generating demo…" })).toBeDisabled());
     resolveGeneration?.({ ok: true, json: async () => generationResult });
     await waitFor(() => expect(replace).toHaveBeenCalledWith(`/projects/${projectResponse.id}/editor`));
     expect(fetchMock).toHaveBeenCalledWith("/api/projects", expect.objectContaining({ method: "POST" }));
     expect(fetchMock).toHaveBeenCalledWith(`/api/projects/${projectResponse.id}/generate`, expect.objectContaining({ method: "POST" }));
     const request = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(String(request.body)).name).toBe(projectResponse.name);
     expect(JSON.parse(String(request.body))).toMatchObject({ website_url: "https://example.com", product_summary: projectResponse.product_summary, demo_mode: "presentation_demo", audience: "Product leaders", requested_duration_seconds: 120, cta: "Start a trial", zoom_enabled: false });
   });
 });

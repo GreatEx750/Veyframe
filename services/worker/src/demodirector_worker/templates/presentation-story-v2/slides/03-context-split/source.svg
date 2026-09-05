@@ -44,7 +44,7 @@
     <circle cx="128" cy="176" r="6" fill="#9DE8D2"/>
     <circle cx="2432" cy="176" r="6" fill="#9DE8D2"/>
   
-    <rect x="1000" y="218" width="1432" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/><rect x="1024" y="242" width="186" height="48" rx="8" fill="#0A211C" fill-opacity="0.9"/><circle cx="1054" cy="266" r="8" fill="#FF796C"/>
+    <rect x="1000" y="218" width="1432" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/>
     
     <rect x="500" y="1252" width="1560" height="104" rx="8" fill="#0A211C" fill-opacity="0.94" stroke="#9DE8D2" stroke-opacity="0.72" stroke-width="2"/>
   

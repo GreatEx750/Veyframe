@@ -8,8 +8,7 @@
     <rect width="2560" height="1440" fill="url(#grain-04-workflow-rail)"/>
     
       <rect x="128" y="218" width="730" height="1022" rx="20" fill="#0A211C" fill-opacity="0.9" stroke="#73BDAA" stroke-width="2"/>
-      <rect x="184" y="600" width="618" height="220" rx="12" fill="#2C5B50"/>
-      <rect x="184" y="850" width="618" height="58" rx="8" fill="#F3EDE1" fill-opacity="0.1"/><rect x="184" y="928" width="618" height="58" rx="8" fill="#F3EDE1" fill-opacity="0.1"/><rect x="184" y="1006" width="618" height="58" rx="8" fill="#9DE8D2" fill-opacity="1"/>
+      <rect x="184" y="600" width="618" height="148" rx="12" fill="#2C5B50"/><rect x="184" y="784" width="618" height="148" rx="12" fill="#2C5B50"/><rect x="184" y="968" width="618" height="148" rx="12" fill="#2C5B50"/>
     
   </g>
     <g id="product-slot">
@@ -43,7 +42,7 @@
     <circle cx="128" cy="176" r="6" fill="#9DE8D2"/>
     <circle cx="2432" cy="176" r="6" fill="#9DE8D2"/>
   
-    <rect x="930" y="218" width="1502" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/><rect x="954" y="242" width="186" height="48" rx="8" fill="#0A211C" fill-opacity="0.9"/><circle cx="984" cy="266" r="8" fill="#FF796C"/>
+    <rect x="930" y="218" width="1502" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/>
     
     <rect x="500" y="1252" width="1560" height="104" rx="8" fill="#0A211C" fill-opacity="0.94" stroke="#9DE8D2" stroke-opacity="0.72" stroke-width="2"/>
   
@@ -52,8 +51,9 @@
 <text data-slot="counter" x="2432" y="126" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="2432" dy="0">04 / 09</tspan></text>
 <text data-slot="eyebrow" x="186" y="296" text-anchor="start" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="186" dy="0">ONE REQUEST</tspan></text>
 <text data-slot="headline" x="184" y="410" text-anchor="start" fill="#F3EDE1" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="184" dy="0">Turn intent into</tspan><tspan x="184" dy="64">a visible plan.</tspan></text>
-<text data-slot="request" x="212" y="676" text-anchor="start" fill="#F3EDE1" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="212" dy="0">“Show the dashboard,</tspan><tspan x="212" dy="42">reveal the insight, then finish</tspan><tspan x="212" dy="42">on the action.”</tspan></text>
-<text data-slot="result" x="212" y="1050" text-anchor="start" fill="#F3EDE1" font-size="40" font-weight="600" letter-spacing="-0.5px"><tspan x="212" dy="0">Directed. Captured. Ready.</tspan></text>
+<text data-slot="request" x="212" y="658" text-anchor="start" fill="#F3EDE1" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="212" dy="0">Open the section you want to explore.</tspan></text>
+<text data-slot="step_two" x="212" y="842" text-anchor="start" fill="#F3EDE1" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="212" dy="0">Inspect the details in context.</tspan></text>
+<text data-slot="step_three" x="212" y="1026" text-anchor="start" fill="#F3EDE1" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="212" dy="0">Return to the overview.</tspan></text>
 <text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">Every step stays traceable from request to result.</tspan></text></g>
   
 </svg>

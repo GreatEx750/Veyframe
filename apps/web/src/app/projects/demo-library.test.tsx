@@ -78,7 +78,7 @@ describe("DemoLibrary", () => {
     renderLibrary();
     const navigation = screen.getByRole("navigation", { name: "Primary navigation" });
 
-    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Voice", "Settings"]);
+    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Jobs", "Voice", "Settings"]);
     expect(within(navigation).queryByText("Brand")).not.toBeInTheDocument();
     expect(within(navigation).queryByText("Output")).not.toBeInTheDocument();
   });

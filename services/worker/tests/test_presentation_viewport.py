@@ -6,7 +6,7 @@ import pytest
 from demodirector_worker.presentation_assets import capture_settings_for_template, load_pack
 
 
-@pytest.mark.parametrize("index", [2, 3, 4, 5, 6, 7])
+@pytest.mark.parametrize("index", [1, 2, 3, 4, 5, 6, 7])
 def test_recording_dimensions_match_each_product_window(index: int) -> None:
     template = load_pack()["templates"][index]
     settings = capture_settings_for_template(template)

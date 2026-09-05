@@ -19,10 +19,10 @@ The bundled Inter variable font and its license live in `shared/`. `tokens.json`
 ## Composition order
 
 1. Draw `background.png`.
-2. Place real product footage through `product-mask.png` using the fixed `contain_over_blur` fit.
+2. Place real product footage through `product-mask.png`. The authored renderer records at the aperture's native resolution and places the footage without rescaling.
 3. Draw `foreground.png`.
 4. Render validated project copy, captions, cursor, and click feedback into declared slots.
 
-The opening 0–5 seconds and closing 115–120 seconds intentionally omit a product aperture. Every layout from 5–115 seconds requires product footage. The pack is authored but not connected to the renderer in this asset-generation step, so the existing `presentation-story@1` output remains unchanged.
+Only the opening 0–3 seconds and closing 115–120 seconds omit a product aperture. Slide 2 shows a ten-second product example from 3–13 seconds; every layout from 3–115 seconds requires product footage. The local application uses all nine slides for the full 120-second Presentation Demo and the first five for the optional 61-second preview. The separate `presentation-story@1` renderer remains for legacy exports, not new presentation generation.
 
 Regenerate committed assets with `npm run templates:presentation` and review the contact sheet before accepting changes.

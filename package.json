@@ -7,7 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -k -n web,api \"npm run dev:web\" \"npm run dev:api\"",
+    "dev": "concurrently -k -n web,api,worker \"npm run dev:web\" \"npm run dev:api\" \"npm run dev:worker\"",
+    "dev:worker": "node scripts/python-runner.mjs -m demodirector_api.job_worker",
     "dev:web": "npm run dev --workspace @demodirector/web",
     "dev:api": "node scripts/python-runner.mjs -m uvicorn demodirector_api.main:app --app-dir services/api/src --reload --port 8000",
     "templates:presentation": "node scripts/build-presentation-template-assets.mjs",

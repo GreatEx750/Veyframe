@@ -12,6 +12,7 @@ from demodirector_contracts import (
     Scene,
     Storyboard,
 )
+from pydantic import Field
 
 from demodirector_api.google_ai import StructuredAIService
 
@@ -21,8 +22,18 @@ DURATION_TOLERANCE = 0.10
 INTERACTIVE_ACTIONS = {"click", "fill", "select", "upload"}
 
 
+class GeneratedStoryboard(Storyboard):
+    # Advertise the generation budget to Gemini; business validation below remains authoritative.
+    scenes: list[Scene] = Field(json_schema_extra={"minItems": MIN_SCENES, "maxItems": MAX_SCENES})
+
+
 class StoryboardValidationError(RuntimeError):
     """Raised when an AI-proposed storyboard is unsafe or outside the brief."""
+
+    def __init__(self, message: str, *, code: str = "invalid_storyboard") -> None:
+        super().__init__(message)
+        self.code = code
+        self.candidate: Storyboard | None = None
 
 
 class StoryboardGenerationService:
@@ -36,13 +47,17 @@ class StoryboardGenerationService:
         understanding: ProductUnderstanding,
         sources: list[ResearchSource],
     ) -> Storyboard:
-        storyboard = self.ai_service.generate_structured(
+        storyboard: Storyboard = self.ai_service.generate_structured(
             prompt=build_storyboard_prompt(project, understanding, sources),
-            response_model=Storyboard,
+            response_model=GeneratedStoryboard,
         )
         storyboard = canonicalize_scene_order(storyboard)
         storyboard = ground_capture_locators(storyboard, sources)
-        validate_storyboard(storyboard, project, sources)
+        try:
+            validate_storyboard(storyboard, project, sources)
+        except StoryboardValidationError as error:
+            error.candidate = storyboard
+            raise
         return storyboard
 
     def regenerate_scene(
@@ -104,7 +119,8 @@ def build_storyboard_prompt(
         "The deterministic renderer owns the first and final five seconds as the authored intro "
         "and outro and keeps captured product footage visible between them. Do not invent slide "
         "layouts, animation code, render expressions, or template geometry. Provide "
-        "project-specific copy through the typed scene fields only. "
+        "project-specific copy through the typed scene fields only. Plan six to eight focused "
+        "scenes rather than grouping the whole brief into only three or four scenes. "
         if project.demo_mode == "presentation_demo"
         else "This is a Product Demo: plan one continuous product walkthrough with narration, "
         "captions, recorded pointer movement, and optional smooth camera direction. "
@@ -239,7 +255,8 @@ def validate_storyboard(
         raise StoryboardValidationError("Storyboard project ID does not match the request.")
     if not MIN_SCENES <= len(storyboard.scenes) <= MAX_SCENES:
         raise StoryboardValidationError(
-            f"Generated storyboard must contain {MIN_SCENES}-{MAX_SCENES} scenes."
+            f"Generated storyboard must contain {MIN_SCENES}-{MAX_SCENES} scenes.",
+            code="scene_count",
         )
     orders = [scene.order for scene in storyboard.scenes]
     if orders != list(range(len(storyboard.scenes))):
@@ -259,17 +276,25 @@ def validate_storyboard(
 
 def validate_scene(scene: Scene, allowed_sources: set[str]) -> None:
     if not scene.source_ids:
-        raise StoryboardValidationError(f"Scene {scene.id} requires grounded source IDs.")
+        raise StoryboardValidationError(
+            f"Scene {scene.id} requires grounded source IDs.", code="missing_sources"
+        )
     if set(scene.source_ids) - allowed_sources:
-        raise StoryboardValidationError(f"Scene {scene.id} references an unknown source ID.")
+        raise StoryboardValidationError(
+            f"Scene {scene.id} references an unknown source ID.", code="unknown_source"
+        )
     is_interactive = any(
         action.type in INTERACTIVE_ACTIONS for action in scene.capture_plan.actions
     )
     if is_interactive and not scene.capture_plan.success_assertions:
         raise StoryboardValidationError(
-            f"Interactive scene {scene.id} requires a success assertion."
+            f"Interactive scene {scene.id} requires a success assertion.", code="missing_assertion"
         )
-    if "submit" in scene.objective.casefold():
+    objective = re.sub(
+        r"\b(?:do not|don't|never|without|avoid|not)\s+submit(?:ting)?\b",
+        "", scene.objective.casefold(),
+    )
+    if re.search(r"\bsubmit(?:ting)?\b", objective):
         actions = scene.capture_plan.actions
         last_fill = max(
             (index for index, action in enumerate(actions) if action.type == "fill"),
@@ -279,5 +304,6 @@ def validate_scene(scene: Scene, allowed_sources: set[str]) -> None:
             action.type == "click" for action in actions[last_fill + 1 :]
         ):
             raise StoryboardValidationError(
-                f"Scene {scene.id} requires a submit action after filling the field."
+                f"Scene {scene.id} requires a submit action after filling the field.",
+                code="missing_submit",
             )

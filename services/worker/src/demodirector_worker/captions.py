@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from demodirector_contracts import (
     CaptionClip,
@@ -8,6 +9,37 @@ from demodirector_contracts import (
     CaptionTrack,
     NarrationSegment,
 )
+
+
+@dataclass(frozen=True)
+class WordHighlight:
+    words: tuple[str, ...]
+    word_index: int
+    start_ms: int
+    end_ms: int
+
+
+def highlight_frame_window(state: WordHighlight, fps: int = 30) -> tuple[int, int]:
+    """Quantize shared absolute boundaries, never independently rounded durations."""
+    return ((state.start_ms * fps + 500) // 1000, (state.end_ms * fps + 500) // 1000)
+
+
+def word_highlights(text: str, start_ms: int, end_ms: int) -> list[WordHighlight]:
+    """Estimated word timing within an existing phrase, not speech alignment."""
+    words = tuple(text.split())
+    if not words or end_ms <= start_ms:
+        return []
+    duration = end_ms - start_ms
+    return [
+        WordHighlight(
+            words,
+            index,
+            start_ms + duration * index // len(words),
+            start_ms + duration * (index + 1) // len(words),
+        )
+        for index in range(len(words))
+        if duration * (index + 1) // len(words) > duration * index // len(words)
+    ]
 
 
 class CaptionService:

@@ -61,6 +61,30 @@
         "weight": 600,
         "tracking": 4.4
       },
+      "activity_badge": {
+        "size": 22,
+        "line_height": 30,
+        "weight": 500,
+        "tracking": 1.6
+      },
+      "activity_status": {
+        "size": 22,
+        "line_height": 30,
+        "weight": 400,
+        "tracking": 2
+      },
+      "activity_detail": {
+        "size": 34,
+        "line_height": 44,
+        "weight": 400,
+        "tracking": 0
+      },
+      "activity_heading": {
+        "size": 24,
+        "line_height": 34,
+        "weight": 400,
+        "tracking": 3.5
+      },
       "caption": {
         "size": 44,
         "line_height": 54,
@@ -146,42 +170,42 @@
     },
     {
       "start_ms": 3000,
-      "end_ms": 5000,
+      "end_ms": 13000,
       "template_id": "brand-promise@2",
       "transition_preset": "matched_slide"
     },
     {
-      "start_ms": 5000,
-      "end_ms": 20000,
+      "start_ms": 13000,
+      "end_ms": 28000,
       "template_id": "context-split@2",
       "transition_preset": "matched_slide"
     },
     {
-      "start_ms": 20000,
-      "end_ms": 37000,
+      "start_ms": 28000,
+      "end_ms": 45000,
       "template_id": "workflow-rail@2",
       "transition_preset": "field_slide"
     },
     {
-      "start_ms": 37000,
-      "end_ms": 53000,
+      "start_ms": 45000,
+      "end_ms": 61000,
       "template_id": "prompt-over-product@2",
       "transition_preset": "aperture_expand"
     },
     {
-      "start_ms": 53000,
-      "end_ms": 70000,
+      "start_ms": 61000,
+      "end_ms": 78000,
       "template_id": "focus-detail@2",
       "transition_preset": "focus_rise"
     },
     {
-      "start_ms": 70000,
-      "end_ms": 90000,
+      "start_ms": 78000,
+      "end_ms": 98000,
       "template_id": "human-review@2",
       "transition_preset": "field_slide"
     },
     {
-      "start_ms": 90000,
+      "start_ms": 98000,
       "end_ms": 115000,
       "template_id": "trust-cards@2",
       "transition_preset": "card_stagger"
@@ -282,15 +306,16 @@
     },
     {
       "id": "brand-promise@2",
-      "name": "Brand promise",
+      "name": "Product in action",
       "folder": "slides/02-brand-promise",
-      "role": "intro",
-      "requires_product": false,
+      "role": "product",
+      "requires_product": true,
       "assets": {
         "source_svg": "slides/02-brand-promise/source.svg",
         "background_png": "slides/02-brand-promise/background.png",
         "foreground_png": "slides/02-brand-promise/foreground.png",
-        "preview_png": "slides/02-brand-promise/preview.png"
+        "preview_png": "slides/02-brand-promise/preview.png",
+        "product_mask_png": "slides/02-brand-promise/product-mask.png"
       },
       "copy_slots": [
         {
@@ -325,13 +350,13 @@
           "id": "brand",
           "kind": "text",
           "rect": {
-            "x": 542,
-            "y": 460,
-            "width": 1476,
-            "height": 150
+            "x": 128,
+            "y": 208,
+            "width": 2304,
+            "height": 106
           },
           "font_token": "display_l",
-          "align": "center",
+          "align": "left",
           "max_characters": 32,
           "max_lines": 1
         },
@@ -339,15 +364,15 @@
           "id": "headline",
           "kind": "text",
           "rect": {
-            "x": 452,
-            "y": 644,
-            "width": 1656,
-            "height": 148
+            "x": 128,
+            "y": 326,
+            "width": 2304,
+            "height": 72
           },
           "font_token": "heading",
-          "align": "center",
+          "align": "left",
           "max_characters": 90,
-          "max_lines": 2
+          "max_lines": 1
         },
         {
           "id": "caption",
@@ -364,7 +389,15 @@
           "max_lines": 2
         }
       ],
-      "motion_preset": "matched_slide"
+      "motion_preset": "matched_slide",
+      "product_aperture": {
+        "x": 128,
+        "y": 424,
+        "width": 2304,
+        "height": 816,
+        "corner_radius": 20,
+        "fit": "contain_over_blur"
+      }
     },
     {
       "id": "context-split@2",
@@ -564,27 +597,41 @@
           "kind": "text",
           "rect": {
             "x": 212,
-            "y": 646,
-            "width": 520,
-            "height": 120
+            "y": 628,
+            "width": 552,
+            "height": 100
           },
           "font_token": "body",
           "align": "left",
-          "max_characters": 120,
-          "max_lines": 3
+          "max_characters": 90,
+          "max_lines": 2
         },
         {
-          "id": "result",
+          "id": "step_two",
           "kind": "text",
           "rect": {
             "x": 212,
-            "y": 1010,
-            "width": 520,
-            "height": 90
+            "y": 812,
+            "width": 552,
+            "height": 100
           },
-          "font_token": "title",
+          "font_token": "body",
           "align": "left",
-          "max_characters": 48,
+          "max_characters": 90,
+          "max_lines": 2
+        },
+        {
+          "id": "step_three",
+          "kind": "text",
+          "rect": {
+            "x": 212,
+            "y": 996,
+            "width": 552,
+            "height": 100
+          },
+          "font_token": "body",
+          "align": "left",
+          "max_characters": 90,
           "max_lines": 2
         },
         {
@@ -603,6 +650,7 @@
         }
       ],
       "motion_preset": "field_slide",
+      "visual_revision": "clear-product-2026-09-05",
       "product_aperture": {
         "x": 930,
         "y": 218,
@@ -709,7 +757,7 @@
     },
     {
       "id": "focus-detail@2",
-      "name": "Focal detail",
+      "name": "Product activity",
       "folder": "slides/06-focus-detail",
       "role": "product",
       "requires_product": true,
@@ -750,60 +798,186 @@
           "max_lines": 1
         },
         {
-          "id": "eyebrow",
+          "id": "activity_heading",
           "kind": "text",
           "rect": {
-            "x": 1518,
-            "y": 432,
-            "width": 640,
-            "height": 38
+            "x": 1608,
+            "y": 236,
+            "width": 824,
+            "height": 42
           },
-          "font_token": "label",
+          "font_token": "activity_heading",
           "align": "left",
-          "max_characters": 36,
+          "max_characters": 32,
           "max_lines": 1
         },
         {
-          "id": "headline",
+          "id": "activity_1_label",
           "kind": "text",
           "rect": {
-            "x": 1518,
-            "y": 510,
-            "width": 660,
-            "height": 154
+            "x": 1640,
+            "y": 350,
+            "width": 290,
+            "height": 36
           },
-          "font_token": "heading",
+          "font_token": "activity_badge",
           "align": "left",
-          "max_characters": 58,
-          "max_lines": 3
-        },
-        {
-          "id": "body",
-          "kind": "text",
-          "rect": {
-            "x": 1518,
-            "y": 716,
-            "width": 620,
-            "height": 142
-          },
-          "font_token": "body",
-          "align": "left",
-          "max_characters": 140,
-          "max_lines": 4
-        },
-        {
-          "id": "callout",
-          "kind": "text",
-          "rect": {
-            "x": 1518,
-            "y": 952,
-            "width": 620,
-            "height": 58
-          },
-          "font_token": "title",
-          "align": "left",
-          "max_characters": 44,
+          "max_characters": 18,
           "max_lines": 1
+        },
+        {
+          "id": "activity_1_status",
+          "kind": "text",
+          "rect": {
+            "x": 2160,
+            "y": 350,
+            "width": 236,
+            "height": 36
+          },
+          "font_token": "activity_status",
+          "align": "right",
+          "max_characters": 12,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_1_detail",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 404,
+            "width": 752,
+            "height": 88
+          },
+          "font_token": "activity_detail",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
+        },
+        {
+          "id": "activity_2_label",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 566,
+            "width": 290,
+            "height": 36
+          },
+          "font_token": "activity_badge",
+          "align": "left",
+          "max_characters": 18,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_2_status",
+          "kind": "text",
+          "rect": {
+            "x": 2160,
+            "y": 566,
+            "width": 236,
+            "height": 36
+          },
+          "font_token": "activity_status",
+          "align": "right",
+          "max_characters": 12,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_2_detail",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 620,
+            "width": 752,
+            "height": 88
+          },
+          "font_token": "activity_detail",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
+        },
+        {
+          "id": "activity_3_label",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 782,
+            "width": 290,
+            "height": 36
+          },
+          "font_token": "activity_badge",
+          "align": "left",
+          "max_characters": 18,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_3_status",
+          "kind": "text",
+          "rect": {
+            "x": 2160,
+            "y": 782,
+            "width": 236,
+            "height": 36
+          },
+          "font_token": "activity_status",
+          "align": "right",
+          "max_characters": 12,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_3_detail",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 836,
+            "width": 752,
+            "height": 88
+          },
+          "font_token": "activity_detail",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
+        },
+        {
+          "id": "activity_4_label",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 998,
+            "width": 290,
+            "height": 36
+          },
+          "font_token": "activity_badge",
+          "align": "left",
+          "max_characters": 18,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_4_status",
+          "kind": "text",
+          "rect": {
+            "x": 2160,
+            "y": 998,
+            "width": 236,
+            "height": 36
+          },
+          "font_token": "activity_status",
+          "align": "right",
+          "max_characters": 12,
+          "max_lines": 1
+        },
+        {
+          "id": "activity_4_detail",
+          "kind": "text",
+          "rect": {
+            "x": 1640,
+            "y": 1052,
+            "width": 752,
+            "height": 88
+          },
+          "font_token": "activity_detail",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
         },
         {
           "id": "caption",
@@ -821,18 +995,20 @@
         }
       ],
       "motion_preset": "focus_rise",
+      "visual_revision": "product-activity-v2",
+      "activity_panel": true,
       "product_aperture": {
         "x": 128,
-        "y": 190,
-        "width": 2304,
-        "height": 1050,
+        "y": 218,
+        "width": 1400,
+        "height": 1022,
         "corner_radius": 20,
         "fit": "contain_over_blur"
       }
     },
     {
       "id": "human-review@2",
-      "name": "Human review gate",
+      "name": "Workflow highlights",
       "folder": "slides/07-human-review",
       "role": "product",
       "requires_product": true,
@@ -901,11 +1077,53 @@
           "max_lines": 3
         },
         {
+          "id": "bullet_one",
+          "kind": "text",
+          "rect": {
+            "x": 226,
+            "y": 600,
+            "width": 530,
+            "height": 80
+          },
+          "font_token": "body",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
+        },
+        {
+          "id": "bullet_two",
+          "kind": "text",
+          "rect": {
+            "x": 226,
+            "y": 710,
+            "width": 530,
+            "height": 80
+          },
+          "font_token": "body",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
+        },
+        {
+          "id": "bullet_three",
+          "kind": "text",
+          "rect": {
+            "x": 226,
+            "y": 820,
+            "width": 530,
+            "height": 80
+          },
+          "font_token": "body",
+          "align": "left",
+          "max_characters": 64,
+          "max_lines": 2
+        },
+        {
           "id": "body",
           "kind": "text",
           "rect": {
             "x": 188,
-            "y": 916,
+            "y": 946,
             "width": 560,
             "height": 130
           },
@@ -944,6 +1162,7 @@
         }
       ],
       "motion_preset": "field_slide",
+      "visual_revision": "clear-product-2026-09-05",
       "product_aperture": {
         "x": 876,
         "y": 218,
@@ -955,7 +1174,7 @@
     },
     {
       "id": "trust-cards@2",
-      "name": "Proof stack over product",
+      "name": "Unobstructed product walkthrough",
       "folder": "slides/08-trust-cards",
       "role": "product",
       "requires_product": true,
@@ -996,48 +1215,6 @@
           "max_lines": 1
         },
         {
-          "id": "card_one",
-          "kind": "text",
-          "rect": {
-            "x": 248,
-            "y": 404,
-            "width": 560,
-            "height": 214
-          },
-          "font_token": "heading",
-          "align": "left",
-          "max_characters": 82,
-          "max_lines": 3
-        },
-        {
-          "id": "card_two",
-          "kind": "text",
-          "rect": {
-            "x": 1000,
-            "y": 308,
-            "width": 560,
-            "height": 214
-          },
-          "font_token": "heading",
-          "align": "left",
-          "max_characters": 82,
-          "max_lines": 3
-        },
-        {
-          "id": "card_three",
-          "kind": "text",
-          "rect": {
-            "x": 1752,
-            "y": 472,
-            "width": 560,
-            "height": 214
-          },
-          "font_token": "heading",
-          "align": "left",
-          "max_characters": 82,
-          "max_lines": 3
-        },
-        {
           "id": "caption",
           "kind": "caption",
           "rect": {
@@ -1053,6 +1230,7 @@
         }
       ],
       "motion_preset": "card_stagger",
+      "visual_revision": "clear-product-2026-09-05",
       "product_aperture": {
         "x": 128,
         "y": 190,
@@ -1203,7 +1381,7 @@
   "integrity": {
     "algorithm": "sha256",
     "files": {
-      "contact-sheet.png": "3e700d56dd53629b6b901d0187d7a19b53c41fb10e4a4b1ef18c5dfec9184d01",
+      "contact-sheet.png": "9991995006c838d3751a4466ea0c8fa506e59afb1006c634974d01694b1366b8",
       "motion.json": "6899da54858821a3f4004250c5ac1b7d262bcc4f9f9e0b6a25de877069566e4b",
       "shared/INTER-LICENSE.txt": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345",
       "shared/inter-latin-variable.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
@@ -1211,45 +1389,46 @@
       "slides/01-hook-question/foreground.png": "9aafe6043109ae12845baaea619f3d737d30abc78be68120d75822b0892310ad",
       "slides/01-hook-question/preview.png": "0d41619d74e96f0d7dff9efe555f723f84355cfa51dd156d334231060a230366",
       "slides/01-hook-question/source.svg": "dd5f14a6e5fe7e4a7928b06f7203481ef4d86b6f9a827c63da4c758527801759",
-      "slides/02-brand-promise/background.png": "fe972ec298d3b99e814ffc6bf318e1bee4133bd8701ec40a074ef2eeeb01f948",
-      "slides/02-brand-promise/foreground.png": "ef4d17454ee79868d3ab67a71e2ce8043080b8449ab13b9c1a85b3d2acc718be",
-      "slides/02-brand-promise/preview.png": "6ae1364f7627d63700e824cfa350aee2cc218ecfce7cacafac13f6507a9dc1be",
-      "slides/02-brand-promise/source.svg": "d46ca18d2a57f052497eec3ba55804a128bbf4fa755237c8d18b1ef77d6fdfa5",
+      "slides/02-brand-promise/background.png": "899961da61ed71a734869909bd76e5ed5e770e92e4a26adee4492e8cf0534934",
+      "slides/02-brand-promise/foreground.png": "618721e3fca8af7b361973eb47890c282dbd2227e1eaf7020de4ad39d07d83a0",
+      "slides/02-brand-promise/preview.png": "6a8f2c09f28b0015bb7dd70b41294b155d014e4e4d20030cf703fd197023c090",
+      "slides/02-brand-promise/product-mask.png": "f2a633bd6e3ae3e6eba1111da98e50091dfe92af4cb3cde24c7db5bd91598628",
+      "slides/02-brand-promise/source.svg": "43b554aacf1d934e7b56843b4dbfb9557345e15d22aa2034181f039d2a5cd5bc",
       "slides/03-context-split/background.png": "0c028b7790557233a8ff08e56194520baa306f3c8a5dd7dc7e3c0c1130b48158",
-      "slides/03-context-split/foreground.png": "1640be50d6ae702e382a1446d202d594cab9927e127884dfe3ceafc773fec5f7",
-      "slides/03-context-split/preview.png": "1cfc7bcd795a34920c0a47066d5b898546d2ecc1dac8fd3ee67fc47ae7107783",
+      "slides/03-context-split/foreground.png": "41377d13a80ab0f63a3113f5ea035f2c89eade47865fe89ee06364e318b41d67",
+      "slides/03-context-split/preview.png": "3a4d3ff7912fbef946a3eab6bfcb5ff6db2149303fb57b0e908198e5472d324f",
       "slides/03-context-split/product-mask.png": "6bccf30b742f5757f279c456bff7ef0555e983edd604229ac17eac5ee7780bd3",
-      "slides/03-context-split/source.svg": "eb8eca9df5d84c42ac5f9f4abc990853c5d69b78d427f45ef64878d1b65bc6b4",
-      "slides/04-workflow-rail/background.png": "23a63c6556fa157313867376eb2df72e70a6c41e9f96ec8d56b1173db40742ea",
-      "slides/04-workflow-rail/foreground.png": "9449443a5d3d6b97ddc379c1586004f02a9014f974ce5a7d9c2a4ffa5845172e",
-      "slides/04-workflow-rail/preview.png": "3b42555e141d6d70eb6f3f30561a102f54539697fcac2bf9ae264ccf4435a84d",
+      "slides/03-context-split/source.svg": "994c8744ec62ed92d11326e66fbf48e9d383f3f1af83bee5ddabc408ec5b46b3",
+      "slides/04-workflow-rail/background.png": "954c6e29b4bfa91620f7a58a545fdde7fe1ff105a20b9f92d25bda39fc533bbb",
+      "slides/04-workflow-rail/foreground.png": "738fd8c798a3252c1622883fca88b17de335496172fd88d7a9d522c5b51bbe56",
+      "slides/04-workflow-rail/preview.png": "aced68660edeba1d36372b66731a83b978b7e61798d208ede2053af859ae388d",
       "slides/04-workflow-rail/product-mask.png": "cb07787e16e4ae88138509299b77453029af475bb7a817c4e648cdd6879abe55",
-      "slides/04-workflow-rail/source.svg": "dfe1d29a683d70d91b4dd3101350305ccbd86dcbdcddab86e2aeb37e45c395ef",
+      "slides/04-workflow-rail/source.svg": "1f5a7bf268016238cd67b89a6956761e229192d0266fd2f77d259933c838ef3f",
       "slides/05-prompt-over-product/background.png": "1cff0b0d01308ef3a605395cf8e3f2e7bf8fae3911c5db0828aaf6e7c11ca1bc",
-      "slides/05-prompt-over-product/foreground.png": "7e636ad0525da3873cb2a8e7d883530347e50e528e56d6c1fa1ca8c14fd0df67",
-      "slides/05-prompt-over-product/preview.png": "8699ad526d1ea9b09d3df9cd2b61651799cb038d5e3f73822d2b4ad1c0f4e52e",
+      "slides/05-prompt-over-product/foreground.png": "618721e3fca8af7b361973eb47890c282dbd2227e1eaf7020de4ad39d07d83a0",
+      "slides/05-prompt-over-product/preview.png": "5ede9dbcdf49e9059347307c265ed69af641ff2d263849cedb07577140008e05",
       "slides/05-prompt-over-product/product-mask.png": "f2a633bd6e3ae3e6eba1111da98e50091dfe92af4cb3cde24c7db5bd91598628",
-      "slides/05-prompt-over-product/source.svg": "f6c0105199ebf7f95cbce8cac048ef6c4ec62c493d561599f3f695b086f21ac6",
-      "slides/06-focus-detail/background.png": "294bdba838273b82693ccd49d4090e47ea875227d7c153be5206c84db58a43f3",
-      "slides/06-focus-detail/foreground.png": "e6af56f1be7649df8b01019d8a5459290c5c7026ddc3928715a1bf560239d294",
-      "slides/06-focus-detail/preview.png": "eb2a00287356eecdde007231305bf4f19f7e441b85756193796d78ef700be825",
-      "slides/06-focus-detail/product-mask.png": "9397d8c38a3c91e0a8b4b60fda170563f62d4176e69c83b7b0f273daebc7720f",
-      "slides/06-focus-detail/source.svg": "9b2cd25a795022fa3e01de92ecf39ab4da4c354181157cccce70401bf9a306ab",
-      "slides/07-human-review/background.png": "4fb68c08d8be5269e2d22c2a3ba30722a37a3e5f8c0267182d1d173afbe2f5b2",
-      "slides/07-human-review/foreground.png": "b4778c18af28ff49c0264e487df812ee8c43e044eba7ba4e0c3ff57294d22151",
-      "slides/07-human-review/preview.png": "9caabf3baf60ed1e5464b6ca58f343e693da0102c7e40139d3d203cc9fe1f65e",
+      "slides/05-prompt-over-product/source.svg": "f22c4e0601798cca43e5a94d5bbb4705f34b4f4d914dd3200b9c2e73c1d44919",
+      "slides/06-focus-detail/background.png": "93059783c126aaa3ee5d5bc4d0e10dcee22502401d17739a6d1354be79b66c2e",
+      "slides/06-focus-detail/foreground.png": "343ec679cc3d4d8f411bc3af71448d4e2d5ea9f4ea24dc540dfde8cd4ecb013a",
+      "slides/06-focus-detail/preview.png": "02a6204d842b989d907ab672a471497cea44bf0dea8f67b55ec589eb27ff3317",
+      "slides/06-focus-detail/product-mask.png": "91f55585aa6d0babf21922f170a2080619313197daa98ddbfbdb05604c1825d2",
+      "slides/06-focus-detail/source.svg": "96a410433db4bae09b7270ca4b0da2d2515ad321030a1020837d8630edd622a8",
+      "slides/07-human-review/background.png": "0a24dbab3b6fa7f042f44988f3f23932fb9c5d4be2e5eb01268dcee170f39262",
+      "slides/07-human-review/foreground.png": "5948e7365f7ed51f63d0b4a80c4086e93f97085e945d97ad38b87ed4ec0e4062",
+      "slides/07-human-review/preview.png": "d24ba98274fd767b8766877ea5629b2d3f88f4adddaf3f0c0de0a68636fecd83",
       "slides/07-human-review/product-mask.png": "2fb6a87fbff5501180dfb464427b9cc1f314f765cc2a0a1dd86aefabfaf60fbe",
-      "slides/07-human-review/source.svg": "c322f1c657c64bc3d4a5e11300eb6e3e71eeffdcd15922b7c8a2ef27d62ab1f3",
+      "slides/07-human-review/source.svg": "f702b2c037e2d2351d966b88261b166b33ecd003ef61eb21d7aee7e232c0d18e",
       "slides/08-trust-cards/background.png": "294bdba838273b82693ccd49d4090e47ea875227d7c153be5206c84db58a43f3",
-      "slides/08-trust-cards/foreground.png": "3fb247c60b420c55ca2f1e3d55871956d9ac588f977913fcc9449b1021ce83e5",
-      "slides/08-trust-cards/preview.png": "572d2ad9ffe8ca874175ee4a32be2a0d6c0b9b3a9c3c0e35b53b172da0e0f6f3",
+      "slides/08-trust-cards/foreground.png": "cdbe43cca5b2aca2018945f04e651eed1dd1408246de7a2c607e35e6d930af76",
+      "slides/08-trust-cards/preview.png": "e34b8bbee6f81b80115a373274e8a5bb0aef674fa8a318f96b53863949a7274d",
       "slides/08-trust-cards/product-mask.png": "9397d8c38a3c91e0a8b4b60fda170563f62d4176e69c83b7b0f273daebc7720f",
-      "slides/08-trust-cards/source.svg": "4419082ac2f8cfa8819a4d68888ed69febd7cfc0815675a2d407b3a677da4056",
+      "slides/08-trust-cards/source.svg": "8d0008f1a82093a05151bc5db07d6de5864bea7d427a0969ede60e8d77d6f885",
       "slides/09-brand-outro/background.png": "d87afe5604ea26bbb8d54bfee3eb96abbddd45b4a7e66876b616bbf40436cdcb",
       "slides/09-brand-outro/foreground.png": "ef4d17454ee79868d3ab67a71e2ce8043080b8449ab13b9c1a85b3d2acc718be",
       "slides/09-brand-outro/preview.png": "984f6088fa5f7df343fb1a30d21d9a61d6f7667ee478cdb2e2822bd5122fc9d7",
       "slides/09-brand-outro/source.svg": "0e4252d2298705ee70dd8390920df0632e232bb8378bff0339d7ab59fc1319ab",
-      "tokens.json": "f1313544dac539d0581384727ff58fc9ceaca8bafef937233453a980b996dbde"
+      "tokens.json": "9b5b23151a9c8fd51ff274d745c626525af6be5212b8b71fe8f7188592be6241"
     }
   }
 }

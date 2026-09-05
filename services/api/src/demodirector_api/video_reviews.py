@@ -56,17 +56,15 @@ class GeminiVideoCritic:
     def review(self, media: bytes, prompt: str) -> CriticOutput:
         response = self.client.models.generate_content(
             model=self.model_name,
-            contents=[
-                types.Content(
-                    parts=[
-                        types.Part(text=prompt),
-                        types.Part(
-                            inline_data=types.Blob(data=media, mime_type="video/mp4"),
-                            video_metadata=types.VideoMetadata(fps=1),
-                        ),
-                    ]
-                )
-            ],
+            contents=types.Content(
+                parts=[
+                    types.Part(text=prompt),
+                    types.Part(
+                        inline_data=types.Blob(data=media, mime_type="video/mp4"),
+                        video_metadata=types.VideoMetadata(fps=1),
+                    ),
+                ]
+            ),
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_json_schema=CriticOutput.model_json_schema(),

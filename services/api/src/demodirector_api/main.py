@@ -81,7 +81,9 @@ from demodirector_api.google_ai import (
 )
 from demodirector_api.health import HealthResponse
 from demodirector_api.inspection_routes import router as inspection_router
+from demodirector_api.job_monitor import JobMonitor
 from demodirector_api.job_routes import router as generation_router
+from demodirector_api.jobs_overview_routes import router as jobs_overview_router
 from demodirector_api.longform_director import GoogleADKLongFormGateway, LongFormDirector
 from demodirector_api.motion_director import ADKMotionDirector, GoogleADKMotionGateway
 from demodirector_api.optimization import OptimizationService
@@ -94,6 +96,8 @@ from demodirector_api.parallel_search import (
     ProjectResearchService,
     UnavailableParallelSearchAdapter,
 )
+from demodirector_api.presentation_jobs import PresentationJobs
+from demodirector_api.presentation_routes import router as presentation_router
 from demodirector_api.product_understanding import ProductUnderstandingService
 from demodirector_api.projects import router as projects_router
 from demodirector_api.qa_routes import router as qa_router
@@ -385,6 +389,13 @@ def create_app(
         application.state.longform_director = None
 
     research_tool = create_product_research_tool(projects, resolved_research_service)
+    application.state.presentation_jobs = (
+        PresentationJobs(
+            application.state.generation_service, records, Path.cwd(), database_path, artifact_root
+        )
+        if application.state.generation_service is not None and firestore_client is None
+        else None
+    )
     application.state.generation_jobs = None
     generation = application.state.generation_service
     if generation is not None:
@@ -427,6 +438,8 @@ def create_app(
         settings.model_name,
         tools=[research_tool],
     )
+    application.state.job_monitor = JobMonitor(records, projects)
+    application.include_router(jobs_overview_router)
     application.include_router(projects_router)
     application.include_router(auth_router)
     application.include_router(judge_router)
@@ -441,6 +454,7 @@ def create_app(
     application.include_router(repair_router)
     application.include_router(export_router)
     application.include_router(generation_router)
+    application.include_router(presentation_router)
     application.include_router(review_router)
     application.include_router(optimization_router)
     application.include_router(evidence_router)
@@ -490,7 +504,7 @@ def create_app(
                     headers={"Cache-Control": "no-store"},
                 )
         response = await call_next(request)
-        if path_parts and path_parts[0] in {"projects", "auth"}:
+        if path_parts and path_parts[0] in {"projects", "auth", "jobs"}:
             response.headers["Cache-Control"] = "no-store"
         return response
 

@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from demodirector_api.auth_routes import bearer_token
 from demodirector_api.generation_jobs import GenerationJobs, JobConflict
+from demodirector_api.presentation_jobs import PresentationJobs
 from demodirector_api.records import RecordConflict
 
 router = APIRouter(tags=["generation jobs"])
@@ -64,6 +65,11 @@ class StyleSelectionRequest(BaseModel):
 
 @router.post("/projects/{project_id}/generate", response_model=GenerationJob, status_code=202)
 def start(project_id: str, request: Request, jobs: Jobs) -> GenerationJob:
+    project = jobs.generation.projects.get(project_id)
+    if project and project.demo_mode == "presentation_demo":
+        from demodirector_api.presentation_routes import start_full
+
+        return start_full(project_id, request)
     try:
         return jobs.start(project_id, bearer_token(request.headers.get("authorization")))
     except KeyError as error:
@@ -77,7 +83,12 @@ def start(project_id: str, request: Request, jobs: Jobs) -> GenerationJob:
 
 
 @router.get("/projects/{project_id}/generation", response_model=GenerationJob)
-def latest(project_id: str, jobs: Jobs) -> GenerationJob:
+def latest(project_id: str, request: Request, jobs: Jobs) -> GenerationJob:
+    presentation: PresentationJobs | None = request.app.state.presentation_jobs
+    if presentation is not None:
+        full = presentation.latest(project_id, preview=False)
+        if full is not None:
+            return full
     job = jobs.latest(project_id)
     if job is None:
         raise HTTPException(404, "Generation has not started")

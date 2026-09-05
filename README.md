@@ -37,6 +37,7 @@ npm run dev
 ```
 
 The web app runs at `http://localhost:3000` and the API runs at `http://localhost:8000`.
+This command also starts the generation worker. Keep it running while demos generate.
 
 ## Authentication
 
@@ -71,10 +72,14 @@ credential-free evaluation of the preloaded workflow.
 
 ## Generation, review, and approval
 
-Demo generation now runs as a durable job. The UI saves progress and pauses for storyboard/evidence approval before capture and narration. Local development needs a separate worker:
+Demo generation runs as a durable job. Open **Jobs** in the sidebar to see the current step,
+timestamped activity, worker heartbeat, saved stages, and estimated remaining time.
+One generation per account may be queued, running, or waiting for storyboard approval.
+Failed jobs require explicit retry approval; estimates are planning ranges, not deadlines.
+If you start the API and web app separately instead of using `npm run dev`, also start the worker:
 
 ```powershell
-node scripts/python-runner.mjs -m demodirector_api.job_worker
+npm run dev:worker
 ```
 
 The editor's Quality tool reviews a saved export and proposes bounded, approved camera/caption repairs. Successful reviews are cached; ordinary tests make no paid calls. See [generation and cloud setup](docs/generation-jobs.md) before deploying this version, especially the API-targeted task queue and authenticated-capture encryption key.

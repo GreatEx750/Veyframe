@@ -8,8 +8,7 @@
     <rect width="2560" height="1440" fill="url(#grain-07-human-review)"/>
     
       <rect x="128" y="218" width="676" height="1022" rx="20" fill="#9DE8D2"/>
-      <rect x="176" y="590" width="580" height="270" rx="12" fill="#0A211C"/>
-      <circle cx="218" cy="644" r="12" fill="#9DE8D2"/><rect x="250" y="628" width="452" height="32" rx="6" fill="#F3EDE1" fill-opacity="0.18"/><circle cx="218" cy="720" r="12" fill="#9DE8D2"/><rect x="250" y="704" width="452" height="32" rx="6" fill="#F3EDE1" fill-opacity="0.26"/><circle cx="218" cy="796" r="12" fill="#FF796C"/><rect x="250" y="780" width="452" height="32" rx="6" fill="#F3EDE1" fill-opacity="0.33999999999999997"/>
+      <circle cx="198" cy="621" r="6" fill="#0A211C"/><circle cx="198" cy="731" r="6" fill="#0A211C"/><circle cx="198" cy="841" r="6" fill="#0A211C"/>
     
   </g>
     <g id="product-slot">
@@ -43,16 +42,19 @@
     <circle cx="128" cy="176" r="6" fill="#9DE8D2"/>
     <circle cx="2432" cy="176" r="6" fill="#9DE8D2"/>
   
-    <rect x="876" y="218" width="1556" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/><rect x="900" y="242" width="186" height="48" rx="8" fill="#0A211C" fill-opacity="0.9"/><circle cx="930" cy="266" r="8" fill="#FF796C"/>
+    <rect x="876" y="218" width="1556" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/>
     
     <rect x="500" y="1252" width="1560" height="104" rx="8" fill="#0A211C" fill-opacity="0.94" stroke="#9DE8D2" stroke-opacity="0.72" stroke-width="2"/>
   
   </g>
-    <g id="copy-slots"><text data-slot="chapter" x="128" y="126" text-anchor="start" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">CONTROL STAYS WITH YOU</tspan></text>
+    <g id="copy-slots"><text data-slot="chapter" x="128" y="126" text-anchor="start" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">WORKFLOW HIGHLIGHTS</tspan></text>
 <text data-slot="counter" x="2432" y="126" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="2432" dy="0">07 / 09</tspan></text>
-<text data-slot="eyebrow" x="186" y="298" text-anchor="start" fill="#0A211C" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="186" dy="0">REVIEW GATE</tspan></text>
-<text data-slot="headline" x="184" y="410" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="184" dy="0">Automation moves.</tspan><tspan x="184" dy="64">You decide.</tspan></text>
-<text data-slot="body" x="188" y="946" text-anchor="start" fill="#0A211C" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="188" dy="0">Important changes wait for a clear</tspan><tspan x="188" dy="42">review before the story moves</tspan><tspan x="188" dy="42">forward.</tspan></text>
+<text data-slot="eyebrow" x="186" y="298" text-anchor="start" fill="#0A211C" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="186" dy="0">IN THIS WALKTHROUGH</tspan></text>
+<text data-slot="headline" x="184" y="410" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="184" dy="0">Three steps.</tspan><tspan x="184" dy="64">One clear result.</tspan></text>
+<text data-slot="bullet_one" x="226" y="630" text-anchor="start" fill="#0A211C" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="226" dy="0">Open the search field.</tspan></text>
+<text data-slot="bullet_two" x="226" y="740" text-anchor="start" fill="#0A211C" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="226" dy="0">Enter the topic.</tspan></text>
+<text data-slot="bullet_three" x="226" y="850" text-anchor="start" fill="#0A211C" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="226" dy="0">Explore the result.</tspan></text>
+<text data-slot="body" x="188" y="976" text-anchor="start" fill="#0A211C" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="188" dy="0">Important changes wait for a clear</tspan><tspan x="188" dy="42">review before the story moves</tspan><tspan x="188" dy="42">forward.</tspan></text>
 <text data-slot="callout" x="188" y="1122" text-anchor="start" fill="#0A211C" font-size="40" font-weight="600" letter-spacing="-0.5px"><tspan x="188" dy="0">Prepared—not published</tspan></text>
 <text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">The final decision always remains visible and human.</tspan></text></g>
   

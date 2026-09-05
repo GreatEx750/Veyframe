@@ -10,6 +10,25 @@ export const generationJobSchema = z.object({
 }).strict();
 export type GenerationJob = z.infer<typeof generationJobSchema>;
 
+export const jobActivitySchema = z.object({
+  sequence: z.number().int().positive(), at: z.string().datetime({ offset: true }), stage,
+  level: z.enum(["info", "warning", "error"]), message: z.string().min(1).max(500),
+}).strict();
+export const jobDetailsSchema = z.object({
+  job: generationJobSchema, project_name: z.string(), kind: z.enum(["generation", "presentation_preview", "presentation"]),
+  elapsed_seconds: z.number().int().nonnegative(), step_elapsed_seconds: z.number().int().nonnegative(),
+  last_progress_at: z.string().datetime({ offset: true }), heartbeat_at: z.string().datetime({ offset: true }).nullable(),
+  health: z.enum(["queued", "responding", "slow", "unresponsive", "paused", "finished"]), health_message: z.string(),
+  eta_min_seconds: z.number().int().nonnegative().nullable(), eta_max_seconds: z.number().int().nonnegative().nullable(),
+  estimate_basis: z.string(), events: z.array(jobActivitySchema),
+}).strict();
+export const jobsOverviewSchema = z.object({
+  jobs: z.array(jobDetailsSchema), active_count: z.number().int().nonnegative(), maximum_active: z.literal(1),
+  server_time: z.string().datetime({ offset: true }),
+}).strict();
+export type JobDetails = z.infer<typeof jobDetailsSchema>;
+export type JobsOverview = z.infer<typeof jobsOverviewSchema>;
+
 export const traceStageKindSchema = z.enum(["inspection", "research", "adk_coordination", "understanding", "storyboard", "capture", "narration", "auto_camera", "captions", "render"]);
 export const stageContributionSchema = z.object({
   key: z.enum(["pages_inspected", "controls_observed", "sources_saved", "workflow_runs", "validated_motion_plans", "motion_cues", "templates_assigned", "product_presence", "attention_targets", "callouts_proposed", "callouts_accepted", "style_recommendations", "style_overrides", "longform_plans", "director_steps", "parallel_sources_linked", "chapters_planned", "features_understood", "claims_attributed", "scenes_planned", "actions_planned", "actions_executed", "interactions_recorded", "recordings_created", "narration_segments", "zooms_created", "captions_created", "exports_created", "output_width", "output_height", "output_duration", "adk_plan_consumed"]),

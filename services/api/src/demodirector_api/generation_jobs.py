@@ -69,8 +69,10 @@ from demodirector_api.generation import (
     assemble_timeline,
     prepare_continuous_capture,
 )
+from demodirector_api.job_monitor import JobMonitor, failure_summary
 from demodirector_api.product_understanding import website_sources
 from demodirector_api.records import RecordConflict, RecordStore, SQLiteRecordStore
+from demodirector_api.storyboard_generation import StoryboardValidationError
 
 STAGES: tuple[GenerationStage, ...] = (
     "inspection",
@@ -385,6 +387,7 @@ class GenerationStages:
 
     def execute(self, job: GenerationJob) -> dict[str, Any]:
         s = self.service
+        monitor = JobMonitor(self.records, s.projects)
         context = self._context(job)
         project = Project.model_validate(context["project"])
         token = (
@@ -406,12 +409,16 @@ class GenerationStages:
             if not inspection.pages:
                 raise JobConflict("No usable website pages")
             s.inspections.save(inspection)
+            monitor.event(job, f"Inspected {len(inspection.pages)} website pages; structure saved.")
             s.research_sources.replace_website_sources(
                 project.id, website_sources(project.id, inspection)
             )
             return {"warning": inspection.warning}
         if job.stage == "research":
             result = s.research.analyze(project)
+            sources = s.research_sources.list_for_project(project.id)
+            count = sum(source.source_type == "partner_search" for source in sources)
+            monitor.event(job, f"Research finished: {count} saved Parallel sources.")
             return {"warning": result.warning}
         if job.stage == "understanding":
             saved_inspection = s.inspections.get(project.id)
@@ -428,12 +435,24 @@ class GenerationStages:
             understanding = s.understandings.get(project.id)
             if understanding is None:
                 raise JobConflict("Understanding checkpoint is missing")
-            storyboard_result = s.storyboard_generator.generate(
-                project=project,
-                understanding=understanding,
-                sources=s.research_sources.list_for_project(project.id),
-            )
+            try:
+                storyboard_result = s.storyboard_generator.generate(
+                    project=project,
+                    understanding=understanding,
+                    sources=s.research_sources.list_for_project(project.id),
+                )
+            except StoryboardValidationError as error:
+                if error.candidate is not None:
+                    # Diagnostics are never treated as approved execution checkpoints.
+                    key = f"job-invalid-storyboard-{job.id}-{job.attempts}"
+                    current = self.records.get(key)
+                    self.records.put(key, current[0] if current else 0, {
+                        "code": error.code,
+                        "candidate": error.candidate.model_dump(mode="json"),
+                    })
+                raise
             s.storyboards.save(storyboard_result)
+            monitor.event(job, f"Validated and saved {len(storyboard_result.scenes)} scenes.")
             return {"storyboard": storyboard_result.model_dump(mode="json")}
         board = s.storyboards.get_latest(project.id)
         evidence_map: SourceContributionMap | None = None
@@ -527,6 +546,10 @@ class GenerationStages:
                 else durations
             )
             scene = prepare_continuous_capture(scenes, capture_durations)
+            monitor.event(
+                job, f"Recording continuous browser footage for {sum(capture_durations) // 1000} "
+                "seconds, including cursor movement and click indicators.",
+            )
             capture = s.capture_worker.capture_scene(scene, session_token=token)
             if capture.status != "succeeded" or capture.raw_clip_path is None:
                 failed_actions = [
@@ -542,6 +565,10 @@ class GenerationStages:
                     failed_actions,
                 )
                 raise JobConflict("Capture did not produce a usable video")
+            monitor.event(
+                job, f"Recorded {capture.duration_ms // 1000} seconds and "
+                f"{len(capture.interaction_events)} browser interaction events; saving footage.",
+            )
             media = s.timeline_media_store.persist(
                 Timeline(
                     project_id=project.id,
@@ -859,6 +886,9 @@ class GenerationStages:
                     "duration_ms": 180_000,
                     "interaction_events": merged_events,
                 })
+            monitor.event(
+                job, f"Gemini TTS is generating {len(narration_scenes)} narration segments."
+            )
             narration = s.narration.generate(
                 narration_scenes,
                 s.voice,
@@ -869,6 +899,7 @@ class GenerationStages:
                 or len(narration.segments) != len(narration_scenes)
             ):
                 raise JobConflict("Narration did not produce every scene")
+            monitor.event(job, f"Saved {len(narration.segments)} narration segments.")
             motion_checkpoint = self.records.get(f"job-stage-{job.id}-motion")
             if motion_checkpoint is None:
                 raise JobConflict("Motion direction checkpoint is missing")
@@ -959,6 +990,7 @@ class GenerationJobs:
         self.generation = generation
         self.vault = vault
         self.trace_services = trace_services or self._runtime_services()
+        self.monitor = JobMonitor(records, generation.projects)
 
     def _runtime_services(self) -> dict[TraceStageKind, str]:
         ai = getattr(self.generation.understanding_generator, "ai_service", None)
@@ -1879,6 +1911,7 @@ class GenerationJobs:
             updated_at=now,
             message="Queued. You may close this browser; progress is saved on the server.",
         )
+        self.monitor.acquire(project, job.id, f"generation-{job.id}")
         self.records.put(
             f"job-input-{job.id}",
             0,
@@ -1895,6 +1928,7 @@ class GenerationJobs:
             assert winner is not None
             return winner
         self.generation._set_status(project_id, "storyboarding", "queued")
+        self.monitor.event(job)
         self.dispatcher.dispatch(job.id, job.version)
         return job
 
@@ -1908,10 +1942,16 @@ class GenerationJobs:
             }
         )
         self.records.put(f"generation-{job.id}", job.version, updated.model_dump(mode="json"))
+        self.monitor.event(updated)
         return updated
 
     def step(self, job_id: str) -> GenerationJob:
         job = self.get(job_id)
+        project = self.generation.projects.get(job.project_id)
+        if project is None:
+            raise KeyError("Project not found")
+        if job.status in {"queued", "running"}:
+            self.monitor.acquire(project, job.id, f"generation-{job.id}")
         canonical = self.latest(job.project_id)
         if canonical is None or canonical.id != job.id:
             raise JobConflict("Job is not the active project generation")
@@ -1951,7 +1991,8 @@ class GenerationJobs:
         self._start_trace_attempt(claimed, claimed.updated_at)
         try:
             if checkpoint is None:
-                result = self.executor.execute(claimed)
+                with self.monitor.heartbeat(claimed):
+                    result = self.executor.execute(claimed)
                 self.records.put(checkpoint_key, 0, result)
             else:
                 result = checkpoint[1]
@@ -1964,11 +2005,10 @@ class GenerationJobs:
                 attempts=max(0, claimed.attempts - 1),
                 message="Review storyboard evidence, then approve capture and narration.",
             )
-        except Exception:
-            logger.exception(
-                "Generation stage %s failed for project %s",
-                job.stage,
-                job.project_id,
+        except Exception as error:
+            self.monitor.event(
+                claimed, f"{job.stage.capitalize()}: {failure_summary(error)} "
+                "Completed checkpoints are preserved.", "error",
             )
             terminal = claimed.attempts >= 3
             self._finish_trace_attempt(claimed, succeeded=False, terminal=terminal)
@@ -2012,6 +2052,10 @@ class GenerationJobs:
             return job
         if job.status != "awaiting_retry" or not approved or job.attempts >= 3:
             raise JobConflict("Retry requires explicit approval and remaining attempts.")
+        project = self.generation.projects.get(project_id)
+        if project is None:
+            raise KeyError("Project not found")
+        self.monitor.acquire(project, job.id, f"generation-{job.id}")
         queued = self._save(
             job, status="queued", message="Retry approved; completed stages will be reused."
         )
@@ -2049,7 +2093,7 @@ class GenerationJobs:
                 try:
                     self.step(job.id)
                     return True
-                except JobConflict:
+                except (JobConflict, RecordConflict):
                     continue
         return False
 
@@ -2057,6 +2101,10 @@ class GenerationJobs:
         job = self.latest(project_id)
         if job is None or job.status != "awaiting_approval":
             return job
+        project = self.generation.projects.get(project_id)
+        if project is None:
+            raise KeyError("Project not found")
+        self.monitor.acquire(project, job.id, f"generation-{job.id}")
         resumed = self._save(job, status="queued", message="Storyboard approved; capture queued.")
         self.generation._set_status(project_id, "ready", "queued")
         self.dispatcher.dispatch(job.id, resumed.version)

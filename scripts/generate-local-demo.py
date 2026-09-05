@@ -122,6 +122,7 @@ def capture_product_flow(artifact_root: Path, session_token: str) -> Path:
         hold_until(page, started, 5.0)
 
         page.get_by_label("Website URL", exact=False).fill(BASE_URL)
+        page.get_by_label("Demo title", exact=False).fill("DemoDirector product walkthrough")
         page.get_by_label("Describe your video", exact=False).fill(
             "Create a concise product tour that introduces DemoDirector, shows the "
             "natural-language video brief and editing controls, and ends in the project "

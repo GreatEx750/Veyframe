@@ -7,13 +7,14 @@ export const PATCH = GET;
 async function proxy(request: Request, context: { params: Promise<{ projectId: string; path?: string[] }> }) {
   const { projectId, path = [] } = await context.params;
   const traceRequest = path.length === 1 && path[0] === "trace";
+  const previewRequest = path.length === 1 && (path[0] === "presentation-preview" || path[0] === "presentation");
   const motionRequest =
     path.length === 1 && (
       path[0] === "motion-plan" || path[0] === "motion-run" || path[0] === "attention-plan" || path[0] === "style-plan" || path[0] === "long-form-plan" || path[0] === "long-form-checkpoints"
     );
   const chapterRetryRequest = path.length === 3 && path[0] === "long-form-chapters" && path[2] === "retry";
   const retryRequest = path.length === 2 && /^[a-f0-9-]{36}$/.test(path[0]) && path[1] === "retry";
-  if (path.length && !traceRequest && !motionRequest && !retryRequest && !chapterRetryRequest) return Response.json({ detail: "Not found" }, { status: 404 });
+  if (path.length && !traceRequest && !motionRequest && !retryRequest && !chapterRetryRequest && !previewRequest) return Response.json({ detail: "Not found" }, { status: 404 });
   try {
     const result = await fetch(new URL(`/projects/${encodeURIComponent(projectId)}/generation${path.length ? `/${path.join("/")}` : ""}`, process.env.API_BASE_URL ?? "http://localhost:8000"), {
       method: request.method, headers: await apiHeaders({ "Content-Type": "application/json" }), cache: "no-store",

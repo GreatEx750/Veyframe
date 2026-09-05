@@ -24,13 +24,13 @@ PACK_PATH = (
 
 EXPECTED_SCHEDULE = [
     (0, 3_000, "hook-question@2"),
-    (3_000, 5_000, "brand-promise@2"),
-    (5_000, 20_000, "context-split@2"),
-    (20_000, 37_000, "workflow-rail@2"),
-    (37_000, 53_000, "prompt-over-product@2"),
-    (53_000, 70_000, "focus-detail@2"),
-    (70_000, 90_000, "human-review@2"),
-    (90_000, 115_000, "trust-cards@2"),
+    (3_000, 13_000, "brand-promise@2"),
+    (13_000, 28_000, "context-split@2"),
+    (28_000, 45_000, "workflow-rail@2"),
+    (45_000, 61_000, "prompt-over-product@2"),
+    (61_000, 78_000, "focus-detail@2"),
+    (78_000, 98_000, "human-review@2"),
+    (98_000, 115_000, "trust-cards@2"),
     (115_000, 120_000, "brand-outro@2"),
 ]
 
@@ -228,12 +228,12 @@ def test_template_ids_roles_and_product_window_are_strict() -> None:
 
     for entry in manifest["schedule"]:
         template = by_id[entry["template_id"]]
-        if entry["end_ms"] <= 5_000:
+        if entry["end_ms"] <= 3_000:
             expected_role = "intro"
         elif entry["start_ms"] >= 115_000:
             expected_role = "outro"
         else:
-            assert entry["start_ms"] >= 5_000
+            assert entry["start_ms"] >= 3_000
             assert entry["end_ms"] <= 115_000
             expected_role = "product"
         assert template["role"] == expected_role
@@ -345,3 +345,30 @@ def test_all_pack_assets_are_readable_as_python_package_resources() -> None:
         resource = pack_resource.joinpath(*PurePosixPath(relative_path).parts)
         assert resource.is_file(), f"missing package resource: {relative_path}"
         assert resource.read_bytes(), f"empty package resource: {relative_path}"
+
+
+def test_product_windows_have_no_decorative_recording_badge() -> None:
+    from PIL import Image
+
+    for template in _manifest()["templates"]:
+        if not template["requires_product"]:
+            continue
+        x, y = (template["product_aperture"][key] for key in ("x", "y"))
+        with Image.open(PACK_PATH / template["assets"]["foreground_png"]) as foreground:
+            # The top-left product area should match the adjacent undecorated area,
+            # including any intentional full-window dimming layer.
+            reference = foreground.getpixel((x + 240, y + 48))
+            assert foreground.getpixel((x + 54, y + 48)) == reference
+            assert foreground.getpixel((x + 120, y + 48)) == reference
+
+
+def test_second_slide_shows_product_for_ten_seconds_with_copy_above_footage() -> None:
+    template = _manifest()["templates"][1]
+    timing = _manifest()["schedule"][1]
+    assert template["requires_product"] is True
+    assert timing["end_ms"] - timing["start_ms"] == 10_000
+    aperture = template["product_aperture"]
+    assert (aperture["width"], aperture["height"]) == (2304, 816)
+    for slot in template["copy_slots"]:
+        if slot["id"] != "caption":
+            assert slot["rect"]["y"] + slot["rect"]["height"] <= aperture["y"]

@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import { ProductNavigation } from "@/components/product-navigation";
 
 type FormValues = {
+  title: string;
   websiteUrl: string;
   productSummary: string;
   demoMode: "presentation_demo" | "product_demo";
@@ -20,6 +21,7 @@ type FormValues = {
 type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 const initialValues: FormValues = {
+  title: "",
   websiteUrl: "",
   productSummary: "",
   demoMode: "product_demo",
@@ -29,64 +31,6 @@ const initialValues: FormValues = {
   cta: "",
   brandKit: "default-brand",
 };
-
-type PreviewScene = {
-  name: string;
-  startSeconds: number;
-  endSeconds: number;
-};
-
-const presentationScenes: PreviewScene[] = [
-  { name: "Intro", startSeconds: 0, endSeconds: 5 },
-  { name: "Problem + promise", startSeconds: 5, endSeconds: 20 },
-  { name: "Product walkthrough", startSeconds: 20, endSeconds: 80 },
-  { name: "Trust + technology", startSeconds: 80, endSeconds: 100 },
-  { name: "Editing + result", startSeconds: 100, endSeconds: 115 },
-  { name: "Outro", startSeconds: 115, endSeconds: 120 },
-];
-
-const presentationSceneCopy = [
-  null,
-  { title: "One clear view of every impact signal", detail: "Frame the problem, then make the product promise concrete." },
-  { title: "The workflow, shown in motion", detail: "Keep the recorded product at the center of the story." },
-  { title: "Evidence that earns trust", detail: "Connect the interface to the technology behind each result." },
-  { title: "From first edit to finished result", detail: "Show the change, confirm the outcome, and keep moving." },
-  null,
-] as const;
-
-const productSceneWeights = [8, 24, 28, 22, 20, 12];
-const productSceneNames = ["Intro", "Dashboard", "Insights", "Goals", "Team", "Outro"];
-
-function buildProductScenes(totalSeconds: number): PreviewScene[] {
-  const weightTotal = productSceneWeights.reduce((sum, weight) => sum + weight, 0);
-  let elapsedWeight = 0;
-  let startSeconds = 0;
-  return productSceneNames.map((name, index) => {
-    elapsedWeight += productSceneWeights[index];
-    const endSeconds = index === productSceneNames.length - 1
-      ? totalSeconds
-      : Math.round(totalSeconds * elapsedWeight / weightTotal);
-    const scene = { name, startSeconds, endSeconds };
-    startSeconds = endSeconds;
-    return scene;
-  });
-}
-
-function buildTimelineTicks(totalSeconds: number): number[] {
-  const tickStep = totalSeconds <= 30 ? 5 : totalSeconds / 6;
-  const ticks = Array.from(
-    { length: Math.floor(totalSeconds / tickStep) + 1 },
-    (_, index) => Math.round(index * tickStep),
-  );
-  if (ticks.at(-1) !== totalSeconds) ticks.push(totalSeconds);
-  return ticks;
-}
-
-function formatClock(totalSeconds: number, padded = false) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${padded ? String(minutes).padStart(2, "0") : minutes}:${String(seconds).padStart(2, "0")}`;
-}
 
 const iconPaths: Record<string, string> = {
   studio: "M7 5h10l3 4v10H4V9l3-4Zm2 5v4l4-2-4-2Z",
@@ -107,34 +51,31 @@ function Toggle({ checked, describedBy, label, onChange }: { checked: boolean; d
   return <button aria-checked={checked} aria-describedby={describedBy} aria-label={label} className={`toggle ${checked ? "is-on" : ""}`} onClick={onChange} role="switch" type="button"><span /></button>;
 }
 
-function ProductRecording() {
+function ExampleVideo({ presentation }: { presentation: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const mode = presentation ? "Presentation" : "Product";
+  const source = `/examples/northstar-${presentation ? "presentation" : "product"}-20s`;
+
   return <>
-    <div className="browser-bar"><span className="browser-dots"><i /><i /><i /></span><div className="address">app.ecotrack.com/dashboard</div><span className="secure-status">Secure</span></div>
-    <div aria-label="Mock product application" className="mock-app"><aside><div className="mock-logo"><i /> EcoTrack</div>{["Overview", "Dashboard", "Insights", "Goals", "Reports", "Team", "Settings"].map((item, index) => <span className={index === 0 ? "selected" : ""} key={item}>{item}</span>)}</aside><div className="mock-content"><header><div><h2>Overview</h2><p>Good morning, Alex</p></div><span>May 1 – May 31, 2026</span></header><div className="stat-grid"><article><small>Total carbon saved</small><b>128.6</b><em>↑ 18% this month</em></article><article><small>Impact score</small><b>78</b><em>↑ 12 points</em></article><article><small>Active goals</small><b>5<span>/8</span></b><em>● On track</em></article></div><div className="chart-grid"><article><small>Emissions breakdown</small><div className="donut"><b>128.6</b></div></article><article><small>Emissions over time</small><div className="line-chart"><i /><i /><i /><i /><i /><i /></div></article></div></div></div>
+    <video
+      aria-label={`Northstar ${mode} Demo example`}
+      className="studio-example-video"
+      controls
+      onError={() => setFailed(true)}
+      onLoadedData={() => setFailed(false)}
+      playsInline
+      poster={`${source}.jpg`}
+      preload="metadata"
+      src={`${source}.mp4`}
+    />
+    {failed && <p className="example-error" role="alert">Example video couldn’t load. <a href={`${source}.mp4`}>Open example video</a> or refresh to try again.</p>}
   </>;
-}
-
-function PresentationPreview({ scene, sceneIndex }: { scene: PreviewScene; sceneIndex: number }) {
-  const isBookend = sceneIndex === 0 || sceneIndex === presentationScenes.length - 1;
-  if (isBookend) {
-    const isIntro = sceneIndex === 0;
-    return <div aria-label={`Authored ${isIntro ? "intro" : "outro"} title card`} className={`presentation-title-card ${isIntro ? "intro" : "outro"}`}>
-      <span className="presentation-mark" aria-hidden="true" />
-      <div><b>{isIntro ? "Make every impact signal useful." : "Move from insight to measurable action."}</b><p>{isIntro ? "A focused product story" : "The next step starts here"}</p></div>
-      <time>{formatClock(scene.startSeconds, true)} — {formatClock(scene.endSeconds, true)}</time>
-    </div>;
-  }
-
-  const copy = presentationSceneCopy[sceneIndex];
-  return <div aria-label="Authored presentation layout" className="presentation-layout">
-    <div className="presentation-story"><span>{scene.name}</span><b>{copy?.title}</b><p>{copy?.detail}</p></div>
-    <div aria-label="Product recording aperture" className="presentation-aperture"><ProductRecording /></div>
-    <time>{formatClock(scene.startSeconds, true)} — {formatClock(scene.endSeconds, true)}</time>
-  </div>;
 }
 
 function validate(values: FormValues): FormErrors {
   const errors: FormErrors = {};
+  if (!values.title.trim()) errors.title = "Add a title for your demo.";
+  else if (values.title.trim().length > 120) errors.title = "Keep the title to 120 characters or fewer.";
   try {
     const url = new URL(values.websiteUrl);
     if (!["http:", "https:"].includes(url.protocol)) errors.websiteUrl = "Enter a public HTTP or HTTPS URL.";
@@ -158,22 +99,9 @@ export default function Home() {
   const [message, setMessage] = useState<string | null>(null);
   const [captions, setCaptions] = useState(true);
   const [autoZoom, setAutoZoom] = useState(true);
-  const [device, setDevice] = useState("Desktop");
-  const [selectedScene, setSelectedScene] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [firstFive, setFirstFive] = useState(false);
   const demoModeLabel = values.demoMode === "presentation_demo" ? "Presentation Demo" : "Product Demo";
-  const previewDurationSeconds = values.demoMode === "presentation_demo" ? 120 : Number(values.duration);
-  const previewScenes = values.demoMode === "presentation_demo"
-    ? presentationScenes
-    : buildProductScenes(previewDurationSeconds);
-  const previewTicks = buildTimelineTicks(previewDurationSeconds);
-  const previewPositionSeconds = Math.min(12, previewDurationSeconds);
-  const selectedPreviewScene = previewScenes[selectedScene];
   const isPresentation = values.demoMode === "presentation_demo";
-  const isPresentationBookend = isPresentation && (selectedScene === 0 || selectedScene === previewScenes.length - 1);
-  const previewCaption = isPresentationBookend
-    ? selectedScene === 0 ? "A focused story begins with the promise." : "Turn the final insight into action."
-    : "This is your overview dashboard, with every signal in one place.";
 
   function update<K extends keyof FormValues>(field: K, value: FormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -202,6 +130,7 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: values.title.trim(),
           website_url: values.websiteUrl,
           product_summary: values.productSummary,
           demo_mode: values.demoMode,
@@ -217,13 +146,15 @@ export default function Home() {
       const project = projectSchema.safeParse(body);
       if (!response.ok || !project.success) throw new Error("Project could not be saved");
       setMessage("Starting a saved generation job. You may close this tab once it is queued.");
-      const generationResponse = await fetch(`/api/projects/${project.data.id}/generate`, {
+      const preview = values.demoMode === "presentation_demo" && firstFive;
+      const generationResponse = await fetch(`/api/projects/${project.data.id}/${preview ? "generation/presentation-preview" : "generate"}`, {
         method: "POST",
       });
       const generationBody: unknown = await generationResponse.json();
+      if (generationResponse.status === 409) throw new Error("generation_conflict");
       const job = generationJobSchema.safeParse(generationBody);
       if (generationResponse.ok && job.success) {
-        router.replace(`/projects/${project.data.id}/generation`);
+        router.replace(`/jobs?job=${encodeURIComponent(job.data.id)}`);
         return;
       }
       const generation = demoGenerationResultSchema.safeParse(generationBody);
@@ -235,8 +166,10 @@ export default function Home() {
         JSON.stringify(generation.data.export),
       );
       router.replace(`/projects/${project.data.id}/editor`);
-    } catch {
-      setMessage("We couldn’t finish this demo. Open Projects to review its status, then try again.");
+    } catch (error) {
+      setMessage(error instanceof Error && error.message === "generation_conflict"
+        ? "Generation cannot start while another job is active, or this project already has output. Open Jobs to review its status."
+        : "We couldn’t finish this demo. Open Jobs to review its status, then try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -249,15 +182,18 @@ export default function Home() {
       <header aria-label="Project controls" className="studio-topbar">
         <a aria-label="Back to project library" className="topbar-back" href="/projects"><Icon name="arrow" /></a>
         <div className="project-title"><h1>Create {isPresentation ? "presentation" : "product"} demo</h1><span>New project — create to save</span></div>
-        <a className="topbar-action" href="#studio">Preview</a>
-        <button className="topbar-primary" disabled={isSubmitting} form="demo-form" type="submit"><Icon name="spark" />{isSubmitting ? "Generating demo…" : "Create demo"}</button>
       </header>
 
       <section className="configuration" id="studio">
-        <header className="panel-heading"><h2>Project tools</h2><p>Give the director enough context to build your first cut.</p></header>
+        <header className="panel-heading"><h2>Demo setup</h2><p>Describe what to record and who it is for.</p></header>
         <form id="demo-form" noValidate onSubmit={submit}>
           <div className="form-section">
             <div className="form-section-title"><span>01</span><b>Source &amp; brief</b></div>
+            <label htmlFor="demo-title">Demo title <span>Required</span></label>
+            <div className={`input-wrap ${errors.title ? "has-error" : ""}`}>
+              <input aria-describedby={errors.title ? "demo-title-error" : undefined} aria-invalid={Boolean(errors.title)} id="demo-title" maxLength={120} name="title" placeholder="e.g. Wikipedia — explore the Solar System" required type="text" value={values.title} onChange={(event) => update("title", event.target.value)} />
+            </div>
+            {errors.title && <p className="field-error" id="demo-title-error">{errors.title}</p>}
             <label htmlFor="website-url">Website URL <span>Required</span></label>
             <div className={`input-wrap ${errors.websiteUrl ? "has-error" : ""}`}><input id="website-url" placeholder="https://yourproduct.com" type="url" value={values.websiteUrl} onChange={(event) => update("websiteUrl", event.target.value)} /><i className="status-dot" /></div>
             {errors.websiteUrl && <p className="field-error">{errors.websiteUrl}</p>}
@@ -282,6 +218,8 @@ export default function Home() {
                 </label>
               </div>
               <p className="demo-format-note" id="demo-format-note">Both formats keep pointer movement and click feedback visible.</p>
+              {isPresentation && <label className="presentation-preview-option"><input type="checkbox" checked={firstFive} onChange={(event) => setFirstFive(event.target.checked)} />Preview first five slides (61 seconds)</label>}
+              {isPresentation && firstFive && <p className="field-guidance">Use the authored slide templates with real recordings and word-highlighted subtitles. Local preview; the full presentation remains two minutes. Word timing is estimated.</p>}
             </fieldset>
             <label htmlFor="audience">Target Audience</label>
             <select id="audience" value={values.audience} onChange={(event) => update("audience", event.target.value)}><option value="">Select an audience</option><option>Product leaders</option><option>Sales engineers</option><option>Customer success teams</option><option>Founders and operators</option></select>
@@ -296,42 +234,45 @@ export default function Home() {
             {errors.brandKit && <p className="field-error">{errors.brandKit}</p>}
           </div>
 
-          <button className="gradient-button" disabled={isSubmitting} type="submit"><Icon name="spark" />{isSubmitting ? "Generating demo…" : "Create demo"}</button>
-          <small className="form-note">One click creates the storyboard, recordings, voiceover, captions, camera moves, timeline, and MP4.</small>
-          {message && <p className={`form-message ${isSubmitting ? "progress" : "error"}`} role="status">{message}</p>}
+          <small className="form-note">Create your demo when the brief is ready. You can edit the result afterward.</small>
         </form>
       </section>
 
+      <section aria-label="Preview and settings" className="studio-workspace">
       <section aria-label="Studio preview" className="preview-panel">
         <div className="preview-toolbar">
-          <div className="canvas-meta"><b>Canvas</b><span>{demoModeLabel} · {selectedPreviewScene.name}</span></div>
-          <div className="device-tabs" role="group" aria-label="Preview device">
-            {["Desktop", "Tablet", "Mobile"].map((item) => <button aria-pressed={device === item} className={device === item ? "selected" : ""} key={item} onClick={() => setDevice(item)} type="button">{item}</button>)}
-          </div>
-          <select aria-label="Preview resolution" className="resolution" defaultValue="2560 × 1440"><option>2560 × 1440</option></select>
+          <div className="canvas-meta"><b>Example preview</b><span>{demoModeLabel}</span></div>
+          <span className="preview-dimensions">20 seconds</span>
         </div>
-        <div aria-label={isPresentation ? "Presentation demo preview" : "Full-screen product recording"} className={`browser device-${device.toLowerCase()} ${isPresentation ? "presentation-player" : "product-player"}`}>
-          {isPresentation ? <PresentationPreview scene={selectedPreviewScene} sceneIndex={selectedScene} /> : <ProductRecording />}
-          {captions && <div className="caption-preview">{previewCaption}</div>}
-          <div className="player-controls"><button aria-label={isPlaying ? "Pause preview" : "Play preview"} onClick={() => setIsPlaying((value) => !value)} type="button">{isPlaying ? "Ⅱ" : "▶"}</button><b>{formatClock(previewPositionSeconds)} / {formatClock(previewDurationSeconds)}</b><div className="progress"><i /></div><span>CC</span><span>1×</span><span>⛶</span></div>
-        </div>
+        <ExampleVideo key={values.demoMode} presentation={isPresentation} />
+        <p className="preview-explanation">20-second Northstar example · Press play to watch with sound. Your settings apply to the demo you create, not this saved example.</p>
       </section>
 
       <aside aria-labelledby="director-settings" className="automation">
         <header className="panel-heading"><div><Icon name="spark" /><h2 id="director-settings">Director settings</h2></div><p>Fine-tune narration, captions, and camera direction.</p></header>
-        <section className="control-card"><div className="control-title"><b>Narration</b><span>01</span></div><label htmlFor="voice-select">Voice</label><select id="voice-select"><option>Emma — Professional</option><option>Alex — Warm</option></select><label htmlFor="pace">Pace <span>1.0×</span></label><input id="pace" max="1.4" min="0.7" step="0.1" type="range" defaultValue="1" /><label htmlFor="language">Language</label><select id="language"><option>English (US)</option><option>English (UK)</option></select></section>
+        <section className="control-card narration-settings">
+          <div className="control-title"><b>Narration</b></div>
+          <div className="narration-fields">
+            <div><label htmlFor="voice-select">Voice</label><select id="voice-select"><option>Emma — Professional</option><option>Alex — Warm</option></select></div>
+            <div><label htmlFor="language">Language</label><select id="language"><option>English (US)</option><option>English (UK)</option></select></div>
+            <div className="narration-pace"><label htmlFor="pace">Pace <span>1.0×</span></label><input id="pace" max="1.4" min="0.7" step="0.1" type="range" defaultValue="1" /></div>
+          </div>
+        </section>
         <section className="control-card compact"><div className="control-title"><b>Captions</b><Toggle checked={captions} label="Captions" onChange={() => setCaptions((value) => !value)} /></div><label htmlFor="caption-style">Style</label><select id="caption-style"><option>Auto highlight</option><option>Minimal</option></select></section>
         <section className="control-card compact"><div className="control-title"><b>Smooth zoom</b><Toggle checked={autoZoom} describedBy="smooth-zoom-help" label="Smooth zoom" onChange={() => setAutoZoom((value) => !value)} /></div><p className="control-help" id="smooth-zoom-help">Follows important recorded interactions. Pointer movement and click indicators stay visible when zoom is off.</p><label htmlFor="intensity">Intensity <span>70%</span></label><input aria-label="Zoom intensity" disabled={!autoZoom} id="intensity" max="100" min="0" type="range" defaultValue="70" /></section>
-        <section className="control-card compact"><div className="control-title"><b>Export</b><span>04</span></div><label htmlFor="output-format">Output format</label><select id="output-format"><option>Landscape · 1440p</option></select></section>
-        <section className="ready-card"><div><span>{demoModeLabel}</span><span>{previewScenes.length} scenes · {formatClock(previewDurationSeconds)}</span></div><button className="gradient-button" disabled={isSubmitting} form="demo-form" type="submit"><Icon name="spark" />{isSubmitting ? "Generating demo…" : "Create Demo"}</button></section>
+        <section className="control-card compact"><div className="control-title"><b>Export</b></div><label htmlFor="output-format">Output format</label><select id="output-format"><option>Landscape · 1440p</option></select></section>
       </aside>
+      </section>
 
-      <section aria-label="Project timeline" className="timeline">
-        <div className="timeline-head"><div><b>Timeline</b><span>{formatClock(previewPositionSeconds, true)} / {formatClock(previewDurationSeconds, true)}</span></div><div className="timeline-tools"><button aria-label={isPlaying ? "Pause timeline" : "Play timeline"} onClick={() => setIsPlaying((value) => !value)} type="button">{isPlaying ? "Ⅱ" : "▶"}</button><span>100%</span></div></div>
-        <div className="timeline-ruler">{previewTicks.map((tick) => <span key={tick}>{tick === 0 ? "0s" : formatClock(tick)}</span>)}</div><div className="playhead"><i /></div>
-        <div className="track scene-track"><b>Scenes</b><div className="timeline-scenes">{previewScenes.map((scene, index) => <button aria-label={`${index + 1}. ${scene.name}, ${formatClock(scene.startSeconds)} to ${formatClock(scene.endSeconds)}`} aria-pressed={selectedScene === index} className={`scene-thumb thumb-${index}`} key={scene.name} onClick={() => setSelectedScene(index)} type="button"><span>{index + 1} · {scene.name}</span><time>{formatClock(scene.startSeconds)}–{formatClock(scene.endSeconds)}</time></button>)}</div></div>
-        <div className="track caption-track"><b>Captions</b><div className="caption-blocks"><span>Meet your product…</span><span>This is your overview dashboard.</span><span>See the insights that matter.</span><span>Turn signals into action.</span></div></div>
-        <div className="track audio-track"><b>Voiceover</b><div className="waveform">{Array.from({ length: 68 }, (_, index) => <i key={index} style={{ height: `${8 + ((index * 13) % 22)}px` }} />)}</div></div>
+      <section aria-label="Generation actions" className="studio-generation-bar">
+        <div className="generation-summary">
+          <b>{demoModeLabel}</b>
+          <a href="/jobs">View generation jobs</a>
+          <span>{isPresentation ? (firstFive ? "First five slides · 61 seconds" : "2 minutes") : `${values.duration} seconds`} · {autoZoom ? "Smooth zoom on" : "Zoom off"}</span>
+          {message && <p role="status">{message}</p>}
+          {!message && Object.values(errors).some(Boolean) && <p role="status">Check the highlighted fields in Demo setup.</p>}
+        </div>
+        <button className="topbar-primary" disabled={isSubmitting} form="demo-form" type="submit"><Icon name="spark" />{isSubmitting ? "Generating demo…" : "Create demo"}</button>
       </section>
     </main>
   );

@@ -10,6 +10,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, model_validator
 
 from demodirector_api.auth_routes import CurrentIdentity
+from demodirector_api.job_monitor import ACTIVE, JobMonitor
 from demodirector_api.repositories import ProjectRepository
 
 NonEmptyString = Annotated[str, Field(min_length=1)]
@@ -140,10 +141,16 @@ def delete_project(
     project_id: str,
     repository: RepositoryDependency,
     identity: CurrentIdentity,
+    request: Request,
 ) -> Response:
     existing = repository.get(project_id)
     if existing is None or existing.owner_user_id != identity.user_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    monitor: JobMonitor = request.app.state.job_monitor
+    if any(job.status in ACTIVE for _, job in monitor.saved_jobs(existing)):
+        raise HTTPException(
+            409, "A generation is still in progress. Open Jobs before deleting this project."
+        )
     if not repository.delete(project_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)

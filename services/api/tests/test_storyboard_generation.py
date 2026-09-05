@@ -4,6 +4,7 @@ from typing import cast
 import pytest
 from demodirector_api.google_ai import FakeGoogleAIService
 from demodirector_api.storyboard_generation import (
+    GeneratedStoryboard,
     StoryboardGenerationService,
     StoryboardValidationError,
     build_storyboard_prompt,
@@ -122,6 +123,13 @@ def test_storyboard_service_accepts_grounded_timed_scene_plan() -> None:
     assert len(result.scenes) == 5
     assert result.total_duration_seconds == 90
     assert "CaptureAction allowlist" in fake.prompts[0]
+
+
+def test_generation_schema_advertises_required_scene_budget() -> None:
+    schema = GeneratedStoryboard.model_json_schema()
+    assert "scenes" in schema["required"]
+    assert schema["properties"]["scenes"]["minItems"] == 5
+    assert schema["properties"]["scenes"]["maxItems"] == 10
 
 
 def test_storyboard_prompt_distinguishes_fixed_presentation_from_product_capture() -> None:
@@ -250,3 +258,33 @@ def test_storyboard_rejects_submit_intent_without_an_action_after_fill() -> None
         StoryboardGenerationService(FakeGoogleAIService(payload)).generate(
             project=project(), understanding=understanding(), sources=[source()]
         )
+
+
+@pytest.mark.parametrize("objective", [
+    "Fill the setup without submitting a nested generation",
+    "Fill the setup; do not submit another generation",
+    "Fill the setup; don't submit another generation",
+])
+def test_negated_submit_intent_does_not_require_submission(objective: str) -> None:
+    payload = storyboard_payload()
+    first = payload["scenes"][0]  # type: ignore[index]
+    first["objective"] = objective
+    first["capture_plan"]["actions"] = [{
+        "type": "fill", "locator_strategy": "label", "locator": "Website URL",
+        "value": "https://wikipedia.org", "description": "Prepare example input",
+    }]
+    result = StoryboardGenerationService(FakeGoogleAIService(payload)).generate(
+        project=project(), understanding=understanding(), sources=[source()]
+    )
+    assert result.scenes[0].capture_plan.actions[0].type == "fill"
+
+
+def test_invalid_typed_candidate_is_retained_for_diagnostics_not_execution() -> None:
+    payload = storyboard_payload()
+    payload["scenes"][0]["source_ids"] = ["invented"]  # type: ignore[index]
+    with pytest.raises(StoryboardValidationError) as caught:
+        StoryboardGenerationService(FakeGoogleAIService(payload)).generate(
+            project=project(), understanding=understanding(), sources=[source()]
+        )
+    assert caught.value.code == "unknown_source"
+    assert caught.value.candidate is not None

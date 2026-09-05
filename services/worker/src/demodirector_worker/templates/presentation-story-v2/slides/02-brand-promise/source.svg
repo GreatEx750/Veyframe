@@ -7,28 +7,49 @@
     <rect width="2560" height="1440" fill="#9DE8D2"/>
     <rect width="2560" height="1440" fill="url(#grain-02-brand-promise)"/>
     
-      <path d="M128 176H2432M128 1166H2432" stroke="#0A211C" stroke-width="2" opacity="0.72"/>
-      <path d="M128 176V1166M2432 176V1166" stroke="#0A211C" stroke-width="2" opacity="0.22"/>
-      <rect x="1178" y="310" width="204" height="76" rx="8" fill="#0A211C"/>
-      <path d="M1230 348H1330M1280 324V372" stroke="#9DE8D2" stroke-width="8" stroke-linecap="round"/>
+      <path d="M128 176H2432" stroke="#0A211C" stroke-width="2" opacity="0.72"/>
     
   </g>
-    <g id="product-slot"></g>
+    <g id="product-slot">
+    <clipPath id="product-clip-02-brand-promise"><rect x="128" y="424" width="2304" height="816" rx="20"/></clipPath>
+    <g clip-path="url(#product-clip-02-brand-promise)">
+    <svg x="128" y="424" width="2304" height="816" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+      <rect width="1600" height="900" fill="#0D1214"/>
+      <rect width="1600" height="76" fill="#141C1F"/>
+      <circle cx="34" cy="38" r="8" fill="#FF796C"/><circle cx="60" cy="38" r="8" fill="#F0C65A"/><circle cx="86" cy="38" r="8" fill="#5FD58A"/>
+      <rect x="122" y="22" width="880" height="34" rx="8" fill="#222C30"/>
+      <rect x="0" y="76" width="228" height="824" fill="#101719"/>
+      <rect x="26" y="108" width="176" height="46" rx="8" fill="#243238"/>
+      <rect x="34" y="190" width="110" height="18" rx="5" fill="#78949B" opacity="0.48"/><rect x="34" y="260" width="134" height="18" rx="5" fill="#78949B" opacity="0.9"/><rect x="34" y="330" width="158" height="18" rx="5" fill="#78949B" opacity="0.48"/><rect x="34" y="400" width="110" height="18" rx="5" fill="#78949B" opacity="0.48"/><rect x="34" y="470" width="134" height="18" rx="5" fill="#78949B" opacity="0.48"/><rect x="34" y="540" width="158" height="18" rx="5" fill="#78949B" opacity="0.48"/>
+      <rect x="264" y="112" width="340" height="36" rx="8" fill="#F1F5F4" opacity="0.94"/>
+      <rect x="264" y="166" width="540" height="20" rx="5" fill="#7B8B8F" opacity="0.5"/>
+      <rect x="264" y="236" width="382" height="172" rx="14" fill="#182226" stroke="#334348" stroke-width="2"/><rect x="292" y="270" width="170" height="18" rx="5" fill="#90A5AA" opacity="0.72"/><rect x="292" y="318" width="140" height="52" rx="7" fill="#F1F5F4" opacity="0.94"/><rect x="684" y="236" width="382" height="172" rx="14" fill="#182226" stroke="#334348" stroke-width="2"/><rect x="712" y="270" width="170" height="18" rx="5" fill="#90A5AA" opacity="0.72"/><rect x="712" y="318" width="140" height="52" rx="7" fill="#9DE8D2" opacity="0.94"/><rect x="1104" y="236" width="382" height="172" rx="14" fill="#182226" stroke="#334348" stroke-width="2"/><rect x="1132" y="270" width="170" height="18" rx="5" fill="#90A5AA" opacity="0.72"/><rect x="1132" y="318" width="140" height="52" rx="7" fill="#F1F5F4" opacity="0.94"/>
+      <rect x="264" y="446" width="758" height="350" rx="14" fill="#182226" stroke="#334348" stroke-width="2"/>
+      <path d="M310 724C394 662 440 700 522 620S670 604 738 530S866 586 962 494" fill="none" stroke="#9DE8D2" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M310 742H970M310 680H970M310 618H970M310 556H970M310 494H970" stroke="#29373B" stroke-width="2"/>
+      <rect x="1054" y="446" width="486" height="350" rx="14" fill="#182226" stroke="#334348" stroke-width="2"/>
+      <rect x="1090" y="494" width="380" height="26" rx="7" fill="#FF796C" opacity="0.92"/><rect x="1090" y="556" width="348" height="26" rx="7" fill="#9DE8D2" opacity="0.8"/><rect x="1090" y="618" width="316" height="26" rx="7" fill="#9DE8D2" opacity="0.68"/><rect x="1090" y="680" width="284" height="26" rx="7" fill="#9DE8D2" opacity="0.56"/>
+      <rect x="1258" y="110" width="282" height="76" rx="12" fill="#9DE8D2"/>
+      <circle cx="1368" cy="558" r="24" fill="none" stroke="#FF796C" stroke-width="9"/>
+      <path d="M1368 514L1382 546L1416 556L1384 570L1374 604L1360 572L1326 562L1358 548Z" fill="#FFFFFF" stroke="#0A211C" stroke-width="3"/>
+    </svg>
+  </g>
+  </g>
     <g id="foreground">
     
     <path d="M128 176H2432" stroke="#73BDAA" stroke-width="2" opacity="0.7"/>
     <circle cx="128" cy="176" r="6" fill="#9DE8D2"/>
     <circle cx="2432" cy="176" r="6" fill="#9DE8D2"/>
   
-    
+    <rect x="128" y="424" width="2304" height="816" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/>
     
     <rect x="500" y="1252" width="1560" height="104" rx="8" fill="#0A211C" fill-opacity="0.94" stroke="#9DE8D2" stroke-opacity="0.72" stroke-width="2"/>
   
   </g>
-    <g id="copy-slots"><text data-slot="chapter" x="128" y="126" text-anchor="start" fill="#0A211C" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">A FASTER WAY TO DEMO</tspan></text>
+    <g id="copy-slots"><text data-slot="chapter" x="128" y="126" text-anchor="start" fill="#0A211C" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">THE PRODUCT IN ACTION</tspan></text>
 <text data-slot="counter" x="2432" y="126" text-anchor="end" fill="#0A211C" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="2432" dy="0">02 / 09</tspan></text>
-<text data-slot="brand" x="1280" y="548" text-anchor="middle" fill="#0A211C" font-size="88" font-weight="500" letter-spacing="-3px"><tspan x="1280" dy="0">DemoDirector</tspan></text>
-<text data-slot="headline" x="1280" y="700" text-anchor="middle" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="1280" dy="0">From product URL to a presentation-ready story.</tspan></text>
-<text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">Meet the director for your next product demo.</tspan></text></g>
+<text data-slot="brand" x="128" y="296" text-anchor="start" fill="#0A211C" font-size="88" font-weight="500" letter-spacing="-3px"><tspan x="128" dy="0">DemoDirector</tspan></text>
+<text data-slot="headline" x="128" y="382" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="128" dy="0">See the real workflow before we break it down.</tspan></text>
+<text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">Follow the cursor through a real product interaction.</tspan></text></g>
   
 </svg>

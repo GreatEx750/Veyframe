@@ -52,6 +52,37 @@ TraceStageKind = Literal[
 ]
 
 
+class JobActivity(ContractModel):
+    sequence: int = Field(ge=1)
+    at: datetime
+    stage: GenerationStage
+    level: Literal["info", "warning", "error"] = "info"
+    message: str = Field(min_length=1, max_length=500)
+
+
+class JobDetails(ContractModel):
+    job: GenerationJob
+    project_name: str
+    kind: Literal["generation", "presentation_preview", "presentation"]
+    elapsed_seconds: int = Field(ge=0)
+    step_elapsed_seconds: int = Field(ge=0)
+    last_progress_at: datetime
+    heartbeat_at: datetime | None = None
+    health: Literal["queued", "responding", "slow", "unresponsive", "paused", "finished"]
+    health_message: str
+    eta_min_seconds: int | None = Field(default=None, ge=0)
+    eta_max_seconds: int | None = Field(default=None, ge=0)
+    estimate_basis: str
+    events: list[JobActivity] = Field(default_factory=list)
+
+
+class JobsOverview(ContractModel):
+    jobs: list[JobDetails]
+    active_count: int = Field(ge=0)
+    maximum_active: int = 1
+    server_time: datetime
+
+
 class StageContribution(ContractModel):
     key: Literal[
         "pages_inspected",

@@ -8,6 +8,7 @@ import subprocess
 import textwrap
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
 
@@ -26,8 +27,10 @@ from demodirector_contracts.attention import AttentionPlan
 from demodirector_contracts.longform import AudioMixPlan, LongFormVideoPlan
 from demodirector_contracts.motion import MotionDirectionPlan
 from demodirector_contracts.style import StyleDirectionPlan, VisualVariantId
+from PIL import ImageFont
 
 from demodirector_worker.attention import AttentionCompiler
+from demodirector_worker.captions import word_highlights
 from demodirector_worker.editorial import EditorialCompositionCompiler
 from demodirector_worker.longform import LongFormCompiler
 from demodirector_worker.motion import MotionCompositionCompiler
@@ -46,6 +49,11 @@ AUDIO_EXTENSIONS = {".aac", ".m4a", ".mp3", ".ogg", ".wav"}
 
 class RendererError(RuntimeError):
     """Raised when a typed timeline cannot be rendered safely."""
+
+
+@lru_cache(maxsize=8)
+def _caption_font(path: str) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(path, 32)
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,9 +184,7 @@ class FFmpegRenderer:
             raise RendererError("ffprobe found no video stream in the rendered MP4.")
         if longform_plan is not None:
             self._validate_longform_output(output_path, probe)
-            contact_sheet_path = output_path.with_name(
-                f"{output_path.stem}-contact-sheet.jpg"
-            )
+            contact_sheet_path = output_path.with_name(f"{output_path.stem}-contact-sheet.jpg")
             self._run(
                 [
                     self.settings.ffmpeg_path,
@@ -265,9 +271,7 @@ class FFmpegRenderer:
             issues.append("video dimensions are not 2560x1440")
         if video is None or video.get("codec_name") != "h264":
             issues.append("video codec is not H.264")
-        if video is None or abs(
-            _frame_rate(str(video.get("avg_frame_rate", "0/1"))) - 30
-        ) > 0.01:
+        if video is None or abs(_frame_rate(str(video.get("avg_frame_rate", "0/1"))) - 30) > 0.01:
             issues.append("frame rate is not 30 fps")
         if audio is None or audio.get("codec_name") != "aac":
             issues.append("audio codec is not AAC")
@@ -394,9 +398,7 @@ class FFmpegRenderer:
                 item for item in cursor_events if item.event_type == "click"
             ):
                 next_label = f"vclick{index}"
-                filters.append(
-                    self._click_filter(event, config, current, next_label)
-                )
+                filters.append(self._click_filter(event, config, current, next_label))
                 current = next_label
         if timeline.presentation.zoom_enabled and timeline.zoom_clips:
             filters.append(self._zoom_filter(timeline.zoom_clips, config, current, "vzoom"))
@@ -424,9 +426,7 @@ class FFmpegRenderer:
                 current = output
             for index, interval in enumerate(longform_plan.condensed_intervals):
                 output = f"vcondensed{index}"
-                filters.append(
-                    self._condensed_interval_filter(interval, config, current, output)
-                )
+                filters.append(self._condensed_interval_filter(interval, config, current, output))
                 current = output
         if (
             legacy_directed_composition
@@ -464,9 +464,8 @@ class FFmpegRenderer:
                 )
                 current = next_label
         if (
-            (legacy_directed_composition or timeline.demo_mode == "presentation_demo")
-            and attention_plan is not None
-        ):
+            legacy_directed_composition or timeline.demo_mode == "presentation_demo"
+        ) and attention_plan is not None:
             compiled_attention = AttentionCompiler().compile(
                 attention_plan,
                 config,
@@ -606,10 +605,7 @@ class FFmpegRenderer:
         text = _escape_drawtext(
             f"{interval.label} · actual {interval.actual_elapsed_ms / 1_000:.1f}s"
         )
-        enable = (
-            f"between(t,{interval.start_ms / 1_000:.3f},"
-            f"{interval.end_ms / 1_000:.3f})"
-        )
+        enable = f"between(t,{interval.start_ms / 1_000:.3f},{interval.end_ms / 1_000:.3f})"
         margin = round(config.width * 0.035)
         return (
             f"[{input_label}]drawtext=fontfile='{font}':text='{text}':expansion=none:"
@@ -829,12 +825,9 @@ class FFmpegRenderer:
             mask_label = f"pt_{slug}_mask"
             frame_label = f"pt_{slug}_frame"
             next_label = f"pt_{slug}_{index}"
-            active_intervals = [
-                entry for entry in schedule if entry.template_id == template.id
-            ]
+            active_intervals = [entry for entry in schedule if entry.template_id == template.id]
             enable = "+".join(
-                _half_open_time_window(entry.start_ms, entry.end_ms)
-                for entry in active_intervals
+                _half_open_time_window(entry.start_ms, entry.end_ms) for entry in active_intervals
             )
             rounded_mask = (
                 f"if(gt(abs(X-W/2),W/2-{corner_radius})*"
@@ -941,8 +934,7 @@ class FFmpegRenderer:
                     right=config.width - safe_x,
                 )
                 centered_title_y = (
-                    round(config.height * template.copy_layout.y)
-                    - title_layout.height // 2
+                    round(config.height * template.copy_layout.y) - title_layout.height // 2
                 )
                 filter_chain = (
                     f"[{current}]drawbox=x=0:y=0:w=iw:h=ih:"
@@ -980,9 +972,7 @@ class FFmpegRenderer:
                 filter_chain = f"[{current}]null"
                 for line_index, line in enumerate(title_layout.lines):
                     escaped_line = _escape_drawtext(line)
-                    line_y_offset = (
-                        line_index * title_layout.line_height - title_layout.height // 2
-                    )
+                    line_y_offset = line_index * title_layout.line_height - title_layout.height // 2
                     filter_chain += (
                         f",drawtext=fontfile='{font}':text='{escaped_line}':"
                         f"expansion=none:fontcolor=0x{palette_ink}:"
@@ -1259,13 +1249,25 @@ class FFmpegRenderer:
         end = caption.end_ms / 1_000
         text = _escape_drawtext(caption.text)
         font = _escape_filter_path(self._font_path())
-        return (
+        base = (
             f"[{input_label}]drawtext=fontfile='{font}':text='{text}':"
             "expansion=none:fontcolor=white:"
             "fontsize=32:box=1:boxcolor=black@0.65:boxborderw=12:"
-            f"x=(w-text_w)/2:y=h-text_h-48:enable='between(t,{start:.3f},{end:.3f})'"
-            f"[{output_label}]"
+            f"x=(w-text_w)/2:y=h-80:enable='gte(t,{start:.3f})*lt(t,{end:.3f})'"
         )
+        measured = _caption_font(str(self._font_path()))
+        total_width = float(measured.getlength(caption.text))
+        for state in word_highlights(caption.text, caption.start_ms, caption.end_ms):
+            prefix = " ".join(state.words[: state.word_index])
+            advance = float(measured.getlength(prefix + " ")) if prefix else 0.0
+            word = _escape_drawtext(state.words[state.word_index])
+            base += (
+                f",drawtext=fontfile='{font}':text='{word}':expansion=none:"
+                "fontcolor=0x0A211C:fontsize=32:box=1:boxcolor=0x9DE8D2:boxborderw=5:"
+                f"x=(w-{total_width:.3f})/2+{advance:.3f}:y=h-80:"
+                f"enable='gte(t,{state.start_ms / 1000:.3f})*lt(t,{state.end_ms / 1000:.3f})'"
+            )
+        return base + f"[{output_label}]"
 
     def _font_path(self) -> Path:
         candidates = [
@@ -1318,9 +1320,7 @@ class FFmpegRenderer:
                 f"atrim=duration={duration:.3f}[{output_label}]"
             )
         if mix is not None:
-            filters.append(
-                f"[amixed]loudnorm=I={mix.narration_lufs:.1f}:TP=-1.5:LRA=11[aout]"
-            )
+            filters.append(f"[amixed]loudnorm=I={mix.narration_lufs:.1f}:TP=-1.5:LRA=11[aout]")
         return "aout"
 
     def _safe_media_path(self, supplied: str, extensions: set[str]) -> Path:
@@ -1475,9 +1475,7 @@ def _layout_text_block(
         1,
         math.floor(width / font_size / _TEXT_WIDTH_FACTOR),
     )
-    lines = tuple(
-        _wrap_copy_lines(compact, characters_per_line, max_lines=available_lines)
-    )
+    lines = tuple(_wrap_copy_lines(compact, characters_per_line, max_lines=available_lines))
     return _TextBlockLayout(lines, font_size, line_height)
 
 
@@ -1497,10 +1495,7 @@ def _animated_position(base: int, offset: int, progress: str) -> str:
 
 
 def _half_open_time_window(start_ms: int, end_ms: int) -> str:
-    return (
-        f"gte(t,{start_ms / 1_000:.3f})*"
-        f"lt(t,{end_ms / 1_000:.3f})"
-    )
+    return f"gte(t,{start_ms / 1_000:.3f})*lt(t,{end_ms / 1_000:.3f})"
 
 
 def _copy_x_position(layout: CopyLayout, config: RenderConfig) -> str:

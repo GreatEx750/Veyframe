@@ -2,13 +2,59 @@
 
 ## Local development
 
-Run the API and web app normally. In a separate terminal, from the repository root run:
+`npm run dev` starts the web app, API, and generation worker together.
+When running the web app and API separately, also run from the repository root:
 
 ```powershell
-node scripts/python-runner.mjs -m demodirector_api.job_worker
+npm run dev:worker
 ```
 
 The worker reads the same SQLite database and artifact directory as the API. Keep those paths consistent. Closing the browser does not stop the worker. Stopping the worker preserves completed checkpoints; restarting it resumes queued work. Interrupted paid stages require explicit approval before retry. There is a maximum of three attempts per stage.
+
+## Authored Presentation Demo
+
+New Presentation Demo requests use the same sequential, pre-authored `presentation-story@2`
+pipeline for both durations: nine slides totaling exactly 120 seconds, or the optional first-five
+61-second preview. Product Demo keeps its continuous recording pipeline. Full presentations no
+longer use the legacy whole-storyboard generator. The old renderer remains for existing exports.
+
+Each slide receives validated Google ADK/Gemini copy, Gemini narration, real browser footage at
+the template's native aperture dimensions, visible cursor/click feedback, optional target-aware
+smooth zoom inside the footage, and word-highlighted captions. Copy, narration, captures, and
+compositions are cached separately. Each finished slide is checked before the next starts, then
+the completed slides are assembled and their final media duration is checked before publication.
+Parallel Search is called directly. When it returns no results, inspected website evidence may
+ground the script instead; the activity log reports the separate source counts truthfully.
+
+Authored presentations currently run in the local API's background executor, not Cloud Tasks.
+Keep the API running. Restarted/interrupted work is shown as failed and requires explicit Retry;
+completed slides are reused. There are three generation attempts, shared account admission with
+Product Demo, and no automatic whole-job paid retries. `/generation/presentation` is the full
+presentation's status/retry endpoint; `/generation/presentation-preview` remains the short preview.
+Completed full presentations with attempts remaining also expose **Rebuild from saved slides**.
+This explicit action consumes another generation attempt, keeps existing exports, and reuses valid
+saved work. Invalidated copy can require new Google narration calls. Rebuilding is rejected once
+the saved timeline has been edited; create a new project instead of overwriting those edits.
+Cloud requests fail clearly rather than silently using a different presentation pipeline.
+Authenticated recording only receives the current session for exact configured
+`DEMO_CAPTURE_AUTH_ORIGINS`; the presentation executor keeps that token in memory, not slide files.
+
+## Job visibility and admission
+
+The authenticated `/jobs` page polls saved backend progress every three seconds. It shows both
+standard generations, full presentations, and local first-five-slide previews, with activity, safe errors,
+saved checkpoints, elapsed time, retries, worker heartbeat, and a rough remaining-time range.
+Workers save a heartbeat every ten seconds during work. Missing heartbeats after 45 seconds and
+steps with no progress for three minutes are explicitly flagged; no reliable ETA is claimed for
+queued, paused, unresponsive, unusually slow, or finished work. Legacy jobs retain their last saved
+status but cannot reconstruct activity that was never recorded. Logs retain the latest 500 updates
+per job and do not include raw provider responses, credentials, or private capture session data.
+
+Account admission uses the record store's atomic compare-and-swap operation across both pipelines
+and API processes. Queued, running, and approval-paused work occupies the single slot. A stopped
+job awaiting an explicitly approved retry does not occupy it; retry must acquire the same slot
+again. Active projects cannot be deleted. A worker heartbeat is a liveness signal, not proof that
+a provider call is making progress. Historical generation times have not yet calibrated estimates.
 
 ## Cloud configuration
 

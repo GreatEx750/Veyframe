@@ -357,8 +357,6 @@ input[type="range"] { height: 3px; padding: 0; border: 0; accent-color: var(--in
 .logout-button.compact { min-height: 28px; margin-left: auto; padding: 0 8px; font-size: 8px; }
 .auth-divider { display: flex; align-items: center; gap: 10px; margin: 22px 0 12px; color: var(--muted); font-size: 8px; text-transform: uppercase; }.auth-divider::before, .auth-divider::after { height: 1px; flex: 1; background: var(--border); content: ""; }
 .judge-entry { width: 100%; min-height: 42px; border: 1px solid #46547a; border-radius: 8px; background: linear-gradient(145deg, #1c2436, #131927); color: #dce4ff; font-size: 10px; font-weight: 700; }.judge-note { display: block; margin-top: 8px; color: var(--muted); font-size: 8px; text-align: center; }
-.judge-banner { position: fixed; z-index: 50; right: 12px; bottom: 12px; display: flex; max-width: calc(100vw - 24px); align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #586aa0; border-radius: 9px; background: rgb(18 24 39 / 96%); box-shadow: 0 12px 36px rgb(0 0 0 / 40%); color: #dce4ff; font-size: 9px; }.judge-banner small { color: #9eabd2; }.judge-banner button { min-height: 28px; padding: 0 9px; border: 1px solid #596a9c; border-radius: 6px; background: #222d49; font-size: 8px; }.judge-banner em { color: #9ed7ac; font-size: 8px; font-style: normal; }
-@media (max-width: 650px) { .judge-banner { right: 8px; bottom: 8px; left: 8px; flex-wrap: wrap; }.judge-banner span { width: 100%; } }
 
 .judge-tour-shell { min-height: 100vh; background: #070910; color: #f5f7ff; padding: 0 5vw 72px; }
 .judge-tour-header { align-items: center; display: flex; justify-content: space-between; padding: 22px 0; }

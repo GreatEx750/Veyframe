@@ -39,16 +39,13 @@
     <circle cx="128" cy="176" r="6" fill="#9DE8D2"/>
     <circle cx="2432" cy="176" r="6" fill="#9DE8D2"/>
   
-    <rect x="128" y="190" width="2304" height="1050" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/><rect x="152" y="214" width="186" height="48" rx="8" fill="#0A211C" fill-opacity="0.9"/><circle cx="182" cy="238" r="8" fill="#FF796C"/><rect x="128" y="190" width="2304" height="1050" rx="20" fill="#0A211C" fill-opacity="0.58"/><g transform="rotate(-2 530 594)"><rect x="204" y="350" width="652" height="488" rx="16" fill="#F3EDE1"/><path d="M252 460H808" stroke="#0A211C" stroke-width="2" opacity="0.3"/><circle cx="274" cy="408" r="12" fill="#FF796C"/></g><g transform="rotate(2 1282 504)"><rect x="956" y="260" width="652" height="488" rx="16" fill="#9DE8D2"/><path d="M1004 370H1560" stroke="#0A211C" stroke-width="2" opacity="0.3"/><circle cx="1026" cy="318" r="12" fill="#FF796C"/></g><g transform="rotate(-1 2034 662)"><rect x="1708" y="418" width="652" height="488" rx="16" fill="#F3EDE1"/><path d="M1756 528H2312" stroke="#0A211C" stroke-width="2" opacity="0.3"/><circle cx="1778" cy="476" r="12" fill="#FF796C"/></g>
+    <rect x="128" y="190" width="2304" height="1050" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/>
     
     <rect x="500" y="1252" width="1560" height="104" rx="8" fill="#0A211C" fill-opacity="0.94" stroke="#9DE8D2" stroke-opacity="0.72" stroke-width="2"/>
   
   </g>
     <g id="copy-slots"><text data-slot="chapter" x="128" y="108" text-anchor="start" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">TRUST, BUILT INTO THE STORY</tspan></text>
 <text data-slot="counter" x="2432" y="108" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="2432" dy="0">08 / 09</tspan></text>
-<text data-slot="card_one" x="248" y="460" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="248" dy="0">Grounded</tspan><tspan x="248" dy="64">in real evidence</tspan></text>
-<text data-slot="card_two" x="1000" y="364" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="1000" dy="0">Directed by</tspan><tspan x="1000" dy="64">typed decisions</tspan></text>
-<text data-slot="card_three" x="1752" y="528" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="1752" dy="0">Safe, visible</tspan><tspan x="1752" dy="64">execution</tspan></text>
 <text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">Every contribution is clear, bounded, and inspectable.</tspan></text></g>
   
 </svg>

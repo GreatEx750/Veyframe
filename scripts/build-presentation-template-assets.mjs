@@ -55,6 +55,10 @@ const FONT_TOKENS = {
   title: { size: 40, line_height: 48, weight: 600, tracking: -0.5 },
   body: { size: 30, line_height: 42, weight: 400, tracking: 0 },
   label: { size: 22, line_height: 28, weight: 600, tracking: 4.4 },
+  activity_badge: { size: 22, line_height: 30, weight: 500, tracking: 1.6 },
+  activity_status: { size: 22, line_height: 30, weight: 400, tracking: 2 },
+  activity_detail: { size: 34, line_height: 44, weight: 400, tracking: 0 },
+  activity_heading: { size: 24, line_height: 34, weight: 400, tracking: 3.5 },
   caption: { size: 44, line_height: 54, weight: 500, tracking: -0.5 },
 };
 
@@ -140,23 +144,24 @@ const TEMPLATES = [
   {
     id: "brand-promise@2",
     slug: "02-brand-promise",
-    name: "Brand promise",
-    role: "intro",
+    name: "Product in action",
+    role: "product",
     motion: "matched_slide",
     layout: "promise",
+    aperture: { x: 128, y: 424, width: 2304, height: 816, corner_radius: 20 },
     copy: [
       slot("chapter", 128, 104, 650, 42, "label", 36, 1),
       slot("counter", 2180, 104, 252, 42, "label", 12, 1, "right"),
-      slot("brand", 542, 460, 1476, 150, "display_l", 32, 1, "center"),
-      slot("headline", 452, 644, 1656, 148, "heading", 90, 2, "center"),
+      slot("brand", 128, 208, 2304, 106, "display_l", 32, 1),
+      slot("headline", 128, 326, 2304, 72, "heading", 90, 1),
       slot("caption", 520, 1260, 1520, 92, "caption", 92, 2, "center"),
     ],
     preview: {
-      chapter: ["A FASTER WAY TO DEMO"],
+      chapter: ["THE PRODUCT IN ACTION"],
       counter: ["02 / 09"],
       brand: ["DemoDirector"],
-      headline: ["From product URL to a presentation-ready story."],
-      caption: ["Meet the director for your next product demo."],
+      headline: ["See the real workflow before we break it down."],
+      caption: ["Follow the cursor through a real product interaction."],
     },
   },
   {
@@ -203,8 +208,9 @@ const TEMPLATES = [
       slot("counter", 2180, 104, 252, 42, "label", 12, 1, "right"),
       slot("eyebrow", 186, 274, 570, 42, "label", 34, 1),
       slot("headline", 184, 354, 600, 184, "heading", 58, 3),
-      slot("request", 212, 646, 520, 120, "body", 120, 3),
-      slot("result", 212, 1010, 520, 90, "title", 48, 2),
+      slot("request", 212, 628, 552, 100, "body", 90, 2),
+      slot("step_two", 212, 812, 552, 100, "body", 90, 2),
+      slot("step_three", 212, 996, 552, 100, "body", 90, 2),
       slot("caption", 520, 1260, 1520, 92, "caption", 92, 2, "center"),
     ],
     preview: {
@@ -212,12 +218,9 @@ const TEMPLATES = [
       counter: ["04 / 09"],
       eyebrow: ["ONE REQUEST"],
       headline: ["Turn intent into", "a visible plan."],
-      request: [
-        "“Show the dashboard,",
-        "reveal the insight, then finish",
-        "on the action.”",
-      ],
-      result: ["Directed. Captured. Ready."],
+      request: ["Open the section you want to explore."],
+      step_two: ["Inspect the details in context."],
+      step_three: ["Return to the overview."],
       caption: ["Every step stays traceable from request to result."],
     },
   },
@@ -247,38 +250,38 @@ const TEMPLATES = [
   {
     id: "focus-detail@2",
     slug: "06-focus-detail",
-    name: "Focal detail",
+    name: "Product activity",
     role: "product",
     motion: "focus_rise",
     layout: "focus",
-    aperture: { x: 128, y: 190, width: 2304, height: 1050, corner_radius: 20 },
+    aperture: { x: 128, y: 218, width: 1400, height: 1022, corner_radius: 20 },
     copy: [
       slot("chapter", 128, 86, 650, 42, "label", 36, 1),
       slot("counter", 2180, 86, 252, 42, "label", 12, 1, "right"),
-      slot("eyebrow", 1518, 432, 640, 38, "label", 36, 1),
-      slot("headline", 1518, 510, 660, 154, "heading", 58, 3),
-      slot("body", 1518, 716, 620, 142, "body", 140, 4),
-      slot("callout", 1518, 952, 620, 58, "title", 44, 1),
+      slot("activity_heading", 1608, 236, 824, 42, "activity_heading", 32, 1),
+      ...[1, 2, 3, 4].flatMap((i) => [
+        slot(`activity_${i}_label`, 1640, 350 + (i - 1) * 216, 290, 36, "activity_badge", 18, 1),
+        slot(`activity_${i}_status`, 2160, 350 + (i - 1) * 216, 236, 36, "activity_status", 12, 1, "right"),
+        slot(`activity_${i}_detail`, 1640, 404 + (i - 1) * 216, 752, 88, "activity_detail", 64, 2),
+      ]),
       slot("caption", 520, 1260, 1520, 92, "caption", 92, 2, "center"),
     ],
     preview: {
-      chapter: ["FOCUS WITHOUT LOSING CONTEXT"],
+      chapter: ["PRODUCT WALKTHROUGH"],
       counter: ["06 / 09"],
-      eyebrow: ["KEY MOMENT"],
-      headline: ["Direct attention", "to the proof."],
-      body: [
-        "A focused detail rises above the live",
-        "product while the surrounding",
-        "workflow remains visible.",
-      ],
-      callout: ["Insight confirmed"],
-      caption: ["The audience sees exactly where the value appears."],
+      activity_heading: ["PRODUCT ACTIVITY"],
+      ...Object.fromEntries([1, 2, 3, 4].flatMap((i) => [
+        [`activity_${i}_label`, [`FEATURE ${i}`]],
+        [`activity_${i}_status`, ["OBSERVED"]],
+        [`activity_${i}_detail`, ["Evidence-grounded product action"]],
+      ])),
+      caption: ["Follow the product workflow in context."],
     },
   },
   {
     id: "human-review@2",
     slug: "07-human-review",
-    name: "Human review gate",
+    name: "Workflow highlights",
     role: "product",
     motion: "field_slide",
     layout: "review",
@@ -288,15 +291,21 @@ const TEMPLATES = [
       slot("counter", 2180, 104, 252, 42, "label", 12, 1, "right"),
       slot("eyebrow", 186, 276, 570, 42, "label", 34, 1),
       slot("headline", 184, 354, 596, 190, "heading", 62, 3),
-      slot("body", 188, 916, 560, 130, "body", 140, 3),
+      slot("bullet_one", 226, 600, 530, 80, "body", 64, 2),
+      slot("bullet_two", 226, 710, 530, 80, "body", 64, 2),
+      slot("bullet_three", 226, 820, 530, 80, "body", 64, 2),
+      slot("body", 188, 946, 560, 130, "body", 140, 3),
       slot("callout", 188, 1082, 560, 64, "title", 44, 1),
       slot("caption", 520, 1260, 1520, 92, "caption", 92, 2, "center"),
     ],
     preview: {
-      chapter: ["CONTROL STAYS WITH YOU"],
+      chapter: ["WORKFLOW HIGHLIGHTS"],
       counter: ["07 / 09"],
-      eyebrow: ["REVIEW GATE"],
-      headline: ["Automation moves.", "You decide."],
+      eyebrow: ["IN THIS WALKTHROUGH"],
+      headline: ["Three steps.", "One clear result."],
+      bullet_one: ["Open the search field."],
+      bullet_two: ["Enter the topic."],
+      bullet_three: ["Explore the result."],
       body: [
         "Important changes wait for a clear",
         "review before the story moves",
@@ -309,7 +318,7 @@ const TEMPLATES = [
   {
     id: "trust-cards@2",
     slug: "08-trust-cards",
-    name: "Proof stack over product",
+    name: "Unobstructed product walkthrough",
     role: "product",
     motion: "card_stagger",
     layout: "trust",
@@ -317,9 +326,6 @@ const TEMPLATES = [
     copy: [
       slot("chapter", 128, 86, 650, 42, "label", 36, 1),
       slot("counter", 2180, 86, 252, 42, "label", 12, 1, "right"),
-      slot("card_one", 248, 404, 560, 214, "heading", 82, 3),
-      slot("card_two", 1000, 308, 560, 214, "heading", 82, 3),
-      slot("card_three", 1752, 472, 560, 214, "heading", 82, 3),
       slot("caption", 520, 1260, 1520, 92, "caption", 92, 2, "center"),
     ],
     preview: {
@@ -363,13 +369,13 @@ const TEMPLATES = [
 
 const SCHEDULE = [
   [0, 3000, "hook-question@2", "hard_cut"],
-  [3000, 5000, "brand-promise@2", "matched_slide"],
-  [5000, 20000, "context-split@2", "matched_slide"],
-  [20000, 37000, "workflow-rail@2", "field_slide"],
-  [37000, 53000, "prompt-over-product@2", "aperture_expand"],
-  [53000, 70000, "focus-detail@2", "focus_rise"],
-  [70000, 90000, "human-review@2", "field_slide"],
-  [90000, 115000, "trust-cards@2", "card_stagger"],
+  [3000, 13000, "brand-promise@2", "matched_slide"],
+  [13000, 28000, "context-split@2", "matched_slide"],
+  [28000, 45000, "workflow-rail@2", "field_slide"],
+  [45000, 61000, "prompt-over-product@2", "aperture_expand"],
+  [61000, 78000, "focus-detail@2", "focus_rise"],
+  [78000, 98000, "human-review@2", "field_slide"],
+  [98000, 115000, "trust-cards@2", "card_stagger"],
   [115000, 120000, "brand-outro@2", "soft_crossfade"],
 ];
 
@@ -421,10 +427,7 @@ function backgroundMarkup(template) {
     `;
   } else if (template.layout === "promise") {
     decoration = `
-      <path d="M128 176H2432M128 1166H2432" stroke="${COLORS.ink}" stroke-width="2" opacity="0.72"/>
-      <path d="M128 176V1166M2432 176V1166" stroke="${COLORS.ink}" stroke-width="2" opacity="0.22"/>
-      <rect x="1178" y="310" width="204" height="76" rx="8" fill="${COLORS.ink}"/>
-      <path d="M1230 348H1330M1280 324V372" stroke="${COLORS.mint}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M128 176H2432" stroke="${COLORS.ink}" stroke-width="2" opacity="0.72"/>
     `;
   } else if (template.layout === "context") {
     decoration = `
@@ -436,8 +439,7 @@ function backgroundMarkup(template) {
   } else if (template.layout === "workflow") {
     decoration = `
       <rect x="128" y="218" width="730" height="1022" rx="20" fill="${COLORS.ink}" fill-opacity="0.9" stroke="${COLORS.line}" stroke-width="2"/>
-      <rect x="184" y="600" width="618" height="220" rx="12" fill="${COLORS.fieldRaised}"/>
-      ${[0, 1, 2].map((index) => `<rect x="184" y="${850 + index * 78}" width="618" height="58" rx="8" fill="${index === 2 ? COLORS.mint : COLORS.ivory}" fill-opacity="${index === 2 ? 1 : 0.1}"/>`).join("")}
+      ${[0, 1, 2].map((index) => `<rect x="184" y="${600 + index * 184}" width="618" height="148" rx="12" fill="${COLORS.fieldRaised}"/>`).join("")}
     `;
   } else if (template.layout === "prompt") {
     decoration = `
@@ -446,12 +448,17 @@ function backgroundMarkup(template) {
       <circle cx="2084" cy="285" r="10" fill="${COLORS.coral}"/>
     `;
   } else if (template.layout === "focus") {
-    decoration = "";
+    decoration = `
+      <path d="M1608 290H2432" stroke="${COLORS.mint}" stroke-width="2" opacity="0.8"/>
+      ${[0, 1, 2, 3].map((i) => `
+        <rect x="1608" y="${320 + i * 216}" width="824" height="200" rx="10" fill="#104638" stroke="${COLORS.mint}" stroke-width="3"/>
+        <rect x="1638" y="${346 + i * 216}" width="308" height="44" rx="6" fill="${COLORS.mint}"/>
+      `).join("")}
+    `;
   } else if (template.layout === "review") {
     decoration = `
       <rect x="128" y="218" width="676" height="1022" rx="20" fill="${COLORS.mint}"/>
-      <rect x="176" y="590" width="580" height="270" rx="12" fill="${COLORS.ink}"/>
-      ${[0, 1, 2].map((index) => `<circle cx="218" cy="${644 + index * 76}" r="12" fill="${index === 2 ? COLORS.coral : COLORS.mint}"/><rect x="250" y="${628 + index * 76}" width="452" height="32" rx="6" fill="${COLORS.ivory}" fill-opacity="${0.18 + index * 0.08}"/>`).join("")}
+      ${[0, 1, 2].map((index) => `<circle cx="198" cy="${621 + index * 110}" r="6" fill="${COLORS.ink}"/>`).join("")}
     `;
   } else if (template.layout === "outro") {
     decoration = `
@@ -505,7 +512,6 @@ function foregroundMarkup(template) {
   if (template.aperture) {
     const { x, y, width, height, corner_radius: radius } = template.aperture;
     layout += `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${radius}" fill="none" stroke="${COLORS.mint}" stroke-width="3"/>`;
-    layout += `<rect x="${x + 24}" y="${y + 24}" width="186" height="48" rx="8" fill="${COLORS.ink}" fill-opacity="0.9"/><circle cx="${x + 54}" cy="${y + 48}" r="8" fill="${COLORS.coral}"/>`;
   }
   if (template.layout === "hook") {
     layout += `
@@ -513,21 +519,6 @@ function foregroundMarkup(template) {
       <rect x="446" y="1048" width="312" height="62" rx="31" fill="none" stroke="${COLORS.mint}" stroke-width="2"/>
       <rect x="784" y="972" width="252" height="62" rx="31" fill="${COLORS.mint}"/>
     `;
-  } else if (template.layout === "focus") {
-    layout += `
-      <rect x="128" y="190" width="2304" height="1050" rx="20" fill="${COLORS.ink}" fill-opacity="0.46"/>
-      <rect x="1414" y="340" width="864" height="760" rx="18" fill="${COLORS.ivory}" stroke="${COLORS.mint}" stroke-width="3"/>
-      <rect x="1478" y="902" width="690" height="116" rx="10" fill="${COLORS.mint}"/>
-      <circle cx="2214" cy="374" r="15" fill="${COLORS.coral}"/>
-    `;
-  } else if (template.layout === "trust") {
-    layout += `<rect x="128" y="190" width="2304" height="1050" rx="20" fill="${COLORS.ink}" fill-opacity="0.58"/>`;
-    const cards = [
-      [204, 350, COLORS.ivory, -2],
-      [956, 260, COLORS.mint, 2],
-      [1708, 418, COLORS.ivory, -1],
-    ];
-    layout += cards.map(([x, y, fill, rotate]) => `<g transform="rotate(${rotate} ${x + 326} ${y + 244})"><rect x="${x}" y="${y}" width="652" height="488" rx="16" fill="${fill}"/><path d="M${x + 48} ${y + 110}H${x + 604}" stroke="${COLORS.ink}" stroke-width="2" opacity="0.3"/><circle cx="${x + 70}" cy="${y + 58}" r="12" fill="${COLORS.coral}"/></g>`).join("");
   }
   return `
     ${metadataRail()}
@@ -552,7 +543,8 @@ function slotColor(template, slotDefinition) {
   if (template.layout === "context" && !["chapter", "counter", "caption"].includes(slotDefinition.id)) return COLORS.ink;
   if (template.layout === "review" && !["chapter", "counter", "caption"].includes(slotDefinition.id)) return COLORS.ink;
   if (template.layout === "prompt" && ["prompt"].includes(slotDefinition.id)) return COLORS.ink;
-  if (template.layout === "focus" && !["chapter", "counter", "caption"].includes(slotDefinition.id)) return COLORS.ink;
+  if (template.layout === "focus" && slotDefinition.id.endsWith("_label")) return COLORS.ink;
+  if (template.layout === "focus" && (slotDefinition.id.endsWith("_status") || slotDefinition.id === "activity_heading")) return COLORS.mint;
   if (template.layout === "trust" && slotDefinition.id.startsWith("card_")) return COLORS.ink;
   return slotDefinition.font_token === "label" ? COLORS.mint : COLORS.ivory;
 }
@@ -669,17 +661,17 @@ async function renderTemplate(template, fontData) {
   const foregroundPath = path.join(folder, "foreground.png");
   const previewPath = path.join(folder, "preview.png");
   await writeFile(sourcePath, sourceSvg(template, fontData), "utf8");
-  await sharp(Buffer.from(backgroundSvg(template)))
+  await writeFile(backgroundPath, await sharp(Buffer.from(backgroundSvg(template)))
     .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toFile(backgroundPath);
-  await sharp(Buffer.from(foregroundSvg(template)))
+    .toBuffer());
+  await writeFile(foregroundPath, await sharp(Buffer.from(foregroundSvg(template)))
     .ensureAlpha()
     .png({ compressionLevel: 9, adaptiveFiltering: true, colourType: 6 })
-    .toFile(foregroundPath);
-  await sharp(Buffer.from(sourceSvg(template, fontData)))
+    .toBuffer());
+  await writeFile(previewPath, await sharp(Buffer.from(sourceSvg(template, fontData)))
     .resize(PREVIEW.width, PREVIEW.height, { fit: "fill" })
     .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toFile(previewPath);
+    .toBuffer());
 
   const assets = {
     source_svg: toPosix(path.relative(PACK_DIR, sourcePath)),
@@ -714,9 +706,9 @@ async function buildContactSheet(previews, fontData) {
     ${cells}
   `, fontData);
   const outputPath = path.join(PACK_DIR, "contact-sheet.png");
-  await sharp(Buffer.from(sheet))
+  await writeFile(outputPath, await sharp(Buffer.from(sheet))
     .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toFile(outputPath);
+    .toBuffer());
   return outputPath;
 }
 
@@ -781,6 +773,9 @@ async function main() {
       assets: assetsByTemplate.get(template.id),
       copy_slots: template.copy,
       motion_preset: template.motion,
+      ...(["workflow", "focus", "review", "trust"].includes(template.layout)
+        ? { visual_revision: template.layout === "focus" ? "product-activity-v2" : "clear-product-2026-09-05" } : {}),
+      ...(template.layout === "focus" ? { activity_panel: true } : {}),
     };
     if (template.aperture) {
       entry.product_aperture = {

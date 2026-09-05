@@ -7,11 +7,26 @@
     <rect width="2560" height="1440" fill="#234D44"/>
     <rect width="2560" height="1440" fill="url(#grain-06-focus-detail)"/>
     
+      <path d="M1608 290H2432" stroke="#9DE8D2" stroke-width="2" opacity="0.8"/>
+      
+        <rect x="1608" y="320" width="824" height="200" rx="10" fill="#104638" stroke="#9DE8D2" stroke-width="3"/>
+        <rect x="1638" y="346" width="308" height="44" rx="6" fill="#9DE8D2"/>
+      
+        <rect x="1608" y="536" width="824" height="200" rx="10" fill="#104638" stroke="#9DE8D2" stroke-width="3"/>
+        <rect x="1638" y="562" width="308" height="44" rx="6" fill="#9DE8D2"/>
+      
+        <rect x="1608" y="752" width="824" height="200" rx="10" fill="#104638" stroke="#9DE8D2" stroke-width="3"/>
+        <rect x="1638" y="778" width="308" height="44" rx="6" fill="#9DE8D2"/>
+      
+        <rect x="1608" y="968" width="824" height="200" rx="10" fill="#104638" stroke="#9DE8D2" stroke-width="3"/>
+        <rect x="1638" y="994" width="308" height="44" rx="6" fill="#9DE8D2"/>
+      
+    
   </g>
     <g id="product-slot">
-    <clipPath id="product-clip-06-focus-detail"><rect x="128" y="190" width="2304" height="1050" rx="20"/></clipPath>
+    <clipPath id="product-clip-06-focus-detail"><rect x="128" y="218" width="1400" height="1022" rx="20"/></clipPath>
     <g clip-path="url(#product-clip-06-focus-detail)">
-    <svg x="128" y="190" width="2304" height="1050" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+    <svg x="128" y="218" width="1400" height="1022" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
       <rect width="1600" height="900" fill="#0D1214"/>
       <rect width="1600" height="76" fill="#141C1F"/>
       <circle cx="34" cy="38" r="8" fill="#FF796C"/><circle cx="60" cy="38" r="8" fill="#F0C65A"/><circle cx="86" cy="38" r="8" fill="#5FD58A"/>
@@ -39,22 +54,26 @@
     <circle cx="128" cy="176" r="6" fill="#9DE8D2"/>
     <circle cx="2432" cy="176" r="6" fill="#9DE8D2"/>
   
-    <rect x="128" y="190" width="2304" height="1050" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/><rect x="152" y="214" width="186" height="48" rx="8" fill="#0A211C" fill-opacity="0.9"/><circle cx="182" cy="238" r="8" fill="#FF796C"/>
-      <rect x="128" y="190" width="2304" height="1050" rx="20" fill="#0A211C" fill-opacity="0.46"/>
-      <rect x="1414" y="340" width="864" height="760" rx="18" fill="#F3EDE1" stroke="#9DE8D2" stroke-width="3"/>
-      <rect x="1478" y="902" width="690" height="116" rx="10" fill="#9DE8D2"/>
-      <circle cx="2214" cy="374" r="15" fill="#FF796C"/>
-    
+    <rect x="128" y="218" width="1400" height="1022" rx="20" fill="none" stroke="#9DE8D2" stroke-width="3"/>
     
     <rect x="500" y="1252" width="1560" height="104" rx="8" fill="#0A211C" fill-opacity="0.94" stroke="#9DE8D2" stroke-opacity="0.72" stroke-width="2"/>
   
   </g>
-    <g id="copy-slots"><text data-slot="chapter" x="128" y="108" text-anchor="start" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">FOCUS WITHOUT LOSING CONTEXT</tspan></text>
+    <g id="copy-slots"><text data-slot="chapter" x="128" y="108" text-anchor="start" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="128" dy="0">PRODUCT WALKTHROUGH</tspan></text>
 <text data-slot="counter" x="2432" y="108" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="2432" dy="0">06 / 09</tspan></text>
-<text data-slot="eyebrow" x="1518" y="454" text-anchor="start" fill="#0A211C" font-size="22" font-weight="600" letter-spacing="4.4px"><tspan x="1518" dy="0">KEY MOMENT</tspan></text>
-<text data-slot="headline" x="1518" y="566" text-anchor="start" fill="#0A211C" font-size="56" font-weight="600" letter-spacing="-1.5px"><tspan x="1518" dy="0">Direct attention</tspan><tspan x="1518" dy="64">to the proof.</tspan></text>
-<text data-slot="body" x="1518" y="746" text-anchor="start" fill="#0A211C" font-size="30" font-weight="400" letter-spacing="0px"><tspan x="1518" dy="0">A focused detail rises above the live</tspan><tspan x="1518" dy="42">product while the surrounding</tspan><tspan x="1518" dy="42">workflow remains visible.</tspan></text>
-<text data-slot="callout" x="1518" y="992" text-anchor="start" fill="#0A211C" font-size="40" font-weight="600" letter-spacing="-0.5px"><tspan x="1518" dy="0">Insight confirmed</tspan></text>
-<text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">The audience sees exactly where the value appears.</tspan></text></g>
+<text data-slot="activity_heading" x="1608" y="260" text-anchor="start" fill="#9DE8D2" font-size="24" font-weight="400" letter-spacing="3.5px"><tspan x="1608" dy="0">PRODUCT ACTIVITY</tspan></text>
+<text data-slot="activity_1_label" x="1640" y="372" text-anchor="start" fill="#0A211C" font-size="22" font-weight="500" letter-spacing="1.6px"><tspan x="1640" dy="0">FEATURE 1</tspan></text>
+<text data-slot="activity_1_status" x="2396" y="372" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="400" letter-spacing="2px"><tspan x="2396" dy="0">OBSERVED</tspan></text>
+<text data-slot="activity_1_detail" x="1640" y="438" text-anchor="start" fill="#F3EDE1" font-size="34" font-weight="400" letter-spacing="0px"><tspan x="1640" dy="0">Evidence-grounded product action</tspan></text>
+<text data-slot="activity_2_label" x="1640" y="588" text-anchor="start" fill="#0A211C" font-size="22" font-weight="500" letter-spacing="1.6px"><tspan x="1640" dy="0">FEATURE 2</tspan></text>
+<text data-slot="activity_2_status" x="2396" y="588" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="400" letter-spacing="2px"><tspan x="2396" dy="0">OBSERVED</tspan></text>
+<text data-slot="activity_2_detail" x="1640" y="654" text-anchor="start" fill="#F3EDE1" font-size="34" font-weight="400" letter-spacing="0px"><tspan x="1640" dy="0">Evidence-grounded product action</tspan></text>
+<text data-slot="activity_3_label" x="1640" y="804" text-anchor="start" fill="#0A211C" font-size="22" font-weight="500" letter-spacing="1.6px"><tspan x="1640" dy="0">FEATURE 3</tspan></text>
+<text data-slot="activity_3_status" x="2396" y="804" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="400" letter-spacing="2px"><tspan x="2396" dy="0">OBSERVED</tspan></text>
+<text data-slot="activity_3_detail" x="1640" y="870" text-anchor="start" fill="#F3EDE1" font-size="34" font-weight="400" letter-spacing="0px"><tspan x="1640" dy="0">Evidence-grounded product action</tspan></text>
+<text data-slot="activity_4_label" x="1640" y="1020" text-anchor="start" fill="#0A211C" font-size="22" font-weight="500" letter-spacing="1.6px"><tspan x="1640" dy="0">FEATURE 4</tspan></text>
+<text data-slot="activity_4_status" x="2396" y="1020" text-anchor="end" fill="#9DE8D2" font-size="22" font-weight="400" letter-spacing="2px"><tspan x="2396" dy="0">OBSERVED</tspan></text>
+<text data-slot="activity_4_detail" x="1640" y="1086" text-anchor="start" fill="#F3EDE1" font-size="34" font-weight="400" letter-spacing="0px"><tspan x="1640" dy="0">Evidence-grounded product action</tspan></text>
+<text data-slot="caption" x="1280" y="1304" text-anchor="middle" fill="#F3EDE1" font-size="44" font-weight="500" letter-spacing="-0.5px"><tspan x="1280" dy="0">Follow the product workflow in context.</tspan></text></g>
   
 </svg>

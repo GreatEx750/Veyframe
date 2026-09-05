@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import "./styles.css";
 import "./studio.css";
 import { SessionBoundary } from "@/components/session-boundary";
-import { JudgeBanner } from "@/components/judge-banner";
 
 const inter = Inter({
   display: "swap",
@@ -21,7 +20,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${inter.variable}`}><SessionBoundary><JudgeBanner />{children}</SessionBoundary></body>
+      <body className={`${inter.className} ${inter.variable}`}><SessionBoundary>{children}</SessionBoundary></body>
     </html>
   );
 }

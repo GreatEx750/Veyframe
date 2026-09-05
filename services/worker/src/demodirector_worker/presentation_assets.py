@@ -11,9 +11,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from demodirector_contracts import Scene, SceneCaptureResult
+from demodirector_contracts import RenderConfig, Scene, SceneCaptureResult, ZoomClip
 from playwright.sync_api import sync_playwright
 
+from demodirector_worker.captions import highlight_frame_window, word_highlights
 from demodirector_worker.capture import CaptureSettings, PlaywrightCaptureWorker, _locator
 
 PACK_ROOT = Path(__file__).parent / "templates" / "presentation-story-v2"
@@ -110,7 +111,12 @@ class AuthoredSlideRenderer:
         self.pack = load_pack()
 
     def capture(
-        self, scene: Scene, duration_ms: int, template: dict[str, Any]
+        self,
+        scene: Scene,
+        duration_ms: int,
+        template: dict[str, Any],
+        *,
+        session_token: str | None = None,
     ) -> tuple[Path, SceneCaptureResult]:
         """Record one scene, moving through observed targets with the standard executor."""
         settings = capture_settings_for_template(template)
@@ -129,7 +135,7 @@ class AuthoredSlideRenderer:
                 browser,
                 destination,
                 start_url=str(scene.capture_plan.start_url),
-                session_token=None,
+                session_token=session_token,
             )
             context.add_init_script(f"({POINTER_SCRIPT})();")
             page = context.new_page()
@@ -236,7 +242,11 @@ class AuthoredSlideRenderer:
             (PACK_ROOT / "shared/inter-latin-variable.woff2").read_bytes()
         ).decode()
         light = template["id"] in {"brand-promise@2", "brand-outro@2"}
-        body_dark = template["id"] in {"context-split@2", "human-review@2", "focus-detail@2"}
+        body_dark = template["id"] in {
+            "context-split@2",
+            "human-review@2",
+            "trust-cards@2",
+        }
         pieces = []
         for slot in template["copy_slots"]:
             key = slot["id"]
@@ -251,6 +261,10 @@ class AuthoredSlideRenderer:
                 color = "#0A211C"
             if template["id"] == "workflow-rail@2" and key == "result":
                 color = "#0A211C"
+            if key.startswith("activity_") and key.endswith("_label"):
+                color = "#0A211C"
+            elif key == "activity_heading" or key.endswith("_status"):
+                color = "#9DE8D2"
             style = (
                 f"left:{rect['x']}px;top:{rect['y']}px;width:{rect['width']}px;"
                 f"height:{rect['height']}px;font-size:{token['size']}px;"
@@ -284,7 +298,8 @@ class AuthoredSlideRenderer:
                     const lines = Math.round(span.getBoundingClientRect().height / (size*ratio));
                     if(el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth
                        && lines <= Number(el.dataset.lines))
-                        return {slot:el.dataset.slot,size,lines,fits:true};
+                        return {slot:el.dataset.slot,size,lines,fits:true,
+                                color:getComputedStyle(el).color};
                     size -= 1;
                 }
                 return {slot:el.dataset.slot,size,fits:false};
@@ -306,6 +321,9 @@ class AuthoredSlideRenderer:
         product: Path | None,
         index: int,
         narration_beats: list[str] | None = None,
+        *,
+        zoom_clips: list[ZoomClip] | None = None,
+        narration_duration: float | None = None,
     ) -> Path:
         directory = self.output / f"slide-{index + 1:02d}"
         directory.mkdir(exist_ok=True)
@@ -313,7 +331,9 @@ class AuthoredSlideRenderer:
         background = PACK_ROOT / template["assets"]["background_png"]
         foreground = PACK_ROOT / template["assets"]["foreground_png"]
         duration = duration_ms / 1000
-        caption_list = self.caption_images(narration_text, directory, duration, narration_beats)
+        caption_list = self.caption_images(
+            narration_text, directory, narration_duration or duration, narration_beats
+        )
         caption_video = directory / "captions.mov"
         run_ffmpeg(
             [
@@ -336,20 +356,36 @@ class AuthoredSlideRenderer:
             self.output,
         )
         inputs = [
+            "-threads",
+            "1",
+            "-framerate",
+            "30",
             "-loop",
             "1",
             "-i",
             str(background),
+            "-threads",
+            "1",
+            "-framerate",
+            "30",
             "-loop",
             "1",
             "-i",
             str(foreground),
+            "-threads",
+            "1",
+            "-framerate",
+            "30",
             "-loop",
             "1",
             "-i",
             str(directory / "copy.png"),
+            "-threads",
+            "1",
             "-i",
             str(narration),
+            "-threads",
+            "1",
             "-i",
             str(caption_video),
         ]
@@ -358,8 +394,14 @@ class AuthoredSlideRenderer:
             if product is None:
                 raise ValueError("A product slide requires its recorded product video")
             inputs += [
+                "-threads",
+                "1",
                 "-i",
                 str(product),
+                "-threads",
+                "1",
+                "-framerate",
+                "30",
                 "-loop",
                 "1",
                 "-i",
@@ -371,8 +413,19 @@ class AuthoredSlideRenderer:
             source = next(s for s in media_probe(product)["streams"] if s["codec_type"] == "video")
             if (source["width"], source["height"]) != (w, h):
                 raise ValueError("Re-record this slide at its authored product aperture dimensions")
+            product_label = "5:v"
+            if zoom_clips:
+                from demodirector_worker.renderer import FFmpegRenderer
+
+                filters.append(
+                    FFmpegRenderer(self.output, self.output)._zoom_filter(
+                        zoom_clips, RenderConfig(width=w, height=h), product_label, "focused"
+                    )
+                )
+                product_label = "focused"
             filters += [
-                f"[5:v]setsar=1,pad=2560:1440:{x}:{y}:color=black[placed]",
+                f"[{product_label}]setpts=PTS-STARTPTS,setsar=1,"
+                f"pad=2560:1440:{x}:{y}:color=black[placed]",
                 "[placed][6:v]alphamerge[masked]",
                 "[0:v][masked]overlay=0:0:shortest=1[base]",
             ]
@@ -386,6 +439,11 @@ class AuthoredSlideRenderer:
             f"[3:a]apad,atrim=duration={duration},asetpts=PTS-STARTPTS[a]",
         ]
         output = directory / "composed.mp4"
+        # Bound static inputs as well as the output so framesync cannot read an
+        # endless image stream while waiting for a finite browser recording.
+        for position in reversed(range(len(inputs))):
+            if inputs[position] == "-loop":
+                inputs[position:position] = ["-t", str(duration)]
         run_ffmpeg(
             [
                 *inputs,
@@ -426,11 +484,14 @@ class AuthoredSlideRenderer:
     ) -> Path:
         windows = [(duration - 4) / 2, (duration - 4) / 2, 4] if beats else [duration]
         chunks = []
+        elapsed_ms = 0
         for beat, window in zip(beats or [text], windows, strict=True):
             words = beat.split()
             for offset in range(0, len(words), 7):
                 chunk = words[offset : offset + 7]
-                chunks.append((chunk, window * len(chunk) / len(words)))
+                chunk_ms = round(window * 1000 * len(chunk) / len(words))
+                chunks.extend(word_highlights(" ".join(chunk), elapsed_ms, elapsed_ms + chunk_ms))
+                elapsed_ms += chunk_ms
         font = base64.b64encode(
             (PACK_ROOT / "shared/inter-latin-variable.woff2").read_bytes()
         ).decode()
@@ -438,24 +499,44 @@ class AuthoredSlideRenderer:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page(viewport={"width": 1560, "height": 104})
-            for index, (chunk, seconds) in enumerate(chunks):
-                markup = " ".join(
-                    html.escape(word) if i != len(chunk) - 1 else f"<b>{html.escape(word)}</b>"
-                    for i, word in enumerate(chunk)
+            page.set_content(
+                '<!doctype html><meta charset="utf-8"><style>'
+                f"@font-face{{font-family:Inter;src:url(data:font/woff2;base64,{font});}}"
+                "body{margin:0;height:104px;display:flex;align-items:center;justify-content:center;"
+                "font:44px/56px Inter;color:#F3EDE1;background:transparent;}"
+                "span{display:inline-block;padding:4px 6px;border-radius:8px;vertical-align:top;}"
+                ".active{background:#9DE8D2;color:#0A211C;}"
+                "p{margin:0;white-space:nowrap}</style><p></p>"
+            )
+            page.evaluate("async () => { await document.fonts.load('44px Inter'); }")
+            phrase: tuple[str, ...] = ()
+            for index, state in enumerate(chunks):
+                start_frame, end_frame = highlight_frame_window(state)
+                if end_frame <= start_frame:
+                    continue
+                if state.words != phrase:
+                    phrase = state.words
+                    markup = " ".join(f"<span>{html.escape(word)}</span>" for word in phrase)
+                    page.locator("p").evaluate(
+                        "(element, markup) => element.innerHTML = markup", markup
+                    )
+                # Only paint changes within a phrase: no font reload or text reflow.
+                page.locator("p").evaluate(
+                    "(element, active) => Array.from(element.children).forEach((word, index) => "
+                    "word.classList.toggle('active', index === active))",
+                    state.word_index,
                 )
-                page.set_content(
-                    '<!doctype html><meta charset="utf-8"><style>'
-                    f"@font-face{{font-family:Inter;src:url(data:font/woff2;base64,{font});}}"
-                    "body{margin:0;height:104px;display:flex;align-items:center;justify-content:center;"
-                    "font:44px Inter;color:#F3EDE1;background:transparent;}"
-                    "b{font-weight:500;color:#9DE8D2;}p{margin:0}</style><p>" + markup + "</p>"
-                )
-                page.evaluate("document.fonts.ready")
                 name = f"caption-{index:03d}.png"
                 page.screenshot(path=str(directory / name), omit_background=True)
-                entries += [f"file '{name}'", f"duration {seconds:.6f}"]
+                entries += [
+                    f"file '{name}'",
+                    "option framerate 30",
+                    f"duration {(end_frame - start_frame) / 30:.9f}",
+                ]
             browser.close()
-        entries.append(f"file 'caption-{len(chunks) - 1:03d}.png'")
+        if not entries:
+            raise ValueError("Captions require at least one visible word.")
+        entries.extend([entries[-3], "option framerate 30"])
         caption_list = directory / "captions.txt"
         caption_list.write_text("\n".join(entries) + "\n", "utf-8")
         return caption_list

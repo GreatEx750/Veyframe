@@ -16,6 +16,7 @@ from demodirector_api.longform_director import (
     LongFormGatewayResult,
 )
 from demodirector_api.records import SQLiteRecordStore
+from demodirector_api.storyboard_generation import StoryboardValidationError
 from demodirector_contracts import (
     InteractionEvent,
     ResearchSource,
@@ -445,6 +446,32 @@ def test_stage_checkpoints_survive_reconstruction(tmp_path: Path) -> None:
     assert len(jobs.generation.capture_worker.scenes) == 1  # type: ignore[attr-defined]
     with pytest.raises(KeyError):
         restored.get(job.id, "foreign")
+
+
+def test_invalid_storyboard_is_only_a_diagnostic_not_a_checkpoint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    jobs = jobs_fixture(tmp_path)
+    job = jobs.start("project-one-click")
+    for _ in range(3):
+        job = jobs.step(job.id)
+    assert job.stage == "storyboard"
+    generator = jobs.generation.storyboard_generator
+    original = generator.generate
+
+    def invalid(**kwargs: Any) -> Any:
+        error = StoryboardValidationError("Untrusted scene details", code="missing_sources")
+        error.candidate = original(**kwargs)
+        raise error
+
+    monkeypatch.setattr(generator, "generate", invalid)
+    stopped = jobs.step(job.id)
+    assert stopped.status == "awaiting_retry"
+    assert "storyboard" not in stopped.completed_stages
+    assert jobs.records.get(f"job-stage-{job.id}-storyboard") is None
+    assert jobs.generation.storyboards.get_latest(job.project_id) is None
+    diagnostic = jobs.records.get(f"job-invalid-storyboard-{job.id}-{stopped.attempts}")
+    assert diagnostic and diagnostic[1]["code"] == "missing_sources"
 
 
 def test_validated_motion_plan_is_queryable_and_bound_to_timeline(tmp_path: Path) -> None:
