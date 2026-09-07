@@ -1,0 +1,33 @@
+{
+  "id": "presenter-split-v1",
+  "status": "standalone_not_integrated",
+  "canvas": {
+    "width": 2560,
+    "height": 1440
+  },
+  "suggested_duration_seconds": 40,
+  "slots": {
+    "video": {
+      "x": 52,
+      "y": 153,
+      "width": 2016,
+      "height": 1134,
+      "radius": 22
+    },
+    "presenter": {
+      "x": 2128,
+      "y": 392,
+      "width": 369,
+      "height": 656,
+      "radius": 24
+    }
+  },
+  "layers": [
+    "video footage",
+    "presenter footage",
+    "overlay.png"
+  ],
+  "video_fit": "contain; record at slot aspect ratio to avoid bars",
+  "presenter_fit": "cover; adjust crop to keep face in frame",
+  "preview_only_labels": true
+}

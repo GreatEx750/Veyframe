@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440">
+<defs>
+  <linearGradient id="pastel" x2="1" y2="0.7"><stop stop-color="#DADAF0"/><stop offset="0.56" stop-color="#E9EDD7"/><stop offset="1" stop-color="#EEE5D8"/></linearGradient>
+  <radialGradient id="blush"><stop stop-color="#F7DADF" stop-opacity="0.95"/><stop offset="1" stop-color="#F7DADF" stop-opacity="0"/></radialGradient>
+  <radialGradient id="mint"><stop stop-color="#E7F4CD" stop-opacity="0.8"/><stop offset="1" stop-color="#E7F4CD" stop-opacity="0"/></radialGradient>
+  <linearGradient id="video-fill" x2="1" y2="1"><stop stop-color="#4532FF"/><stop offset="1" stop-color="#6938FE"/></linearGradient>
+  <linearGradient id="presenter-fill" x2="0.6" y2="1"><stop stop-color="#D3CFCA"/><stop offset="1" stop-color="#AEA69F"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="25"/></filter>
+  <mask id="openings"><rect width="2560" height="1440" fill="white"/><rect x="52" y="153" width="2016" height="1134" rx="22" fill="black"/><rect x="2128" y="392" width="369" height="656" rx="24" fill="black"/></mask>
+  
+</defs><g mask="url(#openings)"><rect width="2560" height="1440" fill="url(#pastel)"/>
+<g>
+  <ellipse cx="1550" cy="1360" rx="1160" ry="760" fill="url(#blush)"/>
+  <ellipse cx="2140" cy="245" rx="940" ry="680" fill="url(#mint)"/>
+  <g transform="translate(0 30)" filter="url(#shadow)" fill="#342344" opacity="0.24"><rect x="52" y="153" width="2016" height="1134" rx="22" /><rect x="2128" y="392" width="369" height="656" rx="24" /></g>
+</g>
+<path d="M2310 96h88" stroke="white" stroke-width="8" stroke-linecap="square"/></g></svg>
