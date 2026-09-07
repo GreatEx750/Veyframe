@@ -52,8 +52,6 @@ artifacts/verification/*
 **/storage-state*.json
 
 # Local tooling, temporary captures, and test output
-/.codex/
-/.openai/
 /.idea/
 /.vscode/
 /.devpost-hackathon-state.json
