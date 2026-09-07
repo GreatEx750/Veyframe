@@ -13,10 +13,14 @@ Full samples retain their narration and open only when requested.
 - Short: a new 45-second Wikipedia recording generated locally through the application
   pipeline with the approved blue/coral portrait template, Google ADK/Gemini direction,
   Parallel research, Gemini narration, visible pointer interactions and captions.
-  The blue top brief, central footage and coral caption strip are editable template
-  layers; the reference photograph and placeholder words are not part of the video.
-  The latest revision rounds the colored panels and footage window in the exported
-  video, while retaining the same recordings, narration and 45-second duration.
+  The current editorial layout has a rounded recording at the top, in-frame highlighted
+  captions, a chapter row, and a large two-line takeaway below it. Blue is the background
+  and light coral is the accent. The reference photograph and placeholder words are not
+  part of the video. The latest local rebuild uses new native-aperture browser recordings
+  and narration at the same 45-second duration.
+
+See [media attribution](../../../../docs/media-attribution.md) for website source pages,
+font licenses, and the distinction between code licensing and third-party recorded content.
 
 `scripts/build-landing-assets.mjs` recreates these files from the retained local export
 artifacts. Rebuilding samples is a maintainer operation; production builds use the

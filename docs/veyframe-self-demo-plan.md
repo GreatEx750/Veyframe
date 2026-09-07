@@ -23,14 +23,28 @@ The fixed authored slides remain the visual system. Google ADK/Gemini supplies
 validated project-specific copy and narration. Slow setup belongs before each
 scene's visible recording clock. Do not stretch speech to fill loading delays.
 
-## User-recorded final minute
+## User-recorded closing script — 40 seconds
 
-- 120–140s: landing page and measured workflow comparison. Use actual measurements
-  and real, permissioned feedback only; no invented testimonials or endorsements.
-- 140–175s: real Parallel request evidence, deployment/build evidence and Cloud Run.
-  The current deployment was a manually submitted Cloud Build, not evidence that a
-  GitHub push trigger ran.
-- 175–180s: short closing statement.
+Timing below assumes the preceding video is exactly two minutes. If the edited
+showcase is longer, shift these timestamps and keep the final export under three minutes.
+
+| Time | Screen direction | Narration |
+| --- | --- | --- |
+| 2:00–2:10 | Show the landing-page benchmark. Keep its estimate disclosure visible; do not present synthetic testimonials as customer evidence. | “Veyframe brings recording, narration, and video assembly into one workflow. This benchmark compares recorded or approximate generation times with clearly labeled manual-production estimates.” |
+| 2:10–2:22 | Open `services/api/src/demodirector_api/parallel_search.py`. Briefly show the SDK import at line 13, then the client construction at line 111 and Search call at line 121. Enlarge the code so the call and its arguments are readable. | “Here is the actual integration: Veyframe creates the official Parallel client and calls its Search API with a research objective and targeted queries during generation.” |
+| 2:22–2:30 | Show one genuine Parallel request and its returned results, then the matching saved sources in Veyframe. Use the same generation for both views. | “These request results become saved sources, giving Gemini and Google ADK evidence for project-specific scripts.” |
+| 2:30–2:37 | Show the three Veyframe Cloud Run services and the enabled `veyframe-main-deploy` trigger. Show a successful build only after one actually succeeds. | “Google Cloud Run hosts the application, with GitHub push-triggered builds configured to deploy the web, API, and worker.” |
+| 2:37–2:40 | Return to Veyframe's landing page or logo. | “Veyframe. Less production work. More story.” |
+
+The runtime entry point is `services/api/src/demodirector_api/presentation_pipeline.py`
+at lines 227–230. It instantiates the adapter and invokes `research_product` on a
+fresh research run. Resumed generations can reuse cached sources; use a fresh run
+when demonstrating a new Parallel request. Never display API keys or `.env`.
+
+As of 2026-09-07, the GitHub trigger is enabled for `GreatEx750/Veyframe` main.
+Its first verification build was cancelled before deployment because the remote
+configuration still named older services. The trigger now has corrected inline
+Veyframe targets; a successful end-to-end automatic deployment remains to be verified.
 
 If the generated section exceeds its 120-second target, shorten it or rebalance
 the final minute before assembly; do not claim the combined result is three
