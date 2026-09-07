@@ -124,6 +124,16 @@ describe("DemoLibrary", () => {
     expect(screen.getByText(/Video ready/)).toBeInTheDocument();
   });
 
+  it("uses an early representative frame instead of the opening title card", async () => {
+    renderLibrary();
+    const preview = await screen.findByLabelText("Preview Northstar Launch Demo") as HTMLVideoElement;
+    Object.defineProperty(preview, "duration", { configurable: true, value: 45 });
+
+    fireEvent.loadedMetadata(preview);
+
+    expect(preview.currentTime).toBe(10);
+  });
+
   it("uses the packaged video for a Northstar judge project", async () => {
     vi.stubGlobal(
       "fetch",

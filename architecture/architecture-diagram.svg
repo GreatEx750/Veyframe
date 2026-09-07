@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" role="img" aria-labelledby="title desc">
+  <title id="title">Veyframe Google Cloud architecture</title>
+  <desc id="desc">The deployed Veyframe architecture showing browser clients, Cloud Run services, Google ADK and Gemini orchestration, direct Parallel Search, Cloud Tasks, production workers, persistent data, and delivery.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#667085"/></marker>
+    <marker id="blueArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#4285F4"/></marker>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#16315F" flood-opacity="0.10"/></filter>
+  </defs>
+  <rect width="2560" height="1440" fill="#FFFFFF"/>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="92" y="84" font-size="23" fill="#697386">Veyframe  /  Google Cloud production architecture</text>
+    <text x="92" y="154" font-size="52" font-weight="700" letter-spacing="-1.5" fill="#172033">From authenticated brief to durable video export</text>
+    <text x="92" y="205" font-size="23" fill="#697386">Actual runtime boundary · direct partner research · typed AI plans · deterministic media execution</text>
+
+    <rect x="70" y="265" width="2420" height="1018" rx="12" fill="#F8FAFD" stroke="#D7DFEC" stroke-width="2"/>
+    <text x="104" y="310" font-size="18" font-weight="700" letter-spacing="2.5" fill="#4285F4">GOOGLE CLOUD · US-CENTRAL1</text>
+
+    <!-- section columns -->
+    <rect x="104" y="348" width="358" height="584" rx="8" fill="#F0F5FF" stroke="#C8D7F2" stroke-width="2"/>
+    <text x="130" y="386" font-size="18" font-weight="700" fill="#3C5278">EXPERIENCE</text>
+
+    <rect x="500" y="348" width="690" height="584" rx="8" fill="#F3F8FF" stroke="#C8D7F2" stroke-width="2"/>
+    <text x="526" y="386" font-size="18" font-weight="700" fill="#3C5278">APPLICATION &amp; ORCHESTRATION</text>
+
+    <rect x="1228" y="348" width="606" height="584" rx="8" fill="#F5F8FC" stroke="#D1D9E6" stroke-width="2"/>
+    <text x="1254" y="386" font-size="18" font-weight="700" fill="#3C5278">MEDIA PRODUCTION</text>
+
+    <rect x="1872" y="348" width="584" height="584" rx="8" fill="#F9F7FF" stroke="#DAD3F3" stroke-width="2"/>
+    <text x="1898" y="386" font-size="18" font-weight="700" fill="#574F7C">AI &amp; PARTNER SERVICES</text>
+
+    <!-- experience -->
+    <g filter="url(#shadow)">
+      <rect x="138" y="432" width="290" height="142" rx="8" fill="#FFFFFF" stroke="#BCD0F2" stroke-width="2"/>
+      <rect x="138" y="614" width="290" height="142" rx="8" fill="#FFFFFF" stroke="#BCD0F2" stroke-width="2"/>
+      <rect x="138" y="796" width="290" height="96" rx="8" fill="#FFFFFF" stroke="#BCD0F2" stroke-width="2"/>
+    </g>
+    <g fill="#4285F4"><path d="M172 468l20-12 20 12v24l-20 12-20-12z"/><path d="M172 650l20-12 20 12v24l-20 12-20-12z"/><path d="M172 826l20-12 20 12v24l-20 12-20-12z"/></g>
+    <text x="232" y="474" font-size="23" font-weight="700" fill="#172033">Customer browser</text>
+    <text x="232" y="511" font-size="19" fill="#697386">Studio · Jobs · Editor</text>
+    <text x="232" y="548" font-size="18" fill="#697386">Project library &amp; Sources</text>
+    <text x="232" y="656" font-size="23" font-weight="700" fill="#172033">Cloud Run web</text>
+    <text x="232" y="693" font-size="19" fill="#697386">Next.js + TypeScript</text>
+    <text x="232" y="730" font-size="18" fill="#697386">Authenticated API proxy</text>
+    <text x="232" y="839" font-size="23" font-weight="700" fill="#172033">Identity Platform</text>
+    <text x="232" y="872" font-size="18" fill="#697386">Email/password sessions</text>
+
+    <!-- app -->
+    <g filter="url(#shadow)">
+      <rect x="536" y="432" width="618" height="182" rx="8" fill="#FFFFFF" stroke="#BCD0F2" stroke-width="2"/>
+      <rect x="536" y="650" width="296" height="238" rx="8" fill="#FFFFFF" stroke="#BCD0F2" stroke-width="2"/>
+      <rect x="858" y="650" width="296" height="238" rx="8" fill="#FFFFFF" stroke="#BCD0F2" stroke-width="2"/>
+    </g>
+    <path d="M570 471l22-13 22 13v26l-22 13-22-13z" fill="#4285F4"/>
+    <text x="634" y="478" font-size="25" font-weight="700" fill="#172033">Cloud Run API</text>
+    <text x="634" y="516" font-size="19" fill="#697386">FastAPI · authenticated project boundary</text>
+    <line x1="570" y1="544" x2="1120" y2="544" stroke="#E0E6EF" stroke-width="2"/>
+    <text x="570" y="579" font-size="18" fill="#3C5278">Briefs · sources · typed plans · jobs · exports · YouTube handoff</text>
+
+    <path d="M570 689l22-13 22 13v26l-22 13-22-13z" fill="#4285F4"/>
+    <text x="634" y="696" font-size="23" font-weight="700" fill="#172033">ADK workflow</text>
+    <text x="570" y="746" font-size="18" fill="#697386">Director · Motion</text>
+    <text x="570" y="777" font-size="18" fill="#697386">Attention · Style · QA</text>
+    <text x="570" y="828" font-size="17" fill="#3154D5">Schema-validated output</text>
+    <text x="570" y="855" font-size="16" fill="#697386">ADK runs inside the API</text>
+
+    <path d="M892 689l22-13 22 13v26l-22 13-22-13z" fill="#4285F4"/>
+    <text x="956" y="696" font-size="23" font-weight="700" fill="#172033">Cloud Tasks</text>
+    <text x="892" y="746" font-size="18" fill="#697386">One active generation</text>
+    <text x="892" y="777" font-size="18" fill="#697386">Slide + capture jobs</text>
+    <text x="892" y="808" font-size="18" fill="#697386">Authenticated dispatch</text>
+    <text x="892" y="855" font-size="16" fill="#697386">Retryable, durable jobs</text>
+
+    <!-- production -->
+    <g filter="url(#shadow)">
+      <rect x="1264" y="432" width="534" height="456" rx="8" fill="#FFFFFF" stroke="#CCD6E5" stroke-width="2"/>
+    </g>
+    <path d="M1298 471l22-13 22 13v26l-22 13-22-13z" fill="#4285F4"/>
+    <text x="1362" y="478" font-size="25" font-weight="700" fill="#172033">Generation runtimes</text>
+    <text x="1362" y="515" font-size="18" fill="#697386">Cloud Run API + private capture worker</text>
+    <line x1="1298" y1="547" x2="1764" y2="547" stroke="#E0E6EF" stroke-width="2"/>
+    <g>
+      <circle cx="1322" cy="603" r="20" fill="#E8F0FE"/><text x="1322" y="611" text-anchor="middle" font-size="19" font-weight="700" fill="#3154D5">1</text>
+      <text x="1362" y="610" font-size="21" font-weight="700" fill="#172033">Playwright + Chromium</text><text x="1362" y="640" font-size="17" fill="#697386">QHD capture, cursor and click metadata</text>
+      <circle cx="1322" cy="689" r="20" fill="#E8F0FE"/><text x="1322" y="697" text-anchor="middle" font-size="19" font-weight="700" fill="#3154D5">2</text>
+      <text x="1362" y="696" font-size="21" font-weight="700" fill="#172033">Gemini TTS narration</text><text x="1362" y="726" font-size="17" fill="#697386">Cached speech with quota fallback</text>
+      <circle cx="1322" cy="775" r="20" fill="#E8F0FE"/><text x="1322" y="783" text-anchor="middle" font-size="19" font-weight="700" fill="#3154D5">3</text>
+      <text x="1362" y="782" font-size="21" font-weight="700" fill="#172033">FFmpeg renderer</text><text x="1362" y="812" font-size="17" fill="#697386">Templates, captions, zooms and MP4</text>
+      <text x="1298" y="856" font-size="16" fill="#3154D5">Only trusted typed operations are executed</text>
+    </g>
+
+    <!-- external services -->
+    <g filter="url(#shadow)">
+      <rect x="1908" y="432" width="512" height="142" rx="8" fill="#FFFFFF" stroke="#D6CEF2" stroke-width="2"/>
+      <rect x="1908" y="614" width="512" height="142" rx="8" fill="#FFFFFF" stroke="#D6CEF2" stroke-width="2"/>
+      <rect x="1908" y="796" width="512" height="96" rx="8" fill="#FFFFFF" stroke="#D6CEF2" stroke-width="2"/>
+    </g>
+    <circle cx="1952" cy="480" r="23" fill="#E8F0FE"/><path d="M1940 480h24M1952 468v24" stroke="#4285F4" stroke-width="5" stroke-linecap="round"/>
+    <text x="1994" y="476" font-size="24" font-weight="700" fill="#172033">Google Gemini</text>
+    <text x="1994" y="512" font-size="18" fill="#697386">Reasoning + structured generation</text>
+    <text x="1994" y="543" font-size="17" fill="#697386">Gemini Flash · Gemini TTS</text>
+    <circle cx="1952" cy="662" r="23" fill="#F0EAFF"/><path d="M1940 672l12-22 12 22" fill="none" stroke="#7857D6" stroke-width="5" stroke-linecap="round"/>
+    <text x="1994" y="658" font-size="24" font-weight="700" fill="#172033">Parallel Search</text>
+    <text x="1994" y="694" font-size="18" fill="#697386">Direct partner SDK integration</text>
+    <text x="1994" y="725" font-size="17" fill="#697386">Official public product context</text>
+    <circle cx="1952" cy="837" r="23" fill="#FEECEC"/><path d="M1941 837h22M1952 826v22" stroke="#EA4335" stroke-width="5" stroke-linecap="round"/>
+    <text x="1994" y="833" font-size="24" font-weight="700" fill="#172033">YouTube Data API</text>
+    <text x="1994" y="867" font-size="17" fill="#697386">Optional private publishing</text>
+
+    <!-- connectors -->
+    <path d="M283 574V602" fill="none" stroke="#667085" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M428 685H524" fill="none" stroke="#667085" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M832 769H846" fill="none" stroke="#667085" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M1154 769H1214V635H1252" fill="none" stroke="#667085" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M1154 486H1184V406H1886V503H1896" fill="none" stroke="#4285F4" stroke-width="3" marker-end="url(#blueArrow)"/>
+    <path d="M1154 525H1176V416H1876V685H1896" fill="none" stroke="#7857D6" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M1154 566H1168V426H1866V844H1896" fill="none" stroke="#EA4335" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <!-- data plane -->
+    <rect x="104" y="976" width="2352" height="267" rx="8" fill="#EEF7F1" stroke="#C4DDCC" stroke-width="2"/>
+    <text x="130" y="1015" font-size="18" font-weight="700" fill="#3F6750">DURABLE DATA, SECURITY &amp; OPERATIONS</text>
+    <g filter="url(#shadow)">
+      <rect x="138" y="1050" width="500" height="148" rx="8" fill="#FFFFFF" stroke="#C5DCCE" stroke-width="2"/>
+      <rect x="672" y="1050" width="500" height="148" rx="8" fill="#FFFFFF" stroke="#C5DCCE" stroke-width="2"/>
+      <rect x="1206" y="1050" width="500" height="148" rx="8" fill="#FFFFFF" stroke="#C5DCCE" stroke-width="2"/>
+      <rect x="1740" y="1050" width="680" height="148" rx="8" fill="#FFFFFF" stroke="#C5DCCE" stroke-width="2"/>
+    </g>
+    <g fill="#34A853"><path d="M178 1088l20-12 20 12v24l-20 12-20-12z"/><path d="M712 1088l20-12 20 12v24l-20 12-20-12z"/><path d="M1246 1088l20-12 20 12v24l-20 12-20-12z"/><path d="M1780 1088l20-12 20 12v24l-20 12-20-12z"/></g>
+    <text x="238" y="1095" font-size="23" font-weight="700" fill="#172033">Firestore</text><text x="238" y="1132" font-size="17" fill="#697386">Projects · jobs · sources · plans</text><text x="238" y="1163" font-size="17" fill="#697386">timelines · export metadata</text>
+    <text x="772" y="1095" font-size="23" font-weight="700" fill="#172033">Cloud Storage</text><text x="772" y="1132" font-size="17" fill="#697386">Recordings · narration · frames</text><text x="772" y="1163" font-size="17" fill="#697386">durable MP4 exports</text>
+    <text x="1306" y="1095" font-size="23" font-weight="700" fill="#172033">Secret Manager</text><text x="1306" y="1132" font-size="17" fill="#697386">Gemini · Parallel · Identity</text><text x="1306" y="1163" font-size="17" fill="#697386">server-side credentials only</text>
+    <text x="1840" y="1095" font-size="23" font-weight="700" fill="#172033">Cloud Logging + IAM</text><text x="1840" y="1132" font-size="17" fill="#697386">Progress events · error reporting</text><text x="1840" y="1163" font-size="17" fill="#697386">least-privilege service identities</text>
+    <path d="M845 614V961" fill="none" stroke="#34A853" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M1532 888V961" fill="none" stroke="#34A853" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <text x="104" y="1346" font-size="17" fill="#697386">Solid arrows show runtime requests and task dispatch. AI proposes typed plans; Playwright and FFmpeg execute only validated operations.</text>
+    <text x="2456" y="1346" text-anchor="end" font-size="17" font-weight="700" fill="#4285F4">VEYFRAME</text>
+  </g>
+</svg>

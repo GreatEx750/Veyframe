@@ -32,6 +32,7 @@ import {
 } from "@demodirector/contracts";
 import Link from "next/link";
 import { VideoQuality } from "./video-quality";
+import { YouTubeUpload } from "@/components/youtube-upload";
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 import {
@@ -53,16 +54,10 @@ type PresentationTemplate = Timeline["presentation"]["template"];
 const editorModes: Array<{ id: EditorMode; label: string }> = [
   { id: "setup", label: "Setup" },
   { id: "sources", label: "Sources" },
-  { id: "quality", label: "Quality" },
   { id: "layout", label: "Layout" },
-  { id: "style", label: "Style" },
-  { id: "story", label: "Story" },
   { id: "cut", label: "Cut" },
   { id: "zoom", label: "Zoom" },
-  { id: "callouts", label: "Callouts" },
   { id: "overlay", label: "Overlay" },
-  { id: "captions", label: "Captions" },
-  { id: "audio", label: "Audio" },
   { id: "adjust", label: "Adjust" },
 ];
 
@@ -920,6 +915,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
         <button aria-label="Undo timeline edit" disabled={!canUndo} onClick={() => void moveHistory("undo")} type="button">↶</button>
         <button aria-label="Redo timeline edit" disabled={!canRedo} onClick={() => void moveHistory("redo")} type="button">↷</button>
         <a className="editor-preview-link" href="#editor-preview">Preview</a>
+        {videoExport?.status === "succeeded" && !exportStale && <YouTubeUpload key={videoExport.id} projectId={projectId} exportId={videoExport.id} title={project?.name ?? "My video"} />}
         {videoExport?.status === "succeeded" && videoExport.download_url && !exportStale ? (
           <a className="publish-button export-download" href={videoExport.download_url}>Download MP4</a>
         ) : (

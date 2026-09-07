@@ -2,13 +2,14 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it } from "vitest";
 
 import { GenerationBenchmark } from "./generation-benchmark";
-import { benchmarkRuns, compareTime, elapsedSeconds } from "./generation-benchmark-data";
+import { benchmarkRuns, compareTime, elapsedSeconds, generationSeconds } from "./generation-benchmark-data";
 
 afterEach(cleanup);
 
 describe("generation benchmark evidence and estimates", () => {
   it("uses full saved job windows, including retry gaps, without claiming a population average", () => {
     expect(benchmarkRuns.map(elapsedSeconds)).toEqual([null, 1628, 142, 401]);
+    expect(benchmarkRuns.map(generationSeconds)).toEqual([1216, 1628, 142, 401]);
     expect(benchmarkRuns.map((run) => run.attempts)).toEqual([null, 3, 1, 2]);
     for (const run of benchmarkRuns) {
       expect(run.manualSteps.reduce((total, step) => total + step.minutes, 0)).toBe(run.manualMinutes);
@@ -51,6 +52,7 @@ describe("generation benchmark evidence and estimates", () => {
     expect(screen.queryByRole("button", { name: "Reset estimates" })).not.toBeInTheDocument();
     expect(screen.queryByText(/editable|edit estimates|editing the total/i)).not.toBeInTheDocument();
     expect(screen.getByText("1h 27m 52s less")).toBeInTheDocument();
+    expect(screen.getByText("34m 44s less")).toBeInTheDocument();
     expect(screen.getByText("27m 38s less")).toBeInTheDocument();
     expect(screen.getByText("33m 19s less")).toBeInTheDocument();
   });
@@ -64,13 +66,16 @@ describe("generation benchmark evidence and estimates", () => {
     expect(screen.queryByText(/6 Sep 2026|Local runs|One saved job per format/i)).not.toBeInTheDocument();
     const row = screen.getByRole("button", { name: "Product Demo details" }).closest("tr")!;
     expect(within(row).getByText("90-second video")).toBeInTheDocument();
-    expect(within(row).getByText("Not measured")).toBeInTheDocument();
-    expect(within(row).queryByText(/less|reduction|0m/)).not.toBeInTheDocument();
+    expect(within(row).getByText("20m 16s")).toBeInTheDocument();
+    expect(within(row).getByText("Estimated generation time")).toBeInTheDocument();
+    expect(within(row).getByText("25m 16s")).toBeInTheDocument();
+    expect(within(row).getByText("34m 44s less")).toBeInTheDocument();
+    expect(within(row).getByText(/58% reduction/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Product Demo details" }));
     const details = screen.getByRole("region", { name: "Product Demo methodology" });
     expect(within(details).getByText(/user-provided estimate/i)).toBeInTheDocument();
     expect(within(details).getByText("Fixed estimated total: 60 minutes.")).toBeInTheDocument();
-    expect(within(details).getByText(/no matched completed generation job/i)).toBeInTheDocument();
+    expect(within(details).getByText(/generation is 20 minutes 16 seconds/i)).toBeInTheDocument();
     expect(within(details).queryByText("Job submitted (UTC)")).not.toBeInTheDocument();
   });
 });

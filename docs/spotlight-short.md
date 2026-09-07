@@ -17,6 +17,16 @@ Run `npm run templates:promo`. The four independent packs are under
 Each pack includes integrity-checked background, foreground and product masks, copy-slot limits,
 a schedule, and licensed font assets. Existing Presentation packs are not regenerated.
 
+Portrait Shorts use the editorial layout in both template selections: a themed 1080 × 1920
+canvas, a rounded 1004 × 1210 product recording at the top, captions inside its lower edge,
+and a chapter row above a large headline and continuation. The default palette uses a green
+canvas with ivory text and mint accents; Google uses a blue canvas, white and ink text, and
+light coral accents (`#FF6666`). A matching arrow completes the lower panel.
+The headline and body (CTA on the closing slide) form one short sentence;
+the project name fills the brand slot. Landscape layouts retain their existing arrangement.
+Revision `short-vertical-{default,google}-editorial-5` invalidates old composition checkpoints.
+New recordings use the new aperture dimensions. Previously exported videos retain their layout.
+
 ## Runtime
 
 The authenticated generate endpoint routes the two modes to the existing authored job executor.

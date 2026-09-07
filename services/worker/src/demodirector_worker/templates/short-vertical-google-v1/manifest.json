@@ -9,40 +9,40 @@
     "height": 1920
   },
   "caption_layout": {
-    "x": 88,
-    "y": 1530,
-    "width": 904,
+    "x": 110,
+    "y": 1100,
+    "width": 860,
     "height": 104,
-    "words_per_line": 3,
-    "text_color": "#202124",
-    "highlight_background": "#FFFFFF",
+    "words_per_line": 4,
+    "text_color": "#FFFFFF",
+    "highlight_background": "#FF6666",
     "highlight_color": "#202124"
   },
   "typography": {
     "tokens": {
       "brand": {
-        "size": 54,
-        "line_height": 64,
-        "weight": 600,
+        "size": 30,
+        "line_height": 40,
+        "weight": 400,
         "tracking": 0
       },
       "headline": {
-        "size": 66,
-        "line_height": 78,
-        "weight": 600,
-        "tracking": -1
+        "size": 94,
+        "line_height": 108,
+        "weight": 500,
+        "tracking": -2
       },
       "body": {
-        "size": 48,
-        "line_height": 62,
-        "weight": 500,
-        "tracking": 0
+        "size": 94,
+        "line_height": 108,
+        "weight": 400,
+        "tracking": -2
       },
       "cta": {
-        "size": 54,
-        "line_height": 68,
-        "weight": 500,
-        "tracking": -1
+        "size": 94,
+        "line_height": 108,
+        "weight": 400,
+        "tracking": -2
       }
     }
   },
@@ -55,21 +55,21 @@
         "height": 1920
       },
       "role": "hook",
-      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "story_intent": "Large rounded product recording above a two-line takeaway. Use headline as the opening line and body (or cta) as its short continuation, completing one coherent sentence. Each line must be only two to four short words and at most 24 characters including spaces. Example: headline=\"Explore the details\", body=\"at your own pace\". Keep brand to the actual project name. Narration appears inside the lower edge of the recording.",
       "requires_product": false,
       "product_aperture": null,
       "copy_slots": [
         {
           "id": "brand",
           "rect": {
-            "x": 570,
-            "y": 310,
-            "width": 420,
-            "height": 124
+            "x": 102,
+            "y": 1318,
+            "width": 310,
+            "height": 44
           },
           "font_token": "brand",
-          "max_characters": 16,
-          "max_lines": 2,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -77,13 +77,13 @@
           "id": "headline",
           "rect": {
             "x": 100,
-            "y": 650,
-            "width": 880,
-            "height": 330
+            "y": 1454,
+            "width": 890,
+            "height": 112
           },
           "font_token": "headline",
-          "max_characters": 60,
-          "max_lines": 3,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -91,18 +91,32 @@
           "id": "body",
           "rect": {
             "x": 100,
-            "y": 1050,
-            "width": 880,
-            "height": 240
+            "y": 1566,
+            "width": 890,
+            "height": 112
           },
           "font_token": "body",
-          "max_characters": 90,
-          "max_lines": 3,
+          "max_characters": 24,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#202124"
+        },
+        {
+          "id": "product_name",
+          "rect": {
+            "x": 100,
+            "y": 470,
+            "width": 880,
+            "height": 260
+          },
+          "font_token": "headline",
+          "max_characters": 40,
+          "max_lines": 2,
           "align": "left",
           "color": "#FFFFFF"
         }
       ],
-      "visual_revision": "short-vertical-google-rounded-3",
+      "visual_revision": "short-vertical-google-editorial-5",
       "assets": {
         "background_png": "slides/hook/background.png",
         "foreground_png": "slides/hook/foreground.png"
@@ -116,27 +130,27 @@
         "height": 1920
       },
       "role": "search",
-      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "story_intent": "Large rounded product recording above a two-line takeaway. Use headline as the opening line and body (or cta) as its short continuation, completing one coherent sentence. Each line must be only two to four short words and at most 24 characters including spaces. Example: headline=\"Explore the details\", body=\"at your own pace\". Keep brand to the actual project name. Narration appears inside the lower edge of the recording.",
       "requires_product": true,
       "product_aperture": {
-        "x": 56,
-        "y": 500,
-        "width": 968,
-        "height": 902,
-        "corner_radius": 32
+        "x": 38,
+        "y": 46,
+        "width": 1004,
+        "height": 1210,
+        "corner_radius": 36
       },
       "copy_slots": [
         {
           "id": "brand",
           "rect": {
-            "x": 570,
-            "y": 310,
-            "width": 420,
-            "height": 124
+            "x": 102,
+            "y": 1318,
+            "width": 310,
+            "height": 44
           },
           "font_token": "brand",
-          "max_characters": 16,
-          "max_lines": 2,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -144,18 +158,32 @@
           "id": "headline",
           "rect": {
             "x": 100,
-            "y": 120,
-            "width": 880,
-            "height": 124
+            "y": 1454,
+            "width": 890,
+            "height": 112
           },
-          "font_token": "body",
-          "max_characters": 58,
-          "max_lines": 2,
+          "font_token": "headline",
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
+        },
+        {
+          "id": "body",
+          "rect": {
+            "x": 100,
+            "y": 1566,
+            "width": 890,
+            "height": 112
+          },
+          "font_token": "body",
+          "max_characters": 24,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#202124"
         }
       ],
-      "visual_revision": "short-vertical-google-rounded-3",
+      "visual_revision": "short-vertical-google-editorial-5",
       "assets": {
         "background_png": "slides/search/background.png",
         "foreground_png": "slides/search/foreground.png",
@@ -170,27 +198,27 @@
         "height": 1920
       },
       "role": "context",
-      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "story_intent": "Large rounded product recording above a two-line takeaway. Use headline as the opening line and body (or cta) as its short continuation, completing one coherent sentence. Each line must be only two to four short words and at most 24 characters including spaces. Example: headline=\"Explore the details\", body=\"at your own pace\". Keep brand to the actual project name. Narration appears inside the lower edge of the recording.",
       "requires_product": true,
       "product_aperture": {
-        "x": 56,
-        "y": 500,
-        "width": 968,
-        "height": 902,
-        "corner_radius": 32
+        "x": 38,
+        "y": 46,
+        "width": 1004,
+        "height": 1210,
+        "corner_radius": 36
       },
       "copy_slots": [
         {
           "id": "brand",
           "rect": {
-            "x": 570,
-            "y": 310,
-            "width": 420,
-            "height": 124
+            "x": 102,
+            "y": 1318,
+            "width": 310,
+            "height": 44
           },
           "font_token": "brand",
-          "max_characters": 16,
-          "max_lines": 2,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -198,18 +226,32 @@
           "id": "headline",
           "rect": {
             "x": 100,
-            "y": 120,
-            "width": 880,
-            "height": 124
+            "y": 1454,
+            "width": 890,
+            "height": 112
           },
-          "font_token": "body",
-          "max_characters": 58,
-          "max_lines": 2,
+          "font_token": "headline",
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
+        },
+        {
+          "id": "body",
+          "rect": {
+            "x": 100,
+            "y": 1566,
+            "width": 890,
+            "height": 112
+          },
+          "font_token": "body",
+          "max_characters": 24,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#202124"
         }
       ],
-      "visual_revision": "short-vertical-google-rounded-3",
+      "visual_revision": "short-vertical-google-editorial-5",
       "assets": {
         "background_png": "slides/context/background.png",
         "foreground_png": "slides/context/foreground.png",
@@ -224,27 +266,27 @@
         "height": 1920
       },
       "role": "related",
-      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "story_intent": "Large rounded product recording above a two-line takeaway. Use headline as the opening line and body (or cta) as its short continuation, completing one coherent sentence. Each line must be only two to four short words and at most 24 characters including spaces. Example: headline=\"Explore the details\", body=\"at your own pace\". Keep brand to the actual project name. Narration appears inside the lower edge of the recording.",
       "requires_product": true,
       "product_aperture": {
-        "x": 56,
-        "y": 500,
-        "width": 968,
-        "height": 902,
-        "corner_radius": 32
+        "x": 38,
+        "y": 46,
+        "width": 1004,
+        "height": 1210,
+        "corner_radius": 36
       },
       "copy_slots": [
         {
           "id": "brand",
           "rect": {
-            "x": 570,
-            "y": 310,
-            "width": 420,
-            "height": 124
+            "x": 102,
+            "y": 1318,
+            "width": 310,
+            "height": 44
           },
           "font_token": "brand",
-          "max_characters": 16,
-          "max_lines": 2,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -252,18 +294,32 @@
           "id": "headline",
           "rect": {
             "x": 100,
-            "y": 120,
-            "width": 880,
-            "height": 124
+            "y": 1454,
+            "width": 890,
+            "height": 112
           },
-          "font_token": "body",
-          "max_characters": 58,
-          "max_lines": 2,
+          "font_token": "headline",
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
+        },
+        {
+          "id": "body",
+          "rect": {
+            "x": 100,
+            "y": 1566,
+            "width": 890,
+            "height": 112
+          },
+          "font_token": "body",
+          "max_characters": 24,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#202124"
         }
       ],
-      "visual_revision": "short-vertical-google-rounded-3",
+      "visual_revision": "short-vertical-google-editorial-5",
       "assets": {
         "background_png": "slides/related/background.png",
         "foreground_png": "slides/related/foreground.png",
@@ -278,21 +334,21 @@
         "height": 1920
       },
       "role": "close",
-      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "story_intent": "Large rounded product recording above a two-line takeaway. Use headline as the opening line and body (or cta) as its short continuation, completing one coherent sentence. Each line must be only two to four short words and at most 24 characters including spaces. Example: headline=\"Explore the details\", body=\"at your own pace\". Keep brand to the actual project name. Narration appears inside the lower edge of the recording.",
       "requires_product": false,
       "product_aperture": null,
       "copy_slots": [
         {
           "id": "brand",
           "rect": {
-            "x": 570,
-            "y": 310,
-            "width": 420,
-            "height": 124
+            "x": 102,
+            "y": 1318,
+            "width": 310,
+            "height": 44
           },
           "font_token": "brand",
-          "max_characters": 16,
-          "max_lines": 2,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -300,13 +356,13 @@
           "id": "headline",
           "rect": {
             "x": 100,
-            "y": 650,
-            "width": 880,
-            "height": 330
+            "y": 1454,
+            "width": 890,
+            "height": 112
           },
           "font_token": "headline",
-          "max_characters": 60,
-          "max_lines": 3,
+          "max_characters": 24,
+          "max_lines": 1,
           "align": "left",
           "color": "#FFFFFF"
         },
@@ -314,18 +370,32 @@
           "id": "cta",
           "rect": {
             "x": 100,
-            "y": 1050,
-            "width": 880,
-            "height": 240
+            "y": 1566,
+            "width": 890,
+            "height": 112
           },
           "font_token": "cta",
-          "max_characters": 46,
-          "max_lines": 3,
+          "max_characters": 24,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#202124"
+        },
+        {
+          "id": "product_name",
+          "rect": {
+            "x": 100,
+            "y": 470,
+            "width": 880,
+            "height": 260
+          },
+          "font_token": "headline",
+          "max_characters": 40,
+          "max_lines": 2,
           "align": "left",
           "color": "#FFFFFF"
         }
       ],
-      "visual_revision": "short-vertical-google-rounded-3",
+      "visual_revision": "short-vertical-google-editorial-5",
       "assets": {
         "background_png": "slides/close/background.png",
         "foreground_png": "slides/close/foreground.png"
@@ -366,19 +436,19 @@
   ],
   "integrity": {
     "files": {
-      "slides/hook/background.png": "160134fa2e08eda5f1ea5f58fa0f555fff4f929d0663ed2da056e1ddaed0124b",
-      "slides/hook/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
-      "slides/search/background.png": "21f918a0dcb7f31bdf3a1b2b75e27d9c28ebb1b3d58d4447ea0784c71089e0bb",
-      "slides/search/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
-      "slides/search/product-mask.png": "7d74bc92eec8ed0c0185e784bb8c3bbb3fba7b08ae8069af2c29ff74e4bda4e1",
-      "slides/context/background.png": "21f918a0dcb7f31bdf3a1b2b75e27d9c28ebb1b3d58d4447ea0784c71089e0bb",
-      "slides/context/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
-      "slides/context/product-mask.png": "7d74bc92eec8ed0c0185e784bb8c3bbb3fba7b08ae8069af2c29ff74e4bda4e1",
-      "slides/related/background.png": "21f918a0dcb7f31bdf3a1b2b75e27d9c28ebb1b3d58d4447ea0784c71089e0bb",
-      "slides/related/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
-      "slides/related/product-mask.png": "7d74bc92eec8ed0c0185e784bb8c3bbb3fba7b08ae8069af2c29ff74e4bda4e1",
-      "slides/close/background.png": "160134fa2e08eda5f1ea5f58fa0f555fff4f929d0663ed2da056e1ddaed0124b",
-      "slides/close/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "slides/hook/background.png": "0eb3bb4d2f0b22c93a789dac51a8d7cbfdd94028cf908b805d8c758ad6b14821",
+      "slides/hook/foreground.png": "d3446e68c1c86013b870f22df6b6aae5d2a9685e7dfc9c48ea3f8ce2ae6578e5",
+      "slides/search/background.png": "0eb3bb4d2f0b22c93a789dac51a8d7cbfdd94028cf908b805d8c758ad6b14821",
+      "slides/search/foreground.png": "59b40994e92925d46dc24d2869439c04ef6ccb4f0372d7b02a0a1131e5598db6",
+      "slides/search/product-mask.png": "41619f9b9275cb6a7d2c303d7ac7164d64609a3e36438255d1a3913562636267",
+      "slides/context/background.png": "0eb3bb4d2f0b22c93a789dac51a8d7cbfdd94028cf908b805d8c758ad6b14821",
+      "slides/context/foreground.png": "096ef9ec4e027b2e8b7c6b25e10a33d50c48ef9d688b28f09e3241a8724e59e1",
+      "slides/context/product-mask.png": "41619f9b9275cb6a7d2c303d7ac7164d64609a3e36438255d1a3913562636267",
+      "slides/related/background.png": "0eb3bb4d2f0b22c93a789dac51a8d7cbfdd94028cf908b805d8c758ad6b14821",
+      "slides/related/foreground.png": "b5bfa4f14a27c2ad1c02a2670e17c635336d1aed792cfaab8f9cd3b65a691baf",
+      "slides/related/product-mask.png": "41619f9b9275cb6a7d2c303d7ac7164d64609a3e36438255d1a3913562636267",
+      "slides/close/background.png": "0eb3bb4d2f0b22c93a789dac51a8d7cbfdd94028cf908b805d8c758ad6b14821",
+      "slides/close/foreground.png": "a99b7825fd5573a3be34d17e537ca313f9f5c25c452adee4aaf594fe38b8eaf7",
       "shared/inter-latin-variable.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
     }
   }

@@ -128,6 +128,8 @@ from demodirector_api.timeline_edits import TimelineEditService
 from demodirector_api.timeline_routes import router as timeline_router
 from demodirector_api.understanding_routes import router as understanding_router
 from demodirector_api.video_reviews import GeminiVideoCritic, VideoReviewService
+from demodirector_api.youtube import LocalYouTube, YouTubeError
+from demodirector_api.youtube_routes import router as youtube_router
 
 
 def create_app(
@@ -145,6 +147,14 @@ def create_app(
     auth_service: AuthService | None = None,
 ) -> FastAPI:
     application = FastAPI(title="DemoDirector API", version="0.1.0")
+    application.state.youtube = LocalYouTube()
+
+    @application.exception_handler(YouTubeError)
+    async def youtube_error_handler(request: Request, error: YouTubeError) -> JSONResponse:
+        return JSONResponse({"detail": str(error)}, status_code=error.status,
+                            headers={"Cache-Control": "no-store"})
+
+    application.include_router(youtube_router)
     database_path = Path(os.getenv("DEMO_DATABASE_PATH", "artifacts/demodirector.db"))
     cloud_project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
     metadata_backend = os.getenv("DEMO_METADATA_BACKEND", "sqlite")
@@ -517,7 +527,7 @@ def create_app(
                     headers={"Cache-Control": "no-store"},
                 )
         response = await call_next(request)
-        if path_parts and path_parts[0] in {"projects", "auth", "jobs"}:
+        if path_parts and path_parts[0] in {"projects", "auth", "jobs", "youtube"}:
             response.headers["Cache-Control"] = "no-store"
         return response
 

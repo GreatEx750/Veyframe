@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HabiWatch">
+  <rect width="64" height="64" rx="32" fill="#173f37"/>
+  <path d="M13 33c5-9 11-14 19-14s14 5 19 14c-5 9-11 14-19 14S18 42 13 33Z" fill="none" stroke="#d9f4e8" stroke-width="5"/>
+  <circle cx="32" cy="33" r="7" fill="#8fd6bd"/>
+  <path d="M32 26c1-6 5-10 11-12-1 7-5 11-11 12Z" fill="#ffb86b"/>
+</svg>

@@ -57,6 +57,10 @@ def main() -> None:
         results["narrated_example_dialog"] = "passed"
 
         page.get_by_role("tab", name="Shorts", exact=True).click()
+        preview = page.get_by_label("Shorts preview", exact=True)
+        assert preview.get_attribute("src") == "/landing/short-preview.mp4?v=editorial-5"
+        assert preview.get_attribute("poster") == "/landing/short-google-editorial-poster.jpg"
+        page.wait_for_function("document.querySelector('video').readyState >= 2")
         page.screenshot(path=str(output / "short-desktop.png"), full_page=True)
         page.get_by_role("button", name="A little time", exact=False).click()
         page.wait_for_function("document.querySelector('dialog video')?.currentTime > 1")
@@ -64,6 +68,10 @@ def main() -> None:
         assert short.evaluate("v => v.videoHeight / v.videoWidth") == 16 / 9
         assert 45 <= short.evaluate("v => v.duration") <= 45.2
         assert short.evaluate("v => !v.muted && !v.error")
+        assert "editorial-5" in short.get_attribute("src")
+        short.evaluate("v => { v.pause(); v.currentTime = 8; }")
+        page.wait_for_function("document.querySelector('dialog video').readyState >= 2")
+        page.screenshot(path=str(output / "short-new-layout-playing.png"), full_page=True)
         page.keyboard.press("Escape")
         results["new_portrait_short_playback"] = "passed"
 

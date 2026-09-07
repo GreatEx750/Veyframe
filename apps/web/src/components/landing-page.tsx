@@ -16,7 +16,42 @@ const formats = [
   { id: "spotlight", label: "Spotlights", title: "One feature. A moment in the spotlight.",
     duration: "30 seconds", example: "/landing/spotlight-example.mp4" },
   { id: "short", label: "Shorts", title: "A little time. A whole product story.",
-    duration: "45 seconds", example: "/landing/short-example.mp4?v=rounded-3" },
+    duration: "45 seconds", example: "/landing/short-example.mp4?v=editorial-5" },
+] as const;
+
+const projectStories = [
+  {
+    name: "Epiq",
+    detail: "AI outbreak intelligence",
+    handle: "@epiq_ai",
+    logo: "/landing/project-logos/epiq.svg",
+    quote: "Turned a data-heavy outbreak workflow into a story people could actually follow—without hiding the live reports, maps, or forecasting. This is exactly how I want to show Epiq.",
+    href: "https://devpost.com/software/epiq-1ubx5q",
+  },
+  {
+    name: "HabiWatch",
+    detail: "Autonomous habitat research",
+    handle: "@habiwatch",
+    logo: "/landing/project-logos/habiwatch.svg",
+    quote: "Veyframe kept the HabiWatch investigation easy to follow while the real map, research agents, evidence, and provenance stayed on screen. No disconnected screen recording.",
+    href: "https://devpost.com/software/habiwatchai",
+  },
+  {
+    name: "Roamstead",
+    detail: "Explainable property matching",
+    handle: "@roamstead",
+    logo: "/landing/project-logos/roamstead.svg",
+    quote: "The property search, fit explanation, and shortlist finally feel like one connected journey. I can show why Roamstead is useful instead of just clicking through screens.",
+    href: "https://roamstead-web-tn7ddsxnmq-uc.a.run.app/",
+  },
+  {
+    name: "BoneTwein",
+    detail: "Product storytelling",
+    handle: "@bonetwein",
+    logo: "/landing/project-logos/bonetwein.svg",
+    quote: "The workflow, proof points, and final outcome now play as one coherent story. BoneTwein stays visible while Veyframe handles the repetitive production work.",
+    href: null,
+  },
 ] as const;
 
 function subscribeToMotion(callback: () => void) {
@@ -36,6 +71,79 @@ function PlayIcon({ paused = true }: { paused?: boolean }) {
   </svg>;
 }
 
+function ProjectStoryCarousel({ reducedMotion }: { reducedMotion: boolean }) {
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const track = useRef<HTMLDivElement>(null);
+  const rotates = !paused && !reducedMotion;
+
+  function chooseStory(index: number) {
+    setCurrent((index + projectStories.length) % projectStories.length);
+  }
+
+  useEffect(() => {
+    if (!rotates) return;
+    const timer = window.setInterval(() => {
+      setCurrent((index) => (index + 1) % projectStories.length);
+    }, 7000);
+    return () => window.clearInterval(timer);
+  }, [rotates]);
+
+  useEffect(() => {
+    const element = track.current;
+    const card = element?.children.item(current) as HTMLElement | null;
+    if (!element || !card || typeof element.scrollTo !== "function") return;
+    element.scrollTo({
+      left: card.offsetLeft - element.offsetLeft,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  }, [current, reducedMotion]);
+
+  return <section className={styles.stories} aria-labelledby="stories-heading"
+    aria-roledescription="carousel">
+    <header className={styles.storiesHeading}>
+      <h2 id="stories-heading">Built for stories like yours</h2>
+      <p>Synthetic testimonial tweets for layout preview. Replace them with approved customer posts before publishing.</p>
+    </header>
+    <div className={styles.storyViewport}>
+      <div className={styles.storyTrack} ref={track} aria-live={rotates ? "off" : "polite"}>
+        {projectStories.map((story, index) => <article className={styles.storyCard}
+          aria-label={`${story.name} synthetic testimonial`}
+          aria-current={index === current ? "true" : undefined}
+          key={`${story.name}-${story.detail}`}>
+          <header className={styles.storyIdentity}>
+            <span className={styles.storyAvatar}>
+              <Image src={story.logo} width={42} height={42} alt={`${story.name} project logo`} />
+            </span>
+            <span className={styles.storyMeta}>
+              <strong>{story.name}</strong>
+              <span>{story.handle}</span>
+            </span>
+            <span className={styles.storyNetwork} aria-label="Synthetic social post">@</span>
+          </header>
+          <blockquote>“{story.quote}”</blockquote>
+          <footer>
+            {story.href
+              ? <a href={story.href} target="_blank" rel="noreferrer"
+                onFocus={() => chooseStory(index)}>View {story.name} <span aria-hidden="true">↗</span></a>
+              : <span className={styles.storyProjectName}>{story.name}</span>}
+            <span>{story.detail}</span>
+          </footer>
+        </article>)}
+      </div>
+    </div>
+    <div className={styles.storyControls}>
+      <button type="button" aria-label="Previous testimonial"
+        onClick={() => chooseStory(current - 1)}><span aria-hidden="true">←</span></button>
+      <span className={styles.storyCounter} aria-live="polite">{current + 1} / {projectStories.length}</span>
+      <button type="button" aria-label={rotates ? "Pause testimonials" : "Play testimonials"}
+        onClick={() => setPaused((value) => !value)}><PlayIcon paused={!rotates} /></button>
+      <button type="button" aria-label="Next testimonial"
+        onClick={() => chooseStory(current + 1)}><span aria-hidden="true">→</span></button>
+    </div>
+  </section>;
+}
+
 export function LandingPage() {
   const router = useRouter();
   const [judgeLoading, setJudgeLoading] = useState(false);
@@ -49,8 +157,8 @@ export function LandingPage() {
   const dialog = useRef<HTMLDialogElement>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const format = formats[selected];
-  const poster = `/landing/${format.id === "short" ? "short-google-rounded" : format.id}-poster.jpg`;
-  const previewSource = `/landing/${format.id}-preview.mp4${format.id === "short" ? "?v=rounded-3" : ""}`;
+  const poster = `/landing/${format.id === "short" ? "short-google-editorial" : format.id}-poster.jpg`;
+  const previewSource = `/landing/${format.id}-preview.mp4${format.id === "short" ? "?v=editorial-5" : ""}`;
   const playing = !paused && !reducedMotion && !dialogOpen;
   const [manualPlay, setManualPlay] = useState(false);
   const shouldPlay = playing || (manualPlay && !paused && !dialogOpen);
@@ -184,7 +292,12 @@ export function LandingPage() {
         </button>
         <p className={styles.exampleNote}>Actual videos made with Veyframe. Select a format to explore.</p>
       </section>
-      <GenerationBenchmark />
+      <div className={styles.proofBand} data-testid="landing-proof-band">
+        <div className={styles.proofSection}>
+          <GenerationBenchmark />
+          <ProjectStoryCarousel reducedMotion={reducedMotion} />
+        </div>
+      </div>
     </main>
 
     <footer className={styles.footer}>

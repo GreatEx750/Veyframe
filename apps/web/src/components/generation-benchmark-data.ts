@@ -10,6 +10,13 @@ export function elapsedSeconds(run: BenchmarkRun): number | null {
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
 }
 
+export function generationSeconds(run: BenchmarkRun): number | null {
+  const recorded = elapsedSeconds(run);
+  if (recorded !== null) return recorded;
+  const estimated = run.estimatedGenerationSeconds;
+  return typeof estimated === "number" && Number.isFinite(estimated) && estimated >= 0 ? estimated : null;
+}
+
 export function compareTime(generationSeconds: number | null, manualMinutes: number | null) {
   if (generationSeconds === null || !Number.isFinite(generationSeconds) || generationSeconds < 0) return null;
   if (manualMinutes === null || !Number.isFinite(manualMinutes) || manualMinutes < 1 || manualMinutes > 1440) return null;

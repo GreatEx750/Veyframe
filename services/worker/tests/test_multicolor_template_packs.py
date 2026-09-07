@@ -9,22 +9,29 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1] / "src" / "demodirector_worker" / "templates"
 
 
-def test_google_phone_short_matches_approved_asymmetric_frame() -> None:
+@pytest.mark.parametrize("folder", ["short-vertical-v1", "short-vertical-google-v1"])
+def test_phone_short_matches_portrait_video_and_lower_title_layout(folder: str) -> None:
     from PIL import Image
 
-    pack = json.loads((ROOT / "short-vertical-google-v1/manifest.json").read_text("utf-8"))
+    pack = json.loads((ROOT / folder / "manifest.json").read_text("utf-8"))
     template = pack["templates"][1]
     assert template["product_aperture"] == {
-        "x": 56, "y": 500, "width": 968, "height": 902, "corner_radius": 32,
+        "x": 38, "y": 46, "width": 1004, "height": 1210, "corner_radius": 36,
     }
-    background = ROOT / "short-vertical-google-v1" / template["assets"]["background_png"]
+    background = ROOT / folder / template["assets"]["background_png"]
     with Image.open(background) as frame:
         rgb = frame.convert("RGB")
-        assert rgb.getpixel((100, 120)) == (26, 115, 232)
-        assert rgb.getpixel((56, 86)) == (0, 0, 0)
-        assert rgb.getpixel((600, 1600)) == (255, 102, 102)
-        assert rgb.getpixel((420, 1450)) == (255, 255, 255)
-        assert rgb.getpixel((800, 450)) == (0, 0, 0)
+        theme = "google" if "google" in folder else "default"
+        base = (26, 115, 232) if theme == "google" else (35, 77, 68)
+        arrow = (255, 102, 102) if theme == "google" else (157, 232, 210)
+        assert rgb.getpixel((10, 10)) == base
+        assert rgb.getpixel((100, 1600)) == base
+        assert rgb.getpixel((850, 1770)) == arrow
+    assert template["visual_revision"] == f"short-vertical-{theme}-editorial-5"
+    caption = pack["caption_layout"]
+    aperture = template["product_aperture"]
+    assert aperture["y"] < caption["y"]
+    assert caption["y"] + caption["height"] < aperture["y"] + aperture["height"]
 
 
 def test_google_short_product_masks_round_all_four_corners() -> None:
@@ -33,17 +40,17 @@ def test_google_short_product_masks_round_all_four_corners() -> None:
     root = ROOT / "short-vertical-google-v1"
     pack = json.loads((root / "manifest.json").read_text("utf-8"))
     for template in pack["templates"]:
-        assert template["visual_revision"] == "short-vertical-google-rounded-3"
+        assert template["visual_revision"] == "short-vertical-google-editorial-5"
         if not template["requires_product"]:
             continue
         with Image.open(root / template["assets"]["product_mask_png"]) as image:
             mask = image.convert("L")
-            for corner in [(56, 500), (1023, 500), (56, 1401), (1023, 1401)]:
+            for corner in [(38, 46), (1041, 46), (38, 1255), (1041, 1255)]:
                 assert mask.getpixel(corner) == 0
-            assert mask.getpixel((540, 500)) == 255
+            assert mask.getpixel((540, 46)) == 255
             assert mask.getpixel((540, 950)) == 255
     default = json.loads((ROOT / "short-vertical-v1/manifest.json").read_text("utf-8"))
-    assert default["templates"][1]["product_aperture"]["corner_radius"] == 0
+    assert default["templates"][1]["product_aperture"]["corner_radius"] == 36
 
 
 def test_promo_theme_selection_preserves_default_and_rejects_unknown() -> None:
@@ -117,9 +124,7 @@ def test_multicolor_template_pack_integrity(
     "folder",
     [
         "short-landscape-v1",
-        "short-vertical-v1",
         "short-landscape-google-v1",
-        "short-vertical-google-v1",
     ],
 )
 def test_short_templates_keep_the_brief_above_product_and_narration_below(folder: str) -> None:
@@ -137,6 +142,19 @@ def test_short_templates_keep_the_brief_above_product_and_narration_below(folder
         assert aperture["y"] + aperture["height"] <= caption["y"]
 
 
+@pytest.mark.parametrize("folder", ["short-vertical-v1", "short-vertical-google-v1"])
+def test_portrait_short_titles_fit_below_the_video_without_touching_captions(folder: str) -> None:
+    manifest = json.loads((ROOT / folder / "manifest.json").read_text("utf-8"))
+    for template in manifest["templates"]:
+        slots = {slot["id"]: slot for slot in template["copy_slots"]}
+        title = slots["headline"]["rect"]
+        accent = slots["cta" if template["role"] == "close" else "body"]["rect"]
+        assert title["y"] >= 1450
+        assert title["y"] + title["height"] <= accent["y"]
+        assert accent["y"] + accent["height"] < 1730
+        assert title["x"] + title["width"] <= manifest["canvas"]["width"]
+
+
 def test_phone_short_captions_use_readable_theme_colors(tmp_path: Path) -> None:
     from demodirector_worker.presentation_assets import AuthoredSlideRenderer
     from PIL import Image
@@ -147,3 +165,26 @@ def test_phone_short_captions_use_readable_theme_colors(tmp_path: Path) -> None:
         pixels = set(frame.convert("RGBA").getdata())
     assert (32, 33, 36, 255) in pixels
     assert (255, 255, 255, 255) in pixels
+    assert (255, 102, 102, 255) in pixels
+
+
+@pytest.mark.parametrize("folder", ["short-vertical-v1", "short-vertical-google-v1"])
+def test_portrait_short_copy_renders_through_export_text_validation(
+    tmp_path: Path, folder: str,
+) -> None:
+    from demodirector_worker.presentation_assets import AuthoredSlideRenderer
+
+    renderer = AuthoredSlideRenderer(tmp_path, pack_root=ROOT / folder)
+    for index, template in enumerate(renderer.pack["templates"]):
+        copy = {
+            "brand": "Veyframe",
+            "headline": "Make your workflow",
+            "cta" if template["role"] == "close" else "body": "feel effortless",
+        }
+        if not template["requires_product"]:
+            copy["product_name"] = "Veyframe"
+        output = tmp_path / f"copy-{index}.png"
+        renderer.copy_layer(template, copy, output)
+        measurements = json.loads(output.with_suffix(".json").read_text("utf-8"))
+        assert all(slot["fits"] and slot["lines"] == 1 for slot in measurements)
+        assert output.is_file()

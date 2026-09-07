@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440" role="img" aria-labelledby="title desc">
+  <title id="title">Veyframe agent workflow</title>
+  <desc id="desc">Human instruction, Google ADK agent work, typed validation, deterministic production, QA, review, and targeted regeneration.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#272B30"/></marker>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#22314A" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="2560" height="1440" fill="#FFFFFF"/>
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="86" y="76" font-size="22" fill="#6A707B">Veyframe  /  Agent workflow</text>
+    <text x="86" y="139" font-size="50" font-weight="700" letter-spacing="-1.2" fill="#171A1F">Human judgment around a typed, bounded agent workflow</text>
+
+    <!-- legend -->
+    <g transform="translate(1806 42)">
+      <rect width="620" height="224" rx="6" fill="#FFFFFF" stroke="#CBD0D8" stroke-width="2"/>
+      <text x="26" y="37" font-size="16" font-weight="700" letter-spacing="2" fill="#707782">LEGEND</text>
+      <rect x="26" y="60" width="270" height="55" fill="#FFF4CD" stroke="#5D6066" stroke-width="2"/><text x="161" y="95" text-anchor="middle" font-size="19" fill="#171A1F">Human instruction / review</text>
+      <rect x="324" y="60" width="270" height="55" rx="14" fill="#F7F8FA" stroke="#BBC1CA" stroke-width="2"/><text x="459" y="95" text-anchor="middle" font-size="19" fill="#171A1F">Google ADK agent work</text>
+      <rect x="26" y="137" width="270" height="58" fill="#ECEDEF" stroke="#5D6066" stroke-width="2"/><text x="161" y="172" text-anchor="middle" font-size="19" fill="#171A1F">Deterministic processing</text>
+      <g transform="translate(352 132)"><circle cx="24" cy="30" r="22" fill="#E8F0FE" stroke="#4285F4" stroke-width="2"/><rect x="12" y="22" width="24" height="19" rx="5" fill="#FFFFFF" stroke="#4285F4" stroke-width="2"/><circle cx="19" cy="31" r="2.5" fill="#4285F4"/><circle cx="29" cy="31" r="2.5" fill="#4285F4"/><path d="M24 14V7M7 29H1M47 29H41" stroke="#4285F4" stroke-width="2"/></g>
+      <text x="407" y="169" font-size="19" fill="#171A1F">Agent</text>
+      <g transform="translate(490 132)"><circle cx="24" cy="28" r="19" fill="#FFF4CD"/><circle cx="24" cy="24" r="9" fill="#272B30"/><path d="M10 48c2-10 8-15 14-15s12 5 14 15" fill="#FFBE98"/></g>
+      <text x="545" y="169" font-size="19" fill="#171A1F">Person</text>
+    </g>
+
+    <!-- main left flow -->
+    <rect x="88" y="225" width="260" height="70" rx="16" fill="#F7F8FA" stroke="#BBC1CA" stroke-width="2" filter="url(#shadow)"/>
+    <text x="218" y="269" text-anchor="middle" font-size="28" fill="#171A1F">Start</text>
+    <path d="M218 295V345" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+
+    <rect x="88" y="362" width="470" height="114" fill="#FFF4CD" stroke="#5D6066" stroke-width="2"/>
+    <text x="323" y="408" text-anchor="middle" font-size="28" font-weight="600" fill="#171A1F">Set the creative brief</text>
+    <text x="323" y="443" text-anchor="middle" font-size="19" fill="#5F646D">URL · audience · format · tone · CTA</text>
+    <path d="M558 419H662" stroke="#272B30" stroke-width="3" stroke-dasharray="15 14"/>
+    <g transform="translate(674 375)"><circle cx="43" cy="43" r="37" fill="#FFF4CD"/><circle cx="43" cy="34" r="17" fill="#272B30"/><path d="M18 84c3-20 12-30 25-30s22 10 25 30" fill="#FFBE98"/><path d="M35 35h4M47 35h4" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/></g>
+    <text x="775" y="427" font-size="20" fill="#5F646D">User</text>
+    <path d="M323 476V526" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+
+    <!-- research block -->
+    <text x="88" y="558" font-size="24" font-weight="600" fill="#171A1F">Grounded planning</text>
+    <rect x="88" y="579" width="704" height="426" fill="#ECEDEF" stroke="#5D6066" stroke-width="2"/>
+    <rect x="136" y="627" width="562" height="82" rx="16" fill="#F8F9FB" stroke="#BBC1CA" stroke-width="2"/>
+    <text x="417" y="660" text-anchor="middle" font-size="25" font-weight="600" fill="#171A1F">Inspect site + retrieve sources</text>
+    <text x="417" y="689" text-anchor="middle" font-size="17" fill="#5F646D">Website structure · direct Parallel Search</text>
+    <path d="M417 709V746" stroke="#272B30" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="136" y="760" width="562" height="82" rx="16" fill="#F8F9FB" stroke="#BBC1CA" stroke-width="2"/>
+    <text x="417" y="793" text-anchor="middle" font-size="25" font-weight="600" fill="#171A1F">Understand product + direct story</text>
+    <text x="417" y="822" text-anchor="middle" font-size="17" fill="#5F646D">Gemini through Google ADK</text>
+    <path d="M417 842V879" stroke="#272B30" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="136" y="893" width="562" height="82" rx="16" fill="#F8F9FB" stroke="#BBC1CA" stroke-width="2"/>
+    <text x="417" y="926" text-anchor="middle" font-size="25" font-weight="600" fill="#171A1F">Plan motion, attention, and style</text>
+    <text x="417" y="955" text-anchor="middle" font-size="17" fill="#5F646D">Trusted template and motion catalogs only</text>
+
+    <g transform="translate(716 635)"><circle cx="35" cy="35" r="31" fill="#E8F0FE" stroke="#4285F4" stroke-width="2"/><rect x="18" y="25" width="34" height="28" rx="6" fill="#FFFFFF" stroke="#4285F4" stroke-width="2"/><circle cx="28" cy="38" r="3" fill="#4285F4"/><circle cx="42" cy="38" r="3" fill="#4285F4"/><path d="M35 17V8M12 36H4M66 36H58" stroke="#4285F4" stroke-width="3"/></g>
+    <g transform="translate(716 767)"><circle cx="35" cy="35" r="31" fill="#E8F0FE" stroke="#4285F4" stroke-width="2"/><rect x="18" y="25" width="34" height="28" rx="6" fill="#FFFFFF" stroke="#4285F4" stroke-width="2"/><circle cx="28" cy="38" r="3" fill="#4285F4"/><circle cx="42" cy="38" r="3" fill="#4285F4"/><path d="M35 17V8M12 36H4M66 36H58" stroke="#4285F4" stroke-width="3"/></g>
+    <g transform="translate(716 900)"><circle cx="35" cy="35" r="31" fill="#E8F0FE" stroke="#4285F4" stroke-width="2"/><rect x="18" y="25" width="34" height="28" rx="6" fill="#FFFFFF" stroke="#4285F4" stroke-width="2"/><circle cx="28" cy="38" r="3" fill="#4285F4"/><circle cx="42" cy="38" r="3" fill="#4285F4"/><path d="M35 17V8M12 36H4M66 36H58" stroke="#4285F4" stroke-width="3"/></g>
+
+    <!-- center validation -->
+    <path d="M792 792H892" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+    <polygon points="1024,700 1156,792 1024,884 892,792" fill="#FFF4CD" stroke="#5D6066" stroke-width="2"/>
+    <text x="1024" y="780" text-anchor="middle" font-size="24" font-weight="600" fill="#171A1F">Typed schema</text>
+    <text x="1024" y="812" text-anchor="middle" font-size="24" font-weight="600" fill="#171A1F">valid?</text>
+    <text x="1024" y="851" text-anchor="middle" font-size="16" fill="#5F646D">Pydantic + Zod</text>
+    <path d="M1024 700V573H417V615" fill="none" stroke="#272B30" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="748" y="562" font-size="18" fill="#5F646D">No · reject or retry safely</text>
+    <path d="M1156 792H1260" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+    <text x="1188" y="775" font-size="18" fill="#5F646D">Yes</text>
+
+    <!-- deterministic production -->
+    <text x="1260" y="558" font-size="24" font-weight="600" fill="#171A1F">Media production</text>
+    <rect x="1260" y="579" width="700" height="426" fill="#ECEDEF" stroke="#5D6066" stroke-width="2"/>
+    <rect x="1308" y="627" width="562" height="82" fill="#FFFFFF" stroke="#91969F" stroke-width="2"/>
+    <text x="1589" y="660" text-anchor="middle" font-size="25" font-weight="600" fill="#171A1F">Record real product interactions</text>
+    <text x="1589" y="689" text-anchor="middle" font-size="17" fill="#5F646D">Playwright · cursor · click evidence</text>
+    <path d="M1589 709V746" stroke="#272B30" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="1308" y="760" width="562" height="82" fill="#FFFFFF" stroke="#91969F" stroke-width="2"/>
+    <text x="1589" y="793" text-anchor="middle" font-size="25" font-weight="600" fill="#171A1F">Generate narration and captions</text>
+    <text x="1589" y="822" text-anchor="middle" font-size="17" fill="#5F646D">Gemini TTS · bounded word timing</text>
+    <path d="M1589 842V879" stroke="#272B30" stroke-width="3" marker-end="url(#arrow)"/>
+    <rect x="1308" y="893" width="562" height="82" fill="#FFFFFF" stroke="#91969F" stroke-width="2"/>
+    <text x="1589" y="926" text-anchor="middle" font-size="25" font-weight="600" fill="#171A1F">Compose the finished MP4</text>
+    <text x="1589" y="955" text-anchor="middle" font-size="17" fill="#5F646D">FFmpeg · templates · camera · audio</text>
+
+    <!-- QA and human review -->
+    <path d="M1960 792H2052" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="2066" y="646" width="392" height="114" rx="16" fill="#F7F8FA" stroke="#BBC1CA" stroke-width="2"/>
+    <text x="2262" y="691" text-anchor="middle" font-size="27" font-weight="600" fill="#171A1F">Demo QA Agent</text>
+    <text x="2262" y="727" text-anchor="middle" font-size="18" fill="#5F646D">Compare video with approved brief</text>
+    <path d="M2458 703H2470" stroke="#272B30" stroke-width="3" stroke-dasharray="15 14"/>
+    <g transform="translate(2470 668)"><circle cx="35" cy="35" r="31" fill="#E8F0FE" stroke="#4285F4" stroke-width="2"/><rect x="18" y="25" width="34" height="28" rx="6" fill="#FFFFFF" stroke="#4285F4" stroke-width="2"/><circle cx="28" cy="38" r="3" fill="#4285F4"/><circle cx="42" cy="38" r="3" fill="#4285F4"/><path d="M35 17V8M12 36H4M66 36H58" stroke="#4285F4" stroke-width="3"/></g>
+    <path d="M2262 760V819" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="2066" y="835" width="392" height="114" fill="#FFF4CD" stroke="#5D6066" stroke-width="2"/>
+    <text x="2262" y="880" text-anchor="middle" font-size="27" font-weight="600" fill="#171A1F">Review and edit</text>
+    <text x="2262" y="916" text-anchor="middle" font-size="18" fill="#5F646D">Approve, adjust, or request repair</text>
+    <path d="M2458 892H2510" stroke="#272B30" stroke-width="3" stroke-dasharray="15 14"/>
+    <g transform="translate(2470 857)"><circle cx="35" cy="35" r="31" fill="#FFF4CD"/><circle cx="35" cy="27" r="14" fill="#272B30"/><path d="M14 67c3-16 10-25 21-25s18 9 21 25" fill="#FFBE98"/></g>
+    <path d="M2262 949V1038" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+
+    <polygon points="2262,1038 2378,1115 2262,1192 2146,1115" fill="#FFF4CD" stroke="#5D6066" stroke-width="2"/>
+    <text x="2262" y="1107" text-anchor="middle" font-size="23" font-weight="600" fill="#171A1F">Approved?</text>
+    <text x="2262" y="1140" text-anchor="middle" font-size="16" fill="#5F646D">Human decision</text>
+    <path d="M2146 1115H1996V934H1972" fill="none" stroke="#272B30" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="1996" y="1092" font-size="18" fill="#5F646D">No · targeted regeneration</text>
+    <path d="M2262 1192V1245" stroke="#272B30" stroke-width="4" marker-end="url(#arrow)"/>
+    <text x="2280" y="1226" font-size="18" fill="#5F646D">Yes</text>
+    <rect x="2132" y="1260" width="260" height="70" rx="16" fill="#F7F8FA" stroke="#BBC1CA" stroke-width="2" filter="url(#shadow)"/>
+    <text x="2262" y="1304" text-anchor="middle" font-size="28" fill="#171A1F">Publish</text>
+
+    <text x="88" y="1367" font-size="17" fill="#6A707B">Agents can propose only bounded structured plans. They never execute shell commands, arbitrary browser JavaScript, or unvalidated media operations.</text>
+    <text x="2458" y="1367" text-anchor="end" font-size="17" font-weight="700" fill="#4285F4">VEYFRAME</text>
+  </g>
+</svg>

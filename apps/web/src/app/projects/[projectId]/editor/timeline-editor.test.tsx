@@ -326,10 +326,10 @@ describe("TimelineEditor", () => {
     expect(screen.getByLabelText("Preview time")).toHaveTextContent("0:13");
   });
 
-  it("caption navigation seeks the video and updates the timeline", () => {
+  it("keeps captions and playhead seeking available without the Captions sidebar mode", () => {
     render(<TimelineEditor initialTimeline={timeline} projectId="project-1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Captions" }));
-    fireEvent.click(screen.getByRole("button", { name: /Workflow caption/ }));
+    expect(screen.getByText("Workflow caption")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Timeline playhead"), { target: { value: "8000" } });
     expect((screen.getByLabelText("Preview video") as HTMLVideoElement).currentTime).toBe(8);
     expect(screen.getByLabelText("Timeline playhead")).toHaveValue("8000");
   });
@@ -497,6 +497,8 @@ describe("TimelineEditor", () => {
         status: 200,
         json: async () => stylePlan,
       };
+      if (url.endsWith("/generation/long-form-plan")) return { ok: true, status: 200, json: async () => longFormPlan };
+      if (url.endsWith("/generation/long-form-checkpoints")) return { ok: true, status: 200, json: async () => chapterCheckpoints };
       throw new Error(`Unexpected URL: ${url}`);
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -504,10 +506,14 @@ describe("TimelineEditor", () => {
 
     const tools = screen.getByRole("navigation", { name: "Editor tools" });
     const toolButtons = Array.from(tools.querySelectorAll("button"));
-    expect(toolButtons.slice(0, 3).map((button) => button.textContent)).toEqual([
+    expect(toolButtons.map((button) => button.textContent)).toEqual([
       "Setup",
       "Sources",
-      "Quality",
+      "Layout",
+      "Cut",
+      "Zoom",
+      "Overlay",
+      "Adjust",
     ]);
 
     fireEvent.click(screen.getByRole("button", { name: "Sources" }));
@@ -528,6 +534,7 @@ describe("TimelineEditor", () => {
     expect(screen.getByText(/2 product-present templates/)).toBeInTheDocument();
     expect(await screen.findByText(/accepted 1 target-aware callout/)).toBeInTheDocument();
     expect(await screen.findByText("Product Spotlight")).toBeInTheDocument();
+    expect(await screen.findByText(`${longFormPlan.sections.length} sections · ${longFormPlan.beats.length} visual beats`)).toBeInTheDocument();
     expect(screen.getByText(/1 linked project inputs/)).toBeInTheDocument();
     expect(screen.getByText(/Gemini TTS · gemini-tts-test/)).toBeInTheDocument();
     expect(screen.getByText("Record browser flow")).toBeInTheDocument();
@@ -553,86 +560,11 @@ describe("TimelineEditor", () => {
     expect(screen.getByRole("heading", { name: "Where each source was used" })).toBeInTheDocument();
   });
 
-  it("edits a target-aware callout without regenerating capture", async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => ({
-      ok: true,
-      status: 200,
-      json: async () => init?.method === "PATCH"
-        ? { ...attentionPlan, id: "attention-plan-2", manual_override_of: attentionPlan.id,
-            callouts: [{ ...attentionPlan.callouts[0], text: "Create the demo" }] }
-        : attentionPlan,
-    }));
-    vi.stubGlobal("fetch", fetchMock);
+  it.each(["Quality", "Style", "Story", "Callouts", "Captions", "Audio"])("does not expose the removed %s sidebar mode", (label) => {
     render(<TimelineEditor initialProject={project} initialTimeline={timeline} projectId="project-1" />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Callouts" }));
-    const input = await screen.findByLabelText("Text");
-    fireEvent.change(input, { target: { value: "Create the demo" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save callout" }));
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "/api/projects/project-1/generation/attention-plan",
-      expect.objectContaining({ method: "PATCH" }),
-    ));
-    expect(screen.getAllByRole("status").at(-1)).toHaveTextContent("Callout saved");
-  });
-
-  it("switches and resets visual style without starting generation", async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      if (init?.method === "PATCH") {
-        const body = JSON.parse(String(init.body)) as { variant_id: string; scene_id?: string; reset_scene?: boolean };
-        return {
-          ok: true,
-          status: 200,
-          json: async () => ({
-            ...stylePlan,
-            id: body.scene_id ? "style-plan-3" : "style-plan-2",
-            manual_override_of: stylePlan.id,
-            decision: { ...stylePlan.decision, selected_variant: body.scene_id ? "technical_proof" : body.variant_id, outcome: "overridden" },
-            overrides: body.scene_id && !body.reset_scene ? [{ scene_id: body.scene_id, variant_id: body.variant_id }] : [],
-          }),
-        };
-      }
-      return { ok: true, status: 200, json: async () => stylePlan };
-    });
-    vi.stubGlobal("fetch", fetchMock);
-    render(<TimelineEditor initialProject={project} initialTimeline={timeline} projectId="project-1" />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Style" }));
-    expect(await screen.findByRole("heading", { name: "Visual style" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Technical Proof/ }));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "/api/projects/project-1/generation/style-plan",
-      expect.objectContaining({ method: "PATCH" }),
-    ));
-    expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith("/generate"))).toBe(false);
-  });
-
-  it("reviews proof-first sections and retries only a failed chapter", async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      if (url.endsWith("/long-form-plan")) return { ok: true, status: 200, json: async () => longFormPlan };
-      if (url.endsWith("/long-form-checkpoints")) return { ok: true, status: 200, json: async () => chapterCheckpoints };
-      if (url.endsWith("/long-form-chapters/chapter-2/retry") && init?.method === "POST") return { ok: true, status: 200, json: async () => ({ ...chapterCheckpoints[1], id: "checkpoint-retry", status: "captured", attempt: 2, artifact_ref: "chapter-2-new.webm", artifact_sha256: "a".repeat(64), replaces_checkpoint_id: chapterCheckpoints[1].id }) };
-      if (url.endsWith("/timeline")) return { ok: true, status: 200, json: async () => ({ current: { project_id: "project-1", version: 2, timeline, change_summary: "Regenerated capture chapter 2", affected_ids: ["chapter-2"] }, can_undo: true, can_redo: false }) };
-      throw new Error(`Unexpected URL: ${url}`);
-    });
-    vi.stubGlobal("fetch", fetchMock);
-    render(<TimelineEditor initialProject={project} initialTimeline={timeline} projectId="project-1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Story" }));
-    expect(await screen.findByRole("heading", { name: "Three-minute story" })).toBeInTheDocument();
-    expect(await screen.findByText("3:00 proof-first")).toBeInTheDocument();
-    expect(screen.getByText("100%")).toBeInTheDocument();
-    const chapterList = screen.getByRole("group", { name: "Capture chapters" });
-    const retryButton = within(chapterList).getAllByRole("button", { name: "Regenerate" })
-      .find((button) => !button.hasAttribute("disabled"));
-    expect(retryButton).toBeDefined();
-    fireEvent.click(retryButton!);
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "/api/projects/project-1/generation/long-form-chapters/chapter-2/retry",
-      { method: "POST" },
-    ));
-    expect(await screen.findAllByText("Chapter regenerated — approved chapters were kept")).toHaveLength(2);
+    const tools = screen.getByRole("navigation", { name: "Editor tools" });
+    expect(within(tools).queryByRole("button", { name: label })).not.toBeInTheDocument();
+    expect(within(tools).getByRole("button", { name: "Zoom" })).toHaveAttribute("aria-pressed", "true");
   });
 
   it("removes stale usage links and provides an approval route", async () => {

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LandingPage } from "./landing-page";
@@ -15,7 +15,7 @@ describe("Veyframe public landing page", () => {
       matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn(),
     }));
   });
-  afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.useRealTimers(); cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
   it("offers real account destinations and all four formats", () => {
     render(<LandingPage />);
@@ -26,6 +26,49 @@ describe("Veyframe public landing page", () => {
     expect(screen.getByRole("tab", { name: "Presentations" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("button", { name: "Judge Demo Mode" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Video production benchmark" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Built for stories like yours" })).toBeInTheDocument();
+    expect(screen.getByText(/synthetic testimonial tweets/i)).toBeInTheDocument();
+    expect(screen.getByText("Epiq")).toBeInTheDocument();
+    expect(screen.getByText("Roamstead")).toBeInTheDocument();
+    expect(screen.getByText("HabiWatch")).toBeInTheDocument();
+    expect(screen.getAllByText("BoneTwein")).toHaveLength(2);
+    expect(screen.getAllByRole("img", { name: /project logo/i })).toHaveLength(4);
+    const sectionHeadings = screen.getAllByRole("heading", { level: 2 });
+    expect(sectionHeadings.indexOf(screen.getByRole("heading", { name: "Video production benchmark" })))
+      .toBeLessThan(sectionHeadings.indexOf(screen.getByRole("heading", { name: "Built for stories like yours" })));
+    const proofBand = screen.getByTestId("landing-proof-band");
+    expect(proofBand).toContainElement(screen.getByRole("heading", { name: "Video production benchmark" }));
+    expect(proofBand).toContainElement(screen.getByRole("heading", { name: "Built for stories like yours" }));
+  });
+
+  it("auto-advances the project testimonial carousel and keeps source links visible", () => {
+    vi.useFakeTimers();
+    render(<LandingPage />);
+    expect(screen.getByText("AI outbreak intelligence")).toBeInTheDocument();
+    expect(screen.getByText("1 / 4")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "View Epiq" })[0]).toHaveAttribute(
+      "href", "https://devpost.com/software/epiq-1ubx5q",
+    );
+
+    act(() => vi.advanceTimersByTime(7000));
+
+    expect(screen.getByText("2 / 4")).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "HabiWatch synthetic testimonial" }))
+      .toHaveAttribute("aria-current", "true");
+    expect(screen.getAllByRole("link", { name: "View HabiWatch" })[0]).toHaveAttribute(
+      "href", "https://devpost.com/software/habiwatchai",
+    );
+    vi.useRealTimers();
+  });
+
+  it("supports previous, next, and pause controls for project stories", () => {
+    render(<LandingPage />);
+    fireEvent.click(screen.getByRole("button", { name: "Next testimonial" }));
+    expect(screen.getByText("2 / 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Previous testimonial" }));
+    expect(screen.getByText("1 / 4")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pause testimonials" }));
+    expect(screen.getByRole("button", { name: "Play testimonials" })).toBeInTheDocument();
   });
 
   it("changes the footage with mouse and keyboard tab selection", () => {
@@ -40,8 +83,8 @@ describe("Veyframe public landing page", () => {
     render(<LandingPage />);
     fireEvent.click(screen.getByRole("button", { name: "Pause preview" }));
     fireEvent.click(screen.getByRole("tab", { name: "Shorts" }));
-    expect(screen.getByLabelText("Shorts preview")).toHaveAttribute("poster", "/landing/short-google-rounded-poster.jpg");
-    expect(screen.getByLabelText("Shorts preview")).toHaveAttribute("src", "/landing/short-preview.mp4?v=rounded-3");
+    expect(screen.getByLabelText("Shorts preview")).toHaveAttribute("poster", "/landing/short-google-editorial-poster.jpg");
+    expect(screen.getByLabelText("Shorts preview")).toHaveAttribute("src", "/landing/short-preview.mp4?v=editorial-5");
     expect(screen.getByRole("button", { name: "Play preview" })).toBeInTheDocument();
     expect(screen.getByLabelText("Shorts preview")).not.toHaveAttribute("autoplay");
   });

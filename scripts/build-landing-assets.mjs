@@ -29,7 +29,7 @@ for (const [mode, relative, start] of samples) {
   const scale = mode === "short" ? "scale=720:1280" : "scale=1280:720";
   ffmpeg(["-ss", String(start), "-i", input, "-t", "8", "-an", "-vf", scale,
     "-c:v", "libx264", "-preset", "fast", "-crf", "22", "-pix_fmt", "yuv420p", "-movflags", "+faststart", preview]);
-  const posterName = mode === "short" ? "short-google-rounded" : mode;
+  const posterName = mode === "short" ? "short-google-editorial" : mode;
   ffmpeg(["-i", preview, "-frames:v", "1", "-update", "1", path.join(output, `${posterName}-poster.jpg`)]);
   if (mode === "spotlight" || mode === "short") {
     ffmpeg(["-i", input, "-vf", scale, "-c:v", "libx264", "-preset", "fast",

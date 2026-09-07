@@ -106,11 +106,44 @@ equivalent.
 API, and worker images in parallel, pushes commit-tagged images to Artifact Registry, and updates
 only the image on each existing `veyframe-*` Cloud Run service. Runtime environment variables, Secret Manager
 references, service identities, scaling, and ingress settings remain owned by the Cloud Run service
-configuration. The target-name changes are local until committed and pushed. No Cloud Build
-triggers were found in the current project's global or us-central1 locations during the rename;
-this operation did not create a GitHub trigger.
+configuration.
 
-The trigger runs as `demodirector-build@habiwatch.iam.gserviceaccount.com`. That identity needs
-Artifact Registry Writer, Cloud Run Developer, and Logs Writer on the project, plus Service Account User
-on each of the three DemoDirector runtime identities. Repository access is granted through the
-Google Cloud Build GitHub App; no GitHub or Google credential is stored in this repository.
+The intended trigger runs as
+`demodirector-build@demodirector-507722.iam.gserviceaccount.com`.
+That identity already has Artifact Registry Writer and Logs Writer on the project.
+Cloud Run Developer is granted individually on `veyframe-web`, `veyframe-api`, and
+`veyframe-worker`, with Service Account User on their three runtime identities.
+It is not granted project-wide Cloud Run administration. Repository access is granted through
+the Google Cloud Build GitHub App; no GitHub or Google credential is stored in this repository.
+
+### Enabled GitHub trigger (2026-09-07)
+
+Repository: `https://github.com/GreatEx750/Veyframe.git` (renamed from DemoDirector).
+The local `origin` now uses this URL. Cloud Build's GitHub App connection can fetch the
+repository even though this workstation's Git credentials currently cannot read it.
+
+- Trigger: `veyframe-main-deploy` in `us-central1`, project `demodirector-507722`.
+- Trigger ID: `a8cd2e72-692b-4794-b3cc-2e16c1613ac3`.
+- Event: pushes to branch `^main$`; no manual approval required.
+- Configuration: an inline copy of the current local `cloudbuild.deploy.yaml`.
+- Targets: only `veyframe-web`, `veyframe-api`, and `veyframe-worker`.
+
+The inline configuration is intentional: GitHub main at commit `861b902` still contained
+the older deployment file targeting `demodirector-*`. Verification build
+`96c58240-e241-4af1-9148-c4f826366edd` fetched main and began image builds successfully,
+but was cancelled before any deploy step when those stale target names were detected.
+The trigger was then updated and read back to verify all three Veyframe targets.
+No HabiWatch resources or older `demodirector-*` services were changed.
+
+Push the current application changes to main to start the first full deployment; this setup
+did not commit or push local application work and did not deploy the older remote code.
+End-to-end deployment verification is pending that push. Inspect progress in
+[Cloud Build history](https://console.cloud.google.com/cloud-build/builds;region=us-central1?project=demodirector-507722).
+
+Until the trigger is switched back to a repository configuration, changes to
+`cloudbuild.deploy.yaml` alone do not change the inline deployment steps. Once main contains
+the correct target names, switch with:
+
+```powershell
+gcloud builds triggers update github veyframe-main-deploy --build-config=cloudbuild.deploy.yaml --region=us-central1 --project=demodirector-507722
+```

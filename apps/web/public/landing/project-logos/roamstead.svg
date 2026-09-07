@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Roamstead">
+  <rect width="64" height="64" rx="32" fill="#f2eee7"/>
+  <path d="m13 31 19-16 19 16v20H38V39H26v12H13Z" fill="#253c35"/>
+  <path d="M19 28 32 17l13 11" fill="none" stroke="#ff8b62" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

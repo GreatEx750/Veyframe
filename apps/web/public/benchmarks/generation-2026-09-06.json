@@ -1,9 +1,9 @@
 {
-  "version": 3,
+  "version": 4,
   "date": "2026-09-06",
   "environment": "Local development",
-  "selection": "Four formats with fixed manual estimates. Three selected completed application jobs have measured timing; Product Demo has no matched completed generation job in this snapshot. Not a representative sample or a success-rate study.",
-  "timing": "Job creation to saved completion, rounded up to a whole second. Includes queued time, retry attempts and gaps within that job. Excludes brief preparation before submission and final human review.",
+  "selection": "Four formats with fixed manual estimates. Three selected completed application jobs have recorded timing; Product Demo uses a user-provided 20-minute 16-second generation time. Not a representative sample or a success-rate study.",
+  "timing": "Recorded jobs use job creation to saved completion, rounded up to a whole second, including queued time, retry attempts and gaps within that job. Product Demo uses an approximate generation time rather than a matched job record. All generation times exclude brief preparation before submission and final human review.",
   "manualMethod": "Illustrative planning estimates, not timed human trials. One editor familiar with the product, existing templates, a short script, screen recording, voiceover, captions, layout and one review pass. No custom animation or approval rounds. Estimates are not industry averages.",
   "veyframeBriefReviewMinutes": 5,
   "limitations": "Prepared application, templates and recording workflows were already available. Setup, workflow authoring, earlier development/debugging and later revisions are not included. Retries may reuse completed work. Human intervention was not timed separately. These different tasks are not a controlled quality-matched comparison. No claim of labor hours saved or automatic conversion of one video into three.",
@@ -17,8 +17,9 @@
       "startedAt": null,
       "completedAt": null,
       "attempts": null,
+      "estimatedGenerationSeconds": 1216,
       "manualMinutes": 60,
-      "note": "User-provided estimate: about one hour to professionally produce a 90-second continuous walkthrough with narration, captions and smooth zoom. The stage breakdown is illustrative, not individually timed. There is no matched completed generation job in this snapshot; generation time and savings are not measured. The packaged example is not a timed generation run.",
+      "note": "User-provided estimates: generation is 20 minutes 16 seconds, compared with about one hour to professionally produce a 90-second continuous walkthrough with narration, captions and smooth zoom. Neither estimate is a matched timed trial, and the stage breakdown is illustrative rather than individually measured.",
       "manualSteps": [
         { "label": "Research and script", "minutes": 10 },
         { "label": "Record the workflow", "minutes": 10 },
@@ -36,6 +37,7 @@
       "startedAt": "2026-09-06T09:56:15.999490Z",
       "completedAt": "2026-09-06T10:23:23.700754Z",
       "attempts": 3,
+      "estimatedGenerationSeconds": null,
       "manualMinutes": 120,
       "note": "Original app-generated 120-second presentation, not the independently edited showcase. Three attempts are included.",
       "manualSteps": [
@@ -55,6 +57,7 @@
       "startedAt": "2026-09-06T16:05:24.333375Z",
       "completedAt": "2026-09-06T16:07:45.887790Z",
       "attempts": 1,
+      "estimatedGenerationSeconds": null,
       "manualMinutes": 35,
       "note": "App-generated three-slide feature video with recorded interactions, narration and highlighted captions.",
       "manualSteps": [
@@ -74,6 +77,7 @@
       "startedAt": "2026-09-06T16:07:54.969078Z",
       "completedAt": "2026-09-06T16:14:35.451602Z",
       "attempts": 2,
+      "estimatedGenerationSeconds": null,
       "manualMinutes": 45,
       "note": "App-generated five-slide vertical video. Includes a narration-related retry and the gap before retry.",
       "manualSteps": [

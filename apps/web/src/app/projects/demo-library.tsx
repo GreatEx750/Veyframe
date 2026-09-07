@@ -35,6 +35,11 @@ function updatedLabel(value: string) {
   return `Edited ${Math.floor(hours / 24)}d ago`;
 }
 
+function showRepresentativeFrame(video: HTMLVideoElement) {
+  if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+  video.currentTime = Math.min(10, video.duration / 4);
+}
+
 export function DemoLibrary() {
   const { replace } = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -166,6 +171,7 @@ export function DemoLibrary() {
                       aria-label={`Preview ${project.name}`}
                       muted
                       onError={() => setVideoFailures((current) => new Set(current).add(project.id))}
+                      onLoadedMetadata={(event) => showRepresentativeFrame(event.currentTarget)}
                       playsInline
                       preload="metadata"
                       src={isJudgeDemoProject(project.id) ? JUDGE_DEMO_VIDEO_URL : `/api/projects/${project.id}/exports/latest/video`}
