@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "pack_id": "presentation-story-google@1",
+  "policy": {
+    "allow_only_listed_presets": true,
+    "arbitrary_expressions": false,
+    "arbitrary_javascript": false,
+    "model_generated_geometry": false,
+    "model_generated_timing": false
+  },
+  "presets": {
+    "hard_cut": {
+      "kind": "cut",
+      "duration_ms": 0
+    },
+    "matched_slide": {
+      "kind": "translate_fade",
+      "duration_ms": 480,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "offset_px": [
+        36,
+        0
+      ]
+    },
+    "field_slide": {
+      "kind": "translate_fade",
+      "duration_ms": 420,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "offset_px": [
+        0,
+        28
+      ]
+    },
+    "aperture_expand": {
+      "kind": "scale_fade",
+      "duration_ms": 560,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "origin": "center",
+      "start_scale": 0.96
+    },
+    "focus_rise": {
+      "kind": "translate_fade",
+      "duration_ms": 520,
+      "easing": "cubic-bezier(0.16, 1, 0.3, 1)",
+      "offset_px": [
+        0,
+        32
+      ]
+    },
+    "card_stagger": {
+      "kind": "staggered_translate_fade",
+      "duration_ms": 520,
+      "item_stagger_ms": 160,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "offset_px": [
+        0,
+        26
+      ]
+    },
+    "soft_crossfade": {
+      "kind": "crossfade",
+      "duration_ms": 500,
+      "easing": "cubic-bezier(0.4, 0, 0.2, 1)"
+    }
+  }
+}

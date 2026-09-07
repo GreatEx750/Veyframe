@@ -8,9 +8,12 @@ import pytest
 from demodirector_api.google_ai import StructuredGenerationError
 from demodirector_api.job_monitor import ActiveJobConflict, JobMonitor, failure_summary
 from demodirector_api.presentation_jobs import PresentationJobs
+from demodirector_api.presentation_pilot import NarrationWordBudgetError
 from demodirector_api.records import SQLiteRecordStore
 from demodirector_api.storyboard_generation import StoryboardValidationError
 from demodirector_contracts.jobs import GenerationJob
+from demodirector_worker.narration import NarrationQuotaError
+from demodirector_worker.renderer import RendererError
 from google.genai.errors import ClientError
 from test_auth import auth_client, bearer, project_payload, signup
 from test_generation import FakeCaptureWorker, build_service
@@ -35,6 +38,23 @@ def test_wrapped_gemini_failure_reports_safe_status_without_provider_payload() -
     summary = failure_summary(error)
     assert "400" in summary and "request" in summary
     assert "private" not in summary and "abc" not in summary
+
+
+def test_speech_quota_failure_has_actionable_safe_details() -> None:
+    summary = failure_summary(NarrationQuotaError("private api_key=abc"))
+    assert "Google speech rate or quota limit" in summary
+    assert "retry" in summary
+    assert "private" not in summary and "abc" not in summary
+    summary = failure_summary(NarrationWordBudgetError("private"))
+    assert "word budget" in summary and "private" not in summary
+
+
+def test_render_path_failure_is_actionable_without_exposing_paths() -> None:
+    summary = failure_summary(
+        RendererError("Media path is outside the approved project directory.")
+    )
+    assert "configured media folder" in summary
+    assert "private" not in failure_summary(RendererError("ffmpeg failed: private api_key=abc"))
 
 
 def test_account_limit_is_atomic_across_services(tmp_path: Path) -> None:

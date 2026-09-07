@@ -28,7 +28,9 @@ def test_composition_bounds_static_inputs_and_resets_recording_clock(tmp_path: P
     }
     with (
         patch.object(renderer, "copy_layer"),
-        patch.object(renderer, "caption_images", return_value=tmp_path / "captions.txt"),
+        patch.object(
+            renderer, "caption_images", return_value=tmp_path / "captions.txt"
+        ) as captions,
         patch("demodirector_worker.presentation_assets.media_probe", return_value=probe),
         patch("demodirector_worker.presentation_assets.run_ffmpeg") as ffmpeg,
     ):
@@ -40,6 +42,7 @@ def test_composition_bounds_static_inputs_and_resets_recording_clock(tmp_path: P
             "Open the dashboard.",
             tmp_path / "recording.mp4",
             0,
+            narration_duration=3,
         )
     arguments = ffmpeg.call_args.args[0]
     loops = [index for index, value in enumerate(arguments) if value == "-loop"]
@@ -48,6 +51,8 @@ def test_composition_bounds_static_inputs_and_resets_recording_clock(tmp_path: P
         assert arguments[index - 2 : index] == ["-t", "10.0"]
     filters = arguments[arguments.index("-filter_complex") + 1]
     assert "[5:v]setpts=PTS-STARTPTS" in filters
+    assert "enable='lt(t,3.000000)'" in filters
+    assert captions.call_args.args[2] == 3
 
 
 def test_zoom_is_applied_only_inside_product_aperture(tmp_path: Path) -> None:

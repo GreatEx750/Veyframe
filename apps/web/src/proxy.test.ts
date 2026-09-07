@@ -11,6 +11,17 @@ afterEach(() => {
 });
 
 describe("application route access", () => {
+  it("keeps the landing page public when production auth is required", () => {
+    process.env.DEMO_AUTH_REQUIRED = "true";
+    expect(proxy(new NextRequest("https://app.example.com/"))
+      .headers.get("location")).toBeNull();
+  });
+
+  it("protects the relocated Studio when production auth is required", () => {
+    process.env.DEMO_AUTH_REQUIRED = "true";
+    expect(proxy(new NextRequest("https://app.example.com/studio"))
+      .headers.get("location")).toBe("https://app.example.com/login");
+  });
   it("keeps local optional-auth routes directly accessible", () => {
     delete process.env.DEMO_AUTH_REQUIRED;
 

@@ -62,14 +62,14 @@ export function JobsDashboard({ projectId, jobId }: { projectId?: string; jobId?
   return <main className="library-shell jobs-shell">
     <ProductNavigation active="jobs" />
     <div className="jobs-content">
-      <header className="jobs-heading"><div><h1>Generation jobs</h1><p>{overview ? `${overview.active_count} active · Maximum 1 generation per account` : "Loading your saved jobs…"}</p></div><Link href="/">Back to Studio</Link></header>
+      <header className="jobs-heading"><div><h1>Generation jobs</h1><p>{overview ? `${overview.active_count} active · Maximum 1 generation per account` : "Loading your saved jobs…"}</p></div><Link href="/studio">Back to Studio</Link></header>
       {error && <p className="jobs-warning" role="alert">{error}</p>}
       <p className="jobs-sync">{overview ? `Last synced ${date(overview.server_time)} · Updates every 3 seconds` : "Connecting to the generation service…"}</p>
       {overview && hasTarget && !details && <p role="status" className="jobs-note">Waiting for the selected job to appear in your saved jobs. This page checks automatically. If the job was removed or belongs to another account, it will not appear. <Link href="/jobs">Show all jobs</Link></p>}
-      {overview && !hasTarget && overview.jobs.length === 0 && <section className="jobs-empty"><h2>No generation jobs yet</h2><p>Create a demo in Studio. Its progress and activity will appear here.</p><Link href="/">Create a demo</Link></section>}
+      {overview && !hasTarget && overview.jobs.length === 0 && <section className="jobs-empty"><h2>No generation jobs yet</h2><p>Create a demo in Studio. Its progress and activity will appear here.</p><Link href="/studio">Create a demo</Link></section>}
       {overview && overview.jobs.length > 0 && <div className="jobs-layout">
         <nav aria-label="Generation jobs" className="jobs-list">{overview.jobs.map((entry) => <button key={entry.job.id} aria-current={entry.job.id === details?.job.id ? "true" : undefined} onClick={() => setSelected(entry.job.id)} type="button">
-          <b>{entry.project_name}</b><span>{entry.kind === "presentation_preview" ? "First five slides" : entry.kind === "presentation" ? "Presentation · 2 minutes" : "Demo generation"} · {entry.job.status.replaceAll("_", " ")}</span><span>{date(entry.job.created_at)}</span><code>{entry.job.id.slice(0, 8)}</code>
+          <b>{entry.project_name}</b><span>{entry.format_label ?? (entry.kind === "presentation_preview" ? "First five slides" : entry.kind === "presentation" ? "Presentation · 2 minutes" : "Demo generation")} · {entry.job.status.replaceAll("_", " ")}</span><span>{date(entry.job.created_at)}</span><code>{entry.job.id.slice(0, 8)}</code>
         </button>)}</nav>
         {details && <section className="job-detail" aria-label="Selected job details">
           <header><h2>{details.project_name}</h2><Link href="/projects">Project library</Link></header>

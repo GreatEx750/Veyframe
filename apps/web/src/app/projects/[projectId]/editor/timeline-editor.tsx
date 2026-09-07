@@ -111,7 +111,7 @@ function shiftTime(startMs: number, endMs: number, boundary: number, delta: numb
 }
 
 export function deleteSceneFromTimeline(timeline: Timeline, sceneId: string): Timeline {
-  if (timeline.demo_mode === "presentation_demo") return timeline;
+  if (["presentation_demo", "spotlight_demo", "short_demo"].includes(timeline.demo_mode)) return timeline;
   const scene = timeline.scene_clips.find((clip) => clip.scene_id === sceneId);
   if (!scene || timeline.scene_clips.length <= 1) return timeline;
   const removedDuration = scene.end_ms - scene.start_ms;
@@ -143,7 +143,7 @@ export function deleteSceneFromTimeline(timeline: Timeline, sceneId: string): Ti
 }
 
 export function duplicateSceneInTimeline(timeline: Timeline, sceneId: string): Timeline {
-  if (timeline.demo_mode === "presentation_demo") return timeline;
+  if (["presentation_demo", "spotlight_demo", "short_demo"].includes(timeline.demo_mode)) return timeline;
   const scene = timeline.scene_clips.find((clip) => clip.scene_id === sceneId);
   if (!scene) return timeline;
   const duration = scene.end_ms - scene.start_ms;
@@ -201,7 +201,7 @@ export function splitSceneInTimeline(
   sceneId: string,
   splitAtMs: number,
 ): Timeline {
-  if (timeline.demo_mode === "presentation_demo") return timeline;
+  if (["presentation_demo", "spotlight_demo", "short_demo"].includes(timeline.demo_mode)) return timeline;
   const scene = timeline.scene_clips.find((clip) => clip.scene_id === sceneId);
   if (!scene || splitAtMs <= scene.start_ms || splitAtMs >= scene.end_ms) return timeline;
   const first = { ...scene, end_ms: splitAtMs };
@@ -333,10 +333,6 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
   }, [generatedExport, initialTimeline, projectId]);
 
   useEffect(() => {
-    if (videoRef.current) videoRef.current.currentTime = playheadMs / 1_000;
-  }, [playheadMs]);
-
-  useEffect(() => {
     if (activeMode !== "sources") return;
     let active = true;
 
@@ -426,6 +422,14 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
     return () => { active = false; };
   }, [activeMode, projectId]);
 
+  // Playback reports its position; only explicit navigation may seek the media.
+  function seekPreview(positionMs: number) {
+    if (!Number.isFinite(positionMs)) return;
+    const targetMs = Math.max(0, Math.min(timeline?.duration_ms ?? 0, positionMs));
+    setPlayheadMs(targetMs);
+    if (videoRef.current) videoRef.current.currentTime = targetMs / 1_000;
+  }
+
   function navigateToMappedScene(sceneId: string) {
     const startMs = [
       ...activeTimeline.audio_clips,
@@ -433,7 +437,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
       ...activeTimeline.scene_clips,
     ].filter((clip) => clip.scene_id === sceneId).map((clip) => clip.start_ms).sort((a, b) => a - b)[0] ?? 0;
     setSelectedSceneId(sceneId);
-    setPlayheadMs(startMs);
+    seekPreview(startMs);
   }
 
   async function togglePreview() {
@@ -614,19 +618,19 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
   }
 
   function deleteSelectedScene() {
-    if (!selectedSceneId || activeTimeline.demo_mode === "presentation_demo") return;
+    if (!selectedSceneId || ["presentation_demo", "spotlight_demo", "short_demo"].includes(activeTimeline.demo_mode)) return;
     const next = deleteSceneFromTimeline(activeTimeline, selectedSceneId);
     persist(next, "Scene deleted · tracks updated");
     setSelectedSceneId(next.scene_clips[0]?.scene_id ?? null);
   }
 
   function duplicateSelectedScene() {
-    if (!selectedSceneId || activeTimeline.demo_mode === "presentation_demo") return;
+    if (!selectedSceneId || ["presentation_demo", "spotlight_demo", "short_demo"].includes(activeTimeline.demo_mode)) return;
     persist(duplicateSceneInTimeline(activeTimeline, selectedSceneId), "Scene duplicated");
   }
 
   function splitSelectedScene() {
-    if (activeTimeline.demo_mode === "presentation_demo") return;
+    if (["presentation_demo", "spotlight_demo", "short_demo"].includes(activeTimeline.demo_mode)) return;
     const scene = activeTimeline.scene_clips.find((clip) => clip.scene_id === selectedSceneId);
     if (!scene || playheadMs <= scene.start_ms || playheadMs >= scene.end_ms) {
       setStatus("Place the playhead inside the selected scene to split it.");
@@ -904,6 +908,9 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
     : 0;
   const focusXPercent = Math.round((focusX / focusWidth) * 100);
   const focusYPercent = Math.round((focusY / focusHeight) * 100);
+  const contribution = sourceMap?.contributions.find((item) => item.id === selectedContributionId);
+  const source = sourceMap?.sources.find((item) => item.id === contribution?.source_id);
+  const statements = sourceMap?.narration_statements.filter((item) => contribution?.narration_statement_ids.includes(item.id)) ?? [];
   return (
     <main className="editor-shell">
       <header className="editor-topbar">
@@ -952,14 +959,14 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
       <aside className="editor-right-sidebar">
         <section className="clip-inspector editor-mode-panel">
-          {activeMode === "quality" && <VideoQuality key={videoExport?.id} projectId={projectId} exportId={isJudgeDemoProject(projectId) ? undefined : videoExport?.id} onSeek={(ms) => { if (videoRef.current) videoRef.current.currentTime = ms / 1000; }} onTimelineChanged={() => { setExportStale(true); window.localStorage.setItem(exportStaleKey(projectId), "true"); setStatus("Repair saved · reload to inspect the candidate timeline before exporting"); }} />}
+          {activeMode === "quality" && <VideoQuality key={videoExport?.id} projectId={projectId} exportId={isJudgeDemoProject(projectId) ? undefined : videoExport?.id} onSeek={seekPreview} onTimelineChanged={() => { setExportStale(true); window.localStorage.setItem(exportStaleKey(projectId), "true"); setStatus("Repair saved · reload to inspect the candidate timeline before exporting"); }} />}
           {activeMode === "setup" && <>
             <div className="inspector-heading"><h2>Project setup</h2><p>Recording details</p></div>
             <dl className="editor-detail-list">
               <dt>Project</dt><dd>{project?.name ?? "Demo project"}</dd>
               <dt>Source</dt><dd>{project ? domainLabel(project.website_url) : "Not available"}</dd>
-              <dt>Format</dt><dd>{timeline.demo_mode === "presentation_demo" ? "Presentation Demo" : "Product Demo"}</dd>
-              {timeline.demo_mode === "presentation_demo" && <><dt>Template sequence</dt><dd>Presentation Story v1</dd></>}
+              <dt>Format</dt><dd>{({presentation_demo: "Presentation Demo", product_demo: "Product Demo", spotlight_demo: "Spotlight", short_demo: "Short"})[timeline.demo_mode]}</dd>
+              {["presentation_demo", "spotlight_demo", "short_demo"].includes(timeline.demo_mode) && <><dt>Template sequence</dt><dd>{timeline.demo_mode === "spotlight_demo" ? "Spotlight v1" : timeline.demo_mode === "short_demo" ? "Short v1" : "Presentation Story v1"}</dd></>}
               <dt>Smooth zoom</dt><dd>{timeline.presentation.zoom_enabled ? "On" : "Off"}</dd>
               <dt>Duration</dt><dd>{Math.round(timeline.duration_ms / 1_000)} seconds</dd>
               <dt>Scenes</dt><dd>{timeline.scene_clips.length}</dd>
@@ -980,12 +987,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
                 <Link href={`/projects/${projectId}/storyboard`}>Review storyboard evidence</Link>
               </section> : <>
                 {sourceMap.partial_evidence && <p className="source-map-partial" role="status">Some evidence groups are empty. This map uses only the evidence saved with the approved storyboard.</p>}
-                {selectedContributionId ? (() => {
-                  const contribution = sourceMap.contributions.find((item) => item.id === selectedContributionId);
-                  const source = sourceMap.sources.find((item) => item.id === contribution?.source_id);
-                  if (!contribution || !source) return null;
-                  const statements = sourceMap.narration_statements.filter((item) => contribution.narration_statement_ids.includes(item.id));
-                  return <section className="source-usage-detail" aria-label="Selected source contribution">
+                {selectedContributionId ? contribution && source ? <section className="source-usage-detail" aria-label="Selected source contribution">
                     <button className="source-back" onClick={() => setSelectedContributionId(null)} type="button">← All sources</button>
                     <span>{originLabel(source.origin)}</span>
                     <h3>{source.title}</h3>
@@ -998,8 +1000,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
                       })}
                       {statements.map((statement) => <button key={statement.id} onClick={() => navigateToMappedScene(statement.scene_id)} type="button"><b>Approved narration</b><span>{statement.text}</span></button>)}
                     </div>
-                  </section>;
-                })() : <section className="sources-section" aria-label="Evidence contributions">
+                  </section> : null : <section className="sources-section" aria-label="Evidence contributions">
                   <h3>Where each source was used</h3>
                   {sourceMap.sources.length > 0 ? (["project_brief", "website_inspection", "parallel_search"] as const).map((origin) => {
                     const originSources = sourceMap.sources.filter((source) => source.origin === origin);
@@ -1116,7 +1117,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
                 <div><dt>Product visible</dt><dd>{Math.round(longFormPlan.product_presence_percent)}%</dd></div>
               </dl>
               <div className="longform-sections" aria-label="Narrative sections">
-                {longFormPlan.sections.map((section) => <button key={section.id} onClick={() => setPlayheadMs(section.start_ms)} type="button"><span>{formatTime(section.start_ms)}</span><b>{section.id.replaceAll("_", " ")}</b><small>{Math.round((section.end_ms - section.start_ms) / 1_000)}s · product footage</small></button>)}
+                {longFormPlan.sections.map((section) => <button key={section.id} onClick={() => seekPreview(section.start_ms)} type="button"><span>{formatTime(section.start_ms)}</span><b>{section.id.replaceAll("_", " ")}</b><small>{Math.round((section.end_ms - section.start_ms) / 1_000)}s · product footage</small></button>)}
               </div>
               {longFormPlan.condensed_intervals.length > 0 && <div className="longform-chapters" aria-label="Time-compressed intervals">
                 <h3>Time compression</h3>
@@ -1135,7 +1136,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
           {activeMode === "cut" && <>
             <div className="inspector-heading"><h2>Cut scene</h2><p>{selectedSceneId ?? "No scene selected"}</p></div>
-            {timeline.demo_mode === "presentation_demo" ? (
+            {["presentation_demo", "spotlight_demo", "short_demo"].includes(timeline.demo_mode) ? (
               <p className="camera-note" role="note">The authored Presentation Demo sequence is fixed at 2:00, so scene timing is read-only.</p>
             ) : <>
               <div className="cut-actions">
@@ -1233,7 +1234,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
           {activeMode === "overlay" && <>
             <div className="inspector-heading"><h2>Video frame</h2><p>Recording frame</p></div>
-            {timeline.demo_mode === "presentation_demo" ? (
+            {["presentation_demo", "spotlight_demo", "short_demo"].includes(timeline.demo_mode) ? (
               <p className="camera-note">Presentation Story v1 controls framing and places the real product recording inside its authored layouts. No additional recording frame is applied.</p>
             ) : <>
               <div className="template-list">
@@ -1247,7 +1248,7 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
 
           {activeMode === "captions" && <>
             <div className="inspector-heading"><h2>Captions</h2><p>{timeline.caption_clips.length} caption clips</p></div>
-            <div className="caption-list">{timeline.caption_clips.map((clip) => <button key={clip.id} onClick={() => setPlayheadMs(clip.start_ms)} type="button"><span>{formatTime(clip.start_ms)}</span><p>{clip.text}</p></button>)}</div>
+            <div className="caption-list">{timeline.caption_clips.map((clip) => <button key={clip.id} onClick={() => seekPreview(clip.start_ms)} type="button"><span>{formatTime(clip.start_ms)}</span><p>{clip.text}</p></button>)}</div>
           </>}
 
           {activeMode === "audio" && <>
@@ -1285,10 +1286,10 @@ export function TimelineEditor({ projectId, initialProject, initialTimeline }: T
       </aside>
 
       <section className="editor-timeline" aria-label="Timeline editor">
-        <input aria-label="Timeline playhead" className="playhead-input" max={timeline.duration_ms} min="0" onChange={(event) => setPlayheadMs(Number(event.target.value))} step="10" type="range" value={playheadMs} />
+        <input aria-label="Timeline playhead" className="playhead-input" max={timeline.duration_ms} min="0" onChange={(event) => seekPreview(Number(event.target.value))} step="10" type="range" value={playheadMs} />
         <div className="editor-ruler"><span>0:00</span><span>{formatTime(timeline.duration_ms / 2)}</span><span>{formatTime(timeline.duration_ms)}</span></div>
         <TimelineTrack label="Scenes">
-          {timeline.scene_clips.map((clip, index) => <button aria-pressed={selectedSceneId === clip.scene_id} className="scene-timeline-clip" key={clip.id} onClick={() => { setSelectedSceneId(clip.scene_id); setActiveMode("cut"); }} style={{ width: `${((clip.end_ms - clip.start_ms) / timeline.duration_ms) * 100}%` }} type="button"><b>{index + 1}</b><span>{clip.scene_id}</span><small>{formatTime(clip.end_ms - clip.start_ms)}</small></button>)}
+          {timeline.scene_clips.map((clip, index) => <button aria-pressed={selectedSceneId === clip.scene_id} className="scene-timeline-clip" key={clip.id} onClick={() => { setSelectedSceneId(clip.scene_id); seekPreview(clip.start_ms); setActiveMode("cut"); }} style={{ width: `${((clip.end_ms - clip.start_ms) / timeline.duration_ms) * 100}%` }} type="button"><b>{index + 1}</b><span>{clip.scene_id}</span><small>{formatTime(clip.end_ms - clip.start_ms)}</small></button>)}
         </TimelineTrack>
         <TimelineTrack label="Captions">{timeline.caption_clips.map((clip) => <span className="caption-timeline-clip" key={clip.id} style={clipStyle(clip, timeline.duration_ms)}>{clip.text}</span>)}</TimelineTrack>
         <TimelineTrack label="Zooms"><div className="zoom-timeline-line" />{timeline.zoom_clips.map((clip) => <button aria-label={`Select zoom ${clip.id}`} aria-pressed={selectedZoomId === clip.id} className="zoom-timeline-clip" key={clip.id} onClick={() => { setSelectedZoomId(clip.id); setActiveMode("zoom"); }} style={clipStyle(clip, timeline.duration_ms)} type="button"><span>{((clip.end_ms - clip.start_ms) / 1_000).toFixed(1)}s</span></button>)}</TimelineTrack>

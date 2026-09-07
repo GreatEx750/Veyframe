@@ -120,7 +120,7 @@ export function DemoLibrary() {
       <section className="library-main">
         <header className="library-heading">
           <div><h1>Projects</h1><p>Create, manage, and publish your product demos.</p></div>
-          <Link className="library-new" href="/">+ New demo</Link>
+          <Link className="library-new" href="/studio">+ New demo</Link>
         </header>
 
         <section className="library-summary" aria-label="Library summary">
@@ -178,7 +178,7 @@ export function DemoLibrary() {
                 </div>
                 <div className="demo-card-body">
                   <h3>{project.name}</h3>
-                  <p><i className={`status-dot status-${project.status}`} />{statusLabels[project.status]} <span>{project.demo_mode === "presentation_demo" ? "Presentation" : "Product"}</span></p>
+                  <p><i className={`status-dot status-${project.status}`} />{statusLabels[project.status]} <span>{({presentation_demo: "Presentation", product_demo: "Product", spotlight_demo: "Spotlight", short_demo: "Short"})[project.demo_mode]}</span></p>
                 </div>
               </Link>
               <footer>

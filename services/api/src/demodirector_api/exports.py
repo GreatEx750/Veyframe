@@ -336,6 +336,8 @@ class ExportService:
             "720p": (1280, 720),
         }
         width, height = dimensions[quality]
+        if timeline.output_orientation == "vertical":
+            width, height = height, width
         try:
             motion_plan: MotionDirectionPlan | None = None
             if timeline.motion_plan_id is not None:

@@ -15,6 +15,7 @@ export const jobActivitySchema = z.object({
   level: z.enum(["info", "warning", "error"]), message: z.string().min(1).max(500),
 }).strict();
 export const jobDetailsSchema = z.object({
+  format_label: z.string().nullish(),
   job: generationJobSchema, project_name: z.string(), kind: z.enum(["generation", "presentation_preview", "presentation"]),
   elapsed_seconds: z.number().int().nonnegative(), step_elapsed_seconds: z.number().int().nonnegative(),
   last_progress_at: z.string().datetime({ offset: true }), heartbeat_at: z.string().datetime({ offset: true }).nullable(),

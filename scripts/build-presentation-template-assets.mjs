@@ -7,6 +7,19 @@ import { deflateSync } from "node:zlib";
 import sharp from "sharp";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const requestedTheme = (process.argv.find((value) => value.startsWith("--theme=")) ?? "--theme=default").slice("--theme=".length);
+const THEMES = {
+  default: {
+    directory: "presentation-story-v2", packId: "presentation-story@2", displayName: "Editorial product story", status: "authored_not_wired",
+    colors: { hook: "#0D4334", field: "#234D44", fieldRaised: "#2C5B50", mint: "#9DE8D2", mintSoft: "#DDF7EF", surface: "#9DE8D2", ivory: "#F3EDE1", ink: "#0A211C", inkSoft: "#173D34", coral: "#FF796C", line: "#73BDAA", white: "#FFFFFF" },
+  },
+  google: {
+    directory: "presentation-story-google-v1", packId: "presentation-story-google@1", displayName: "Multicolor product story", status: "pre_generated_theme",
+    colors: { hook: "#1A73E8", field: "#202124", fieldRaised: "#303134", mint: "#FF6666", mintSoft: "#FCE8E6", surface: "#FCE8E6", ivory: "#F8F9FA", ink: "#202124", inkSoft: "#3C4043", coral: "#FF6666", line: "#34A853", white: "#FFFFFF" },
+  },
+};
+const THEME = THEMES[requestedTheme];
+if (!THEME) throw new Error(`Unknown template theme: ${requestedTheme}`);
 const PACK_DIR = path.join(
   ROOT,
   "services",
@@ -14,7 +27,7 @@ const PACK_DIR = path.join(
   "src",
   "demodirector_worker",
   "templates",
-  "presentation-story-v2",
+  THEME.directory,
 );
 const FONT_SOURCE = path.join(
   ROOT,
@@ -34,19 +47,7 @@ const FONT_LICENSE_SOURCE = path.join(
 
 const CANVAS = { width: 2560, height: 1440 };
 const PREVIEW = { width: 1280, height: 720 };
-const COLORS = {
-  hook: "#0D4334",
-  field: "#234D44",
-  fieldRaised: "#2C5B50",
-  mint: "#9DE8D2",
-  mintSoft: "#DDF7EF",
-  ivory: "#F3EDE1",
-  ink: "#0A211C",
-  inkSoft: "#173D34",
-  coral: "#FF796C",
-  line: "#73BDAA",
-  white: "#FFFFFF",
-};
+const COLORS = THEME.colors;
 
 const FONT_TOKENS = {
   display_xl: { size: 132, line_height: 138, weight: 500, tracking: -4 },
@@ -414,7 +415,7 @@ function captionFrame() {
 }
 
 function backgroundMarkup(template) {
-  const base = template.layout === "promise" || template.layout === "outro" ? COLORS.mint : template.layout === "hook" ? COLORS.hook : COLORS.field;
+  const base = template.layout === "promise" || template.layout === "outro" ? COLORS.surface : template.layout === "hook" ? COLORS.hook : COLORS.field;
   const grain = `<pattern id="grain-${template.slug}" width="48" height="48" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="${template.layout === "promise" || template.layout === "outro" ? COLORS.ink : COLORS.mint}" opacity="0.07"/></pattern>`;
   let decoration = "";
   if (template.layout === "hook") {
@@ -462,6 +463,8 @@ function backgroundMarkup(template) {
     `;
   } else if (template.layout === "outro") {
     decoration = `
+      <rect x="128" y="218" width="2304" height="620" rx="24" fill="${COLORS.white}"/>
+      <rect x="128" y="218" width="18" height="620" rx="9" fill="${COLORS.mint}"/>
       <path d="M128 176H2432M128 940H2432M128 1174H2432" stroke="${COLORS.ink}" stroke-width="2" opacity="0.72"/>
       <path d="M920 940V1174M1640 940V1174" stroke="${COLORS.ink}" stroke-width="2" opacity="0.3"/>
       <rect x="1178" y="286" width="204" height="76" rx="8" fill="${COLORS.ink}"/>
@@ -702,7 +705,7 @@ async function buildContactSheet(previews, fontData) {
   }).join("");
   const sheet = svgShell(`
     <rect width="2560" height="1440" fill="${COLORS.ink}"/>
-    <text x="128" y="68" fill="${COLORS.mint}" font-size="28" font-weight="600" letter-spacing="5">PRESENTATION STORY · EDITORIAL V2 · 2560 × 1440 MASTERS</text>
+    <text x="128" y="68" fill="${COLORS.mint}" font-size="28" font-weight="600" letter-spacing="5">${escapeXml(THEME.displayName.toUpperCase())} · 2560 × 1440 MASTERS</text>
     ${cells}
   `, fontData);
   const outputPath = path.join(PACK_DIR, "contact-sheet.png");
@@ -738,7 +741,7 @@ async function main() {
   };
   const motion = {
     schema_version: 1,
-    pack_id: "presentation-story@2",
+    pack_id: THEME.packId,
     policy: {
       allow_only_listed_presets: true,
       arbitrary_expressions: false,
@@ -787,9 +790,10 @@ async function main() {
   });
   const manifest = {
     schema_version: 1,
-    pack_id: "presentation-story@2",
-    display_name: "Editorial product story",
-    status: "authored_not_wired",
+    pack_id: THEME.packId,
+    display_name: THEME.displayName,
+    status: THEME.status,
+    theme: requestedTheme,
     canvas: {
       ...CANVAS,
       color_space: "sRGB",

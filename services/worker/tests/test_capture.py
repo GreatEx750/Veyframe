@@ -13,7 +13,12 @@ from pathlib import Path
 
 import pytest
 from demodirector_contracts import CaptureAction, CapturePlan, Scene
-from demodirector_worker.capture import CaptureSettings, PlaywrightCaptureWorker
+from demodirector_worker.capture import (
+    ACTION_TIMEOUT_CAP_MS,
+    CaptureSettings,
+    PlaywrightCaptureWorker,
+    _per_action_timeout_ms,
+)
 from pydantic import HttpUrl
 
 
@@ -31,6 +36,12 @@ def media_binary(name: str) -> str:
         if matches:
             return str(matches[0])
     pytest.skip(f"{name} is required for the capture resolution test")
+
+
+def test_per_action_timeout_preserves_the_overall_capture_deadline() -> None:
+    assert _per_action_timeout_ms(210_000, 0) == ACTION_TIMEOUT_CAP_MS
+    assert _per_action_timeout_ms(210_000, 205_000) == 5_000
+    assert _per_action_timeout_ms(210_000, 210_000) == 1
 
 
 class QuietHandler(SimpleHTTPRequestHandler):

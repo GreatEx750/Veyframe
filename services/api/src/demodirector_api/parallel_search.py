@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Literal, Protocol, cast
 from urllib.parse import urlsplit
@@ -192,6 +192,7 @@ class UnavailableParallelSearchAdapter:
 class ResearchRunResult:
     sources: list[ResearchSource]
     warning: str | None = None
+    attempts: list[dict[str, object]] = field(default_factory=list)
 
 
 class ProjectResearchService:
@@ -204,30 +205,42 @@ class ProjectResearchService:
         self.repository = repository
 
     def analyze(self, project: Project) -> ResearchRunResult:
-        domain = product_domain(str(project.website_url))
-        objective, queries = build_product_search(project, domain)
-        try:
-            results = self.search.search(
-                objective=objective,
-                queries=queries,
-                domain=domain,
-            )
-        except ParallelSearchError as error:
-            self.repository.replace_partner_sources(project.id, [])
-            return ResearchRunResult(sources=[], warning=str(error))
+        inspected = [
+            source for source in self.repository.list_for_project(project.id)
+            if source.source_type == "website"
+        ]
+        result = research_product(self.search, project, inspected)
+        self.repository.replace_partner_sources(project.id, result.sources)
+        return result
 
+
+def research_product(
+    search: ParallelSearchGateway, project: Project, inspected: Sequence[ResearchSource],
+) -> ResearchRunResult:
+    """Use the inspector's landing URL, with a bounded broader-query retry."""
+    destination = str(inspected[0].url) if inspected else str(project.website_url)
+    domain = product_domain(destination)
+    objective, queries = build_product_search(project, domain)
+    attempts: list[dict[str, object]] = []
+    for attempt_queries in [queries, [f"{domain} help", f"{domain} documentation"]]:
+        receipt: dict[str, object] = {
+            "requested_url": str(project.website_url), "destination_url": destination,
+            "domain": domain, "objective": objective, "queries": attempt_queries,
+        }
+        attempts.append(receipt)
+        try:
+            results = search.search(objective=objective, queries=attempt_queries, domain=domain)
+        except ParallelSearchError as error:
+            receipt["error"] = str(error)
+            return ResearchRunResult([], str(error), attempts)
         sources = normalize_sources(project.id, results)
-        if not sources:
-            self.repository.replace_partner_sources(project.id, [])
-            return ResearchRunResult(
-                sources=[],
-                warning=(
-                    "Parallel Search returned no usable official sources; "
-                    "continuing with website-only context."
-                ),
-            )
-        self.repository.replace_partner_sources(project.id, sources)
-        return ResearchRunResult(sources=sources)
+        receipt.update(returned_count=len(results), accepted_count=len(sources))
+        if sources:
+            return ResearchRunResult(sources, attempts=attempts)
+    return ResearchRunResult(
+        [], "Parallel Search returned no usable official sources; "
+        "continuing with website-only context.", attempts,
+    )
 
 
 def product_domain(website_url: str) -> str:
@@ -244,9 +257,8 @@ def build_product_search(project: Project, domain: str) -> tuple[str, list[str]]
         f"relevant to this brief: {project.product_summary}"
     )
     queries = [
-        f"{domain} product features",
-        f"{domain} official documentation",
-        f"{domain} help guide",
+        f"site:{domain} help search navigation",
+        f"{domain} user guide",
     ]
     return objective, queries
 

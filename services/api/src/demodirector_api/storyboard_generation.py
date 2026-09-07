@@ -12,7 +12,6 @@ from demodirector_contracts import (
     Scene,
     Storyboard,
 )
-from pydantic import Field
 
 from demodirector_api.google_ai import StructuredAIService
 
@@ -23,8 +22,9 @@ INTERACTIVE_ACTIONS = {"click", "fill", "select", "upload"}
 
 
 class GeneratedStoryboard(Storyboard):
-    # Advertise the generation budget to Gemini; business validation below remains authoritative.
-    scenes: list[Scene] = Field(json_schema_extra={"minItems": MIN_SCENES, "maxItems": MAX_SCENES})
+    """Provider-compatible response schema; scene-count policy is validated after parsing."""
+
+    scenes: list[Scene]
 
 
 class StoryboardValidationError(RuntimeError):

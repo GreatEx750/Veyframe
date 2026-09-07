@@ -27,13 +27,21 @@ class ProjectCreate(BaseModel):
     requested_duration_seconds: int = Field(gt=0, le=600)
     cta: NonEmptyString
     brand_kit_id: NonEmptyString | None = None
-    demo_mode: Literal["product_demo", "presentation_demo"] = "product_demo"
+    demo_mode: Literal["product_demo", "presentation_demo", "spotlight_demo", "short_demo"] = (
+        "product_demo"
+    )
+    output_orientation: Literal["landscape", "vertical"] = "landscape"
     zoom_enabled: bool = True
 
     @model_validator(mode="after")
     def presentation_demo_uses_mvp_duration(self) -> ProjectCreate:
         if self.demo_mode == "presentation_demo" and self.requested_duration_seconds != 120:
             raise ValueError("Presentation Demo must be exactly 120 seconds for the MVP")
+        expected = {"spotlight_demo": 30, "short_demo": 45}.get(self.demo_mode)
+        if expected and self.requested_duration_seconds != expected:
+            raise ValueError(f"{self.demo_mode} requires {expected} seconds")
+        if self.output_orientation == "vertical" and not expected:
+            raise ValueError("Vertical output is supported by Spotlight and Short")
         return self
 
 
@@ -48,7 +56,10 @@ class ProjectUpdate(BaseModel):
     requested_duration_seconds: int | None = Field(default=None, gt=0, le=600)
     cta: NonEmptyString | None = None
     brand_kit_id: NonEmptyString | None = None
-    demo_mode: Literal["product_demo", "presentation_demo"] | None = None
+    demo_mode: (
+        Literal["product_demo", "presentation_demo", "spotlight_demo", "short_demo"] | None
+    ) = None
+    output_orientation: Literal["landscape", "vertical"] | None = None
     zoom_enabled: bool | None = None
 
     @model_validator(mode="after")

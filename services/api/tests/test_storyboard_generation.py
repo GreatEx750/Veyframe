@@ -125,11 +125,11 @@ def test_storyboard_service_accepts_grounded_timed_scene_plan() -> None:
     assert "CaptureAction allowlist" in fake.prompts[0]
 
 
-def test_generation_schema_advertises_required_scene_budget() -> None:
+def test_generation_schema_avoids_provider_unsupported_collection_constraints() -> None:
     schema = GeneratedStoryboard.model_json_schema()
     assert "scenes" in schema["required"]
-    assert schema["properties"]["scenes"]["minItems"] == 5
-    assert schema["properties"]["scenes"]["maxItems"] == 10
+    assert "minItems" not in schema["properties"]["scenes"]
+    assert "maxItems" not in schema["properties"]["scenes"]
 
 
 def test_storyboard_prompt_distinguishes_fixed_presentation_from_product_capture() -> None:

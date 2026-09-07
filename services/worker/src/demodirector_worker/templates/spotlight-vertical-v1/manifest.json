@@ -1,0 +1,256 @@
+{
+  "pack_id": "spotlight-vertical-default@1",
+  "display_name": "Editorial spotlight demo",
+  "family": "promo",
+  "mode": "spotlight_demo",
+  "theme": "default",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "caption_layout": {
+    "x": 72,
+    "y": 1630,
+    "width": 840,
+    "height": 104,
+    "words_per_line": 3
+  },
+  "typography": {
+    "tokens": {
+      "brand": {
+        "size": 34,
+        "line_height": 48,
+        "weight": 500,
+        "tracking": 0
+      },
+      "headline": {
+        "size": 66,
+        "line_height": 78,
+        "weight": 600,
+        "tracking": -1
+      },
+      "body": {
+        "size": 38,
+        "line_height": 50,
+        "weight": 400,
+        "tracking": 0
+      },
+      "cta": {
+        "size": 54,
+        "line_height": 68,
+        "weight": 500,
+        "tracking": -1
+      }
+    }
+  },
+  "templates": [
+    {
+      "id": "spotlight-hook@1",
+      "name": "Editorial spotlight hook",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "hook",
+      "story_intent": "Demonstrate exactly one feature and its grounded benefit.",
+      "requires_product": false,
+      "product_aperture": null,
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 72,
+            "y": 150,
+            "width": 840,
+            "height": 60
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 72,
+            "y": 450,
+            "width": 840,
+            "height": 390
+          },
+          "font_token": "headline",
+          "max_characters": 60,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "body",
+          "rect": {
+            "x": 72,
+            "y": 1030,
+            "width": 840,
+            "height": 240
+          },
+          "font_token": "body",
+          "max_characters": 90,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "spotlight-vertical-default-1",
+      "assets": {
+        "background_png": "slides/hook/background.png",
+        "foreground_png": "slides/hook/foreground.png"
+      }
+    },
+    {
+      "id": "spotlight-proof@1",
+      "name": "Editorial spotlight proof",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "proof",
+      "story_intent": "Demonstrate exactly one feature and its grounded benefit.",
+      "requires_product": true,
+      "product_aperture": {
+        "x": 72,
+        "y": 470,
+        "width": 840,
+        "height": 1090,
+        "corner_radius": 10
+      },
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 72,
+            "y": 150,
+            "width": 840,
+            "height": 60
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 72,
+            "y": 250,
+            "width": 840,
+            "height": 160
+          },
+          "font_token": "headline",
+          "max_characters": 40,
+          "max_lines": 2,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "spotlight-vertical-default-1",
+      "assets": {
+        "background_png": "slides/proof/background.png",
+        "foreground_png": "slides/proof/foreground.png",
+        "product_mask_png": "slides/proof/product-mask.png"
+      }
+    },
+    {
+      "id": "spotlight-close@1",
+      "name": "Editorial spotlight close",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "close",
+      "story_intent": "Demonstrate exactly one feature and its grounded benefit.",
+      "requires_product": false,
+      "product_aperture": null,
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 72,
+            "y": 150,
+            "width": 840,
+            "height": 60
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 72,
+            "y": 450,
+            "width": 840,
+            "height": 390
+          },
+          "font_token": "headline",
+          "max_characters": 60,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "cta",
+          "rect": {
+            "x": 72,
+            "y": 1030,
+            "width": 840,
+            "height": 240
+          },
+          "font_token": "cta",
+          "max_characters": 46,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "spotlight-vertical-default-1",
+      "assets": {
+        "background_png": "slides/close/background.png",
+        "foreground_png": "slides/close/foreground.png"
+      }
+    }
+  ],
+  "schedule": [
+    {
+      "template_id": "spotlight-hook@1",
+      "start_ms": 0,
+      "end_ms": 4000,
+      "recipe": "title"
+    },
+    {
+      "template_id": "spotlight-proof@1",
+      "start_ms": 4000,
+      "end_ms": 26000,
+      "recipe": "search"
+    },
+    {
+      "template_id": "spotlight-close@1",
+      "start_ms": 26000,
+      "end_ms": 30000,
+      "recipe": "title"
+    }
+  ],
+  "integrity": {
+    "files": {
+      "slides/hook/background.png": "459463756f954ca678a6670f4d52de7179992fb4b14ce94d596505d75c9c8a76",
+      "slides/hook/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "slides/proof/background.png": "cf4001cc0a02773973d768e2d9e0bc69c8a1382a54bb5303a2f1a0f355941be9",
+      "slides/proof/foreground.png": "54352c181b91bc1d579b56d741ae9dbda37372268645a7e171de87dd17e2b9c8",
+      "slides/proof/product-mask.png": "6c2931cc001b2c268943dbfa58328e9e4514070e1e04877395dbc289137d1afd",
+      "slides/close/background.png": "459463756f954ca678a6670f4d52de7179992fb4b14ce94d596505d75c9c8a76",
+      "slides/close/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "shared/inter-latin-variable.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+    }
+  }
+}

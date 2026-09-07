@@ -14,9 +14,11 @@ from typing import Any, Literal
 
 from demodirector_contracts import Project
 from demodirector_contracts.jobs import GenerationJob, JobActivity, JobDetails
+from demodirector_worker.narration import NARRATION_QUOTA_MESSAGE, NarrationQuotaError
 from google.genai.errors import APIError
 from pydantic import ValidationError
 
+from demodirector_api.presentation_pilot import NarrationWordBudgetError, SlideDirectionError
 from demodirector_api.records import RecordConflict, RecordStore
 from demodirector_api.repositories import ProjectRepository
 
@@ -49,6 +51,15 @@ def failure_summary(error: Exception) -> str:
     """Describe known failure categories without forwarding provider payloads."""
     cause: BaseException | None = error
     for _ in range(5):
+        if isinstance(cause, SlideDirectionError):
+            return str(cause)
+        if isinstance(cause, NarrationWordBudgetError):
+            return (
+                "The narration script did not meet its word budget after text correction. "
+                "No speech was requested for that paragraph."
+            )
+        if isinstance(cause, NarrationQuotaError):
+            return NARRATION_QUOTA_MESSAGE
         if isinstance(cause, APIError):
             provider_explanations = {
                 400: "Google rejected the generation request; inspect model/schema compatibility",
@@ -74,6 +85,15 @@ def failure_summary(error: Exception) -> str:
         return "Media processing exceeded its time limit."
     if isinstance(error, TimeoutError):
         return "The current operation did not respond within its time limit."
+    if type(error).__name__ == "RendererError":
+        return {
+            "Media path is outside the approved project directory.": (
+                "Video assembly could not access recordings in its configured media folder."
+            ),
+            "Timeline media file does not exist.": (
+                "Video assembly could not find a required recording or narration file."
+            ),
+        }.get(str(error), "Video assembly failed its media processing or validation check.")
     if type(error).__name__ == "StoryboardValidationError":
         categories = {
             "scene_count": "The generated storyboard did not contain between five and ten scenes.",
@@ -320,6 +340,8 @@ class JobMonitor:
         return JobDetails(
             job=clean,
             project_name=project.name,
+            format_label={"spotlight_demo": "Spotlight · 30 seconds",
+                          "short_demo": "Short · 45 seconds"}.get(project.demo_mode),
             kind=kind,
             elapsed_seconds=elapsed,
             step_elapsed_seconds=max(

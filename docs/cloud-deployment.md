@@ -1,4 +1,14 @@
-# DemoDirector Google Cloud deployment
+# Veyframe Google Cloud deployment
+
+The current deployment is in `demodirector-507722`, with Cloud Run services
+`veyframe-web`, `veyframe-api`, and `veyframe-worker` in `us-central1`.
+The public site is https://veyframe-web-5zo4cenn3q-uc.a.run.app.
+See `qa-veyframe-service-rename.md` for the service cutover and verification results.
+The older `demodirector-*` services remain available for existing URLs and queued tasks.
+Firestore, Storage, secret names, runtime identities and image repository paths retain
+their existing names. Application branding is a separate change from this service rename.
+The `habiwatch` commands below document the earlier deployment, not the current target.
+Do not run them against HabiWatch when deploying the current environment.
 
 The production boundary uses three Cloud Run services in `us-central1`. The public web service
 proxies only to the public API and runs under a dedicated identity with no project roles. The API
@@ -62,7 +72,10 @@ deploy that coordinator to Agent Engine rather than adding state to Cloud Run.
 
 For the QHD nine-slide pipeline, update the API memory allowance to 8 GiB before generation;
 the initial 4 GiB configuration above was exhausted in a real cloud render. Retain two CPUs,
-minimum zero/maximum one instance, concurrency two, and the 900-second request timeout.
+minimum zero/maximum two instances, concurrency two, and the 900-second request timeout.
+The second instance lets interactive login and job-status requests be served during a render;
+the application still admits only one active generation per user. A maximum of one instance
+caused a real "no available instance" failure during cloud verification.
 Each slide is a separate authenticated Cloud Tasks request; assembly is the final request.
 Set `DEMO_GENERATION_TASK_URL` to the API origin and grant the existing task identity invocation
 access to that API. Keep `DEMO_JOB_TOKEN_KEY` in Secret Manager for scoped authenticated captures.
@@ -89,11 +102,13 @@ equivalent.
 
 ## Continuous deployment from GitHub
 
-`cloudbuild.deploy.yaml` is the push deployment pipeline for the `main` branch. It builds the web,
+`cloudbuild.deploy.yaml` is the deployment configuration intended for the `main` branch. It builds the web,
 API, and worker images in parallel, pushes commit-tagged images to Artifact Registry, and updates
-only the image on each existing Cloud Run service. Runtime environment variables, Secret Manager
+only the image on each existing `veyframe-*` Cloud Run service. Runtime environment variables, Secret Manager
 references, service identities, scaling, and ingress settings remain owned by the Cloud Run service
-configuration.
+configuration. The target-name changes are local until committed and pushed. No Cloud Build
+triggers were found in the current project's global or us-central1 locations during the rename;
+this operation did not create a GitHub trigger.
 
 The trigger runs as `demodirector-build@habiwatch.iam.gserviceaccount.com`. That identity needs
 Artifact Registry Writer, Cloud Run Developer, and Logs Writer on the project, plus Service Account User

@@ -6,6 +6,7 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from threading import RLock
 from typing import Any
@@ -13,12 +14,14 @@ from urllib.parse import urljoin, urlsplit
 from uuid import uuid4
 
 from demodirector_contracts import CaptureAction, Project
-from demodirector_contracts.jobs import GenerationJob
+from demodirector_contracts.jobs import GenerationJob, GenerationTrace
 
 from demodirector_api.generation import DemoGenerationService
 from demodirector_api.job_monitor import JobMonitor, failure_summary
 from demodirector_api.presentation_pipeline import RECIPES, action, run_presentation
+from demodirector_api.presentation_trace import PresentationTraceRecorder
 from demodirector_api.product_understanding import website_sources
+from demodirector_api.recording_workflows import load_reviewed_profile, load_reviewed_workflow
 from demodirector_api.records import RecordStore
 
 
@@ -76,6 +79,19 @@ class PresentationJobs:
             self.monitor.event(job)
             return job
 
+    def trace(self, project_id: str, preview: bool = False) -> GenerationTrace:
+        job = self.latest(project_id, preview)
+        if job is None:
+            raise KeyError(project_id)
+        recorder = PresentationTraceRecorder(self.records, job)
+        if self.records.get(recorder.key) is None and job.status in {"succeeded", "failed"}:
+            raise KeyError("This older job has no recorded generation trace")
+        trace = recorder.read()
+        return trace.model_copy(update={
+            "status": job.status if job.status in {"succeeded", "failed"} else "running",
+            "updated_at": max(trace.updated_at, job.updated_at),
+        })
+
     def start(
         self,
         project_id: str,
@@ -88,8 +104,10 @@ class PresentationJobs:
             project = self.generation.projects.get(project_id)
             if project is None:
                 raise KeyError(project_id)
-            if project.demo_mode != "presentation_demo":
+            if project.demo_mode not in {"presentation_demo", "spotlight_demo", "short_demo"}:
                 raise ValueError("Choose Presentation Demo for authored slides.")
+            if preview and project.demo_mode != "presentation_demo":
+                raise ValueError("Spotlight and Short require a full generation")
             existing = self.latest(project_id, preview)
             if (
                 existing
@@ -117,9 +135,12 @@ class PresentationJobs:
                 created_at=existing.created_at if existing else now,
                 updated_at=now,
                 message=(
-                    "Queued: first five slides · 61-second preview"
+                    f"Queued: {project.demo_mode.removesuffix('_demo')} · "
+                    f"{project.requested_duration_seconds} seconds"
+                    if project.demo_mode in {"spotlight_demo", "short_demo"}
+                    else "Queued: first five slides · flexible 61–81-second preview"
                     if preview
-                    else "Queued: nine authored slides · 120-second presentation"
+                    else "Queued: nine authored slides · 120-second target, up to 140 seconds"
                 ),
             )
             self.monitor.acquire(project, job.id, self._key(project_id, preview))
@@ -158,6 +179,10 @@ class PresentationJobs:
             project.id, website_sources(project.id, inspection)
         )
         host = urlsplit(str(project.website_url)).hostname or ""
+        workflow = load_reviewed_workflow(str(project.website_url), project.id, self.artifact_root)
+        if workflow:
+            return {name: (str(project.website_url), recipe.actions)
+                    for name, recipe in workflow.items()}
         if host in {
             "wikipedia.com",
             "www.wikipedia.com",
@@ -225,8 +250,12 @@ class PresentationJobs:
             return self._update(project.id, preview=preview, **changes)
 
         try:
-            update(status="running", message="Inspecting the website")
-            recipes = self._recipes(project, session_token)
+            started_job = update(status="running", message="Inspecting the website")
+            recorder = PresentationTraceRecorder(self.records, started_job)
+            recipes = recorder.call(
+                "inspection", "Inspect the recording destination", "Playwright inspector",
+                partial(self._recipes, project, session_token),
+            )
             self.generation.projects.update(project.model_copy(update={"job_status": "running"}))
             update(completed_stages=["inspection"], stage="research")
 
@@ -246,6 +275,9 @@ class PresentationJobs:
                 )
                 update(stage=stage, message=message)
 
+            profile = load_reviewed_profile(
+                str(project.website_url), project.id, self.artifact_root
+            )
             report = run_presentation(
                 project,
                 self.root,
@@ -257,6 +289,14 @@ class PresentationJobs:
                 recipes,
                 preview=preview,
                 session_token=session_token,
+                trace_recorder=recorder,
+                template_theme=profile.template_theme if profile else "default",
+                recording_workflow=load_reviewed_workflow(
+                    str(project.website_url), project.id, self.artifact_root
+                ),
+            )
+            count = {"spotlight_demo": 3, "short_demo": 5}.get(
+                project.demo_mode, 5 if preview else 9
             )
             export = report["export"]
             assert isinstance(export, dict)
@@ -274,9 +314,8 @@ class PresentationJobs:
                 export_id=export["id"],
                 timeline_version=1,
                 message=(
-                    "Ready: five slides · 61 seconds · word highlighting"
-                    if preview
-                    else "Ready: nine slides · 120 seconds · word highlighting"
+                    f"Ready: {count} slides · "
+                    f"{float(export['duration_ms']) / 1000:g} seconds · word highlighting"
                 ),
             )
         except Exception as error:
@@ -293,7 +332,7 @@ class PresentationJobs:
                 status="failed",
                 message=(
                     f"Presentation stopped at {job.stage if job else 'initialization'} "
-                    f"({type(error).__name__}). Retry to resume saved slides; "
+                    f"— {failure_summary(error)} Retry to resume saved slides; "
                     "unsaved provider work may be charged again."
                 ),
             )

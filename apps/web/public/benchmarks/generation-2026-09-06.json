@@ -1,0 +1,88 @@
+{
+  "version": 3,
+  "date": "2026-09-06",
+  "environment": "Local development",
+  "selection": "Four formats with fixed manual estimates. Three selected completed application jobs have measured timing; Product Demo has no matched completed generation job in this snapshot. Not a representative sample or a success-rate study.",
+  "timing": "Job creation to saved completion, rounded up to a whole second. Includes queued time, retry attempts and gaps within that job. Excludes brief preparation before submission and final human review.",
+  "manualMethod": "Illustrative planning estimates, not timed human trials. One editor familiar with the product, existing templates, a short script, screen recording, voiceover, captions, layout and one review pass. No custom animation or approval rounds. Estimates are not industry averages.",
+  "veyframeBriefReviewMinutes": 5,
+  "limitations": "Prepared application, templates and recording workflows were already available. Setup, workflow authoring, earlier development/debugging and later revisions are not included. Retries may reuse completed work. Human intervention was not timed separately. These different tasks are not a controlled quality-matched comparison. No claim of labor hours saved or automatic conversion of one video into three.",
+  "runs": [
+    {
+      "id": "product",
+      "label": "Product Demo",
+      "outputSeconds": 90,
+      "project": null,
+      "jobId": null,
+      "startedAt": null,
+      "completedAt": null,
+      "attempts": null,
+      "manualMinutes": 60,
+      "note": "User-provided estimate: about one hour to professionally produce a 90-second continuous walkthrough with narration, captions and smooth zoom. The stage breakdown is illustrative, not individually timed. There is no matched completed generation job in this snapshot; generation time and savings are not measured. The packaged example is not a timed generation run.",
+      "manualSteps": [
+        { "label": "Research and script", "minutes": 10 },
+        { "label": "Record the workflow", "minutes": 10 },
+        { "label": "Record and clean narration", "minutes": 15 },
+        { "label": "Edit, captions and layout", "minutes": 20 },
+        { "label": "Review and export", "minutes": 5 }
+      ]
+    },
+    {
+      "id": "presentation",
+      "label": "Presentation",
+      "outputSeconds": 120,
+      "project": "Veyframe marketing workflow presentation",
+      "jobId": "cca5a332-3c48-4bc4-a9b7-057d04029a2b",
+      "startedAt": "2026-09-06T09:56:15.999490Z",
+      "completedAt": "2026-09-06T10:23:23.700754Z",
+      "attempts": 3,
+      "manualMinutes": 120,
+      "note": "Original app-generated 120-second presentation, not the independently edited showcase. Three attempts are included.",
+      "manualSteps": [
+        { "label": "Research and script", "minutes": 25 },
+        { "label": "Record the workflow", "minutes": 20 },
+        { "label": "Record and clean narration", "minutes": 20 },
+        { "label": "Edit, captions and layout", "minutes": 50 },
+        { "label": "Review and export", "minutes": 5 }
+      ]
+    },
+    {
+      "id": "spotlight",
+      "label": "Spotlight",
+      "outputSeconds": 30,
+      "project": "Roamstead Spotlight showcase",
+      "jobId": "c078a6fd-fb08-40e1-b540-6366641ed558",
+      "startedAt": "2026-09-06T16:05:24.333375Z",
+      "completedAt": "2026-09-06T16:07:45.887790Z",
+      "attempts": 1,
+      "manualMinutes": 35,
+      "note": "App-generated three-slide feature video with recorded interactions, narration and highlighted captions.",
+      "manualSteps": [
+        { "label": "Research and script", "minutes": 8 },
+        { "label": "Record the workflow", "minutes": 7 },
+        { "label": "Record and clean narration", "minutes": 7 },
+        { "label": "Edit, captions and layout", "minutes": 10 },
+        { "label": "Review and export", "minutes": 3 }
+      ]
+    },
+    {
+      "id": "short",
+      "label": "Short",
+      "outputSeconds": 45,
+      "project": "Roamstead Short showcase",
+      "jobId": "e6756d91-cc93-4dfe-88e6-4624037726eb",
+      "startedAt": "2026-09-06T16:07:54.969078Z",
+      "completedAt": "2026-09-06T16:14:35.451602Z",
+      "attempts": 2,
+      "manualMinutes": 45,
+      "note": "App-generated five-slide vertical video. Includes a narration-related retry and the gap before retry.",
+      "manualSteps": [
+        { "label": "Research and script", "minutes": 10 },
+        { "label": "Record the workflow", "minutes": 8 },
+        { "label": "Record and clean narration", "minutes": 8 },
+        { "label": "Edit, captions and layout", "minutes": 16 },
+        { "label": "Review and export", "minutes": 3 }
+      ]
+    }
+  ]
+}

@@ -19,6 +19,8 @@ from demodirector_contracts import (
 from playwright.sync_api import Browser, BrowserContext, Error, Locator, Page, sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
+ACTION_TIMEOUT_CAP_MS = 15_000
+
 
 class CaptureExecutionError(RuntimeError):
     """Raised when a deterministic capture action cannot be executed safely."""
@@ -75,6 +77,9 @@ class PlaywrightCaptureWorker:
                 )
                 for index, action in enumerate(scene.capture_plan.actions):
                     self._enforce_deadline(started, timeout_ms)
+                    page.set_default_timeout(
+                        _per_action_timeout_ms(timeout_ms, _elapsed_ms(started))
+                    )
                     action_started = time.monotonic()
                     try:
                         if action.type in {"click", "fill", "select"}:
@@ -110,6 +115,9 @@ class PlaywrightCaptureWorker:
 
                 for assertion in scene.capture_plan.success_assertions:
                     self._enforce_deadline(started, timeout_ms)
+                    page.set_default_timeout(
+                        _per_action_timeout_ms(timeout_ms, _elapsed_ms(started))
+                    )
                     self._execute(page, assertion)
                 status = "succeeded"
                 retryable = False
@@ -286,6 +294,11 @@ class PlaywrightCaptureWorker:
     def _enforce_deadline(started: float, timeout_ms: int) -> None:
         if _elapsed_ms(started) >= timeout_ms:
             raise CaptureExecutionError("Scene capture exceeded its timeout.")
+
+
+def _per_action_timeout_ms(total_timeout_ms: int, elapsed_ms: int) -> int:
+    """Keep a missing locator from consuming the complete recording deadline."""
+    return max(1, min(ACTION_TIMEOUT_CAP_MS, total_timeout_ms - elapsed_ms))
 
 
 def _locator(page: Page, action: CaptureAction) -> Locator:

@@ -105,7 +105,7 @@ def _validate_operation(
 ) -> None:
     kind = operation.operation_type
     arguments = operation.arguments
-    if timeline.demo_mode == "presentation_demo" and kind in {
+    if timeline.demo_mode in {"presentation_demo", "spotlight_demo", "short_demo"} and kind in {
         "trim_scene",
         "delete_scene",
     }:

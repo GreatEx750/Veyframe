@@ -4357,7 +4357,9 @@
           "default": "product_demo",
           "enum": [
             "product_demo",
-            "presentation_demo"
+            "presentation_demo",
+            "spotlight_demo",
+            "short_demo"
           ],
           "title": "Demo Mode",
           "type": "string"
@@ -4382,6 +4384,15 @@
         "name": {
           "minLength": 1,
           "title": "Name",
+          "type": "string"
+        },
+        "output_orientation": {
+          "default": "landscape",
+          "enum": [
+            "landscape",
+            "vertical"
+          ],
+          "title": "Output Orientation",
           "type": "string"
         },
         "owner_user_id": {
@@ -5891,7 +5902,9 @@
           "default": "product_demo",
           "enum": [
             "product_demo",
-            "presentation_demo"
+            "presentation_demo",
+            "spotlight_demo",
+            "short_demo"
           ],
           "title": "Demo Mode",
           "type": "string"
@@ -5963,6 +5976,22 @@
           },
           "title": "Narration Overrides",
           "type": "object"
+        },
+        "output_orientation": {
+          "anyOf": [
+            {
+              "enum": [
+                "landscape",
+                "vertical"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Orientation"
         },
         "presentation": {
           "$ref": "#/$defs/VideoPresentationConfig"

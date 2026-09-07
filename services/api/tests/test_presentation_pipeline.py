@@ -11,7 +11,7 @@ from demodirector_api.exports import (
     ExportService,
     SQLiteExportRepository,
 )
-from demodirector_api.presentation_pilot import SlideScript
+from demodirector_api.presentation_pilot import SlideScript, narration_word_budget
 from demodirector_api.repositories import (
     SQLiteProjectRepository,
     SQLiteResearchSourceRepository,
@@ -19,12 +19,14 @@ from demodirector_api.repositories import (
 )
 from demodirector_contracts import ResearchSource, SceneCaptureResult
 from demodirector_worker.presentation_assets import load_pack
+from demodirector_worker.renderer import AUDIO_EXTENSIONS, VIDEO_EXTENSIONS, FFmpegRenderer
 from test_exports import MemoryBucket
 from test_generation import FakeCaptureWorker, build_service
 
 
 @pytest.mark.parametrize("bad_audio", [False, True])
 @pytest.mark.parametrize("cloud", [False, True])
+@pytest.mark.parametrize("extended", [False, True, "mixed"])
 @pytest.mark.parametrize(
     "preview,expected_count,expected_ms", [(True, 5, 61000), (False, 9, 120000)]
 )
@@ -36,7 +38,12 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
     expected_ms: int,
     bad_audio: bool,
     cloud: bool,
+    extended: bool | str,
 ) -> None:
+    if extended == "mixed":
+        expected_ms += 3000
+    elif extended:
+        expected_ms += 20000
     generation, projects, _, _ = build_service(tmp_path, FakeCaptureWorker())
     original = projects.get("project-one-click")
     assert original
@@ -59,7 +66,8 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
         retrieved_at=project.created_at,
     )
     SQLiteResearchSourceRepository(db).replace_website_sources(project.id, [source])
-    output = tmp_path / "artifacts" / "presentation"
+    media_root = tmp_path / ("cloud-runtime" if cloud else "artifacts")
+    output = media_root / "presentation"
     calls: list[tuple[str, int]] = []
     durations: dict[str, float] = {}
     synthesized: list[str] = []
@@ -124,7 +132,7 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
                     "template_id": template["id"],
                     "capture_recipe": recipe,
                     "source_ids": ["page"],
-                    "narration": "Explore the product in action.",
+                    "narration": f"Explore{index} " * narration_word_budget(duration),
                     "narration_beats": [
                         "Show Formation and evolution.",
                         "Show General characteristics.",
@@ -166,8 +174,7 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
     monkeypatch.setattr(
         pipeline, "ParallelSearchAdapter", lambda *_: SimpleNamespace(search=lambda **_: {})
     )
-    monkeypatch.setattr(pipeline, "normalize_sources", lambda *_: [])
-    monkeypatch.setattr(pipeline, "GeminiTTSAdapter", lambda *_: None)
+    monkeypatch.setattr(pipeline, "GeminiTTSAdapter", lambda *_, **__: None)
     def synthesize(scenes: Any, voice: Any) -> Any:
         assert len(scenes) == 1
         synthesized.append(scenes[0].narration)
@@ -181,12 +188,20 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
         "NarrationService",
         lambda *_: SimpleNamespace(generate=synthesize),
     )
-    monkeypatch.setattr(
-        pipeline, "prepare_narration",
-        lambda source, destination, duration: (
-            touch(destination) and {"speech_duration": duration}
-        ),
-    )
+    def prepare(source: Path, destination: Path, duration: float, *, max_duration: float,
+                min_duration: float, allow_silent_hold: bool) -> Any:
+        assert allow_silent_hold
+        touch(destination)
+        if extended == "mixed":
+            index = int(destination.stem.split("-")[1]) - 1
+            fitted = max_duration if index == 1 else min_duration if index == 2 else duration
+            if index == 2:
+                assert min_duration == duration - 2
+        else:
+            fitted = max_duration if extended else duration
+        return {"speech_duration": fitted, "slide_duration": fitted}
+
+    monkeypatch.setattr(pipeline, "prepare_narration", prepare)
     monkeypatch.setattr(pipeline, "run_ffmpeg", lambda args, _: touch(Path(args[-1])))
     monkeypatch.setattr(
         pipeline,
@@ -200,17 +215,32 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
         },
     )
     monkeypatch.setattr(pipeline, "speech_metrics", lambda _: {
-        "max_internal_silence": 3 if bad_audio else .5,
-        "peak": .8, "duration": expected_ms / 1000,
+        "max_internal_silence": 3,
+        "peak": 1 if bad_audio else .8, "duration": expected_ms / 1000,
     })
-    monkeypatch.setattr(pipeline, "FFmpegRenderer", lambda *_: SimpleNamespace(render=render))
+    def assembly_renderer(media_directory: Path, export_directory: Path) -> Any:
+        validator = FFmpegRenderer(media_directory, export_directory)
+
+        def checked_render(timeline: Any, config: Any) -> Any:
+            for clip in timeline.scene_clips:
+                validator._safe_media_path(clip.source_uri, VIDEO_EXTENSIONS)
+            for clip in timeline.audio_clips:
+                validator._safe_media_path(clip.source_uri, AUDIO_EXTENSIONS)
+            return render(timeline, config)
+
+        return SimpleNamespace(render=checked_render)
+
+    monkeypatch.setattr(pipeline, "FFmpegRenderer", assembly_renderer)
     if cloud:
+        from demodirector_api.repositories import SQLiteStoryboardRepository
+
+        generation.storyboards = SQLiteStoryboardRepository(db)
         generation.projects = SQLiteProjectRepository(db)
         generation.research_sources = SQLiteResearchSourceRepository(db)
         generation.timelines = SQLiteTimelineRepository(db)
         bucket = MemoryBucket()
         generation.timeline_media_store = CloudTimelineMediaStore(
-            bucket, tmp_path / "artifacts", tmp_path / "cache"
+            bucket, media_root, tmp_path / "cache"
         )
         generation.exports = ExportService(
             SimpleNamespace(render=render), SQLiteExportRepository(db),
@@ -227,19 +257,53 @@ def test_pipeline_completes_each_slide_then_publishes_measured_output(
         assert calls == [("direct", 0), ("compose", 0)]
         assert generation.timelines.current(project.id) is None
     if bad_audio:
-        with pytest.raises(ValueError, match="excessive gap"):
+        with pytest.raises(ValueError, match="clipping"):
             pipeline.run_presentation(
                 project, tmp_path, output, db, progress.append, preview=preview,
                 generation=generation if cloud else None,
             )
         assert SQLiteTimelineRepository(db).current(project.id) is None
         assert not (output / "result.json").exists()
+        original_requests = len(synthesized)
+        for ready in (output / "narration").glob("*-ready.wav"):
+            ready.unlink()
+        with pytest.raises(ValueError, match="clipping"):
+            pipeline.run_presentation(
+                project, tmp_path, output, db, progress.append, preview=preview,
+                generation=generation if cloud else None,
+            )
+        assert len(synthesized) == original_requests
+        assert any("reusing saved speech" in message for message in progress)
         return
     report = pipeline.run_presentation(
         project, tmp_path, output, db, progress.append, preview=preview,
         generation=generation if cloud else None,
     )
     assert report["export"]["duration_ms"] == expected_ms  # type: ignore[index]
+    from demodirector_api.repositories import SQLiteStoryboardRepository
+
+    storyboard = SQLiteStoryboardRepository(db).get_latest(project.id)
+    assert storyboard and storyboard.status == "captured"
+    assert len(storyboard.scenes) == expected_count
+    assert storyboard.total_duration_seconds == expected_ms / 1000
+    assert [s.narration for s in storyboard.scenes] == synthesized
+    from demodirector_api.evidence import EvidenceService
+    from demodirector_api.records import SQLiteRecordStore
+
+    source_map = EvidenceService(
+        SQLiteProjectRepository(db), SQLiteResearchSourceRepository(db),
+        SQLiteStoryboardRepository(db), generation.understandings, SQLiteRecordStore(db),
+    ).contribution_map(project.id)
+    assert source_map.status == "approval_required"
+    assert len(source_map.scenes) == expected_count
+    history = SQLiteTimelineRepository(db).current(project.id)
+    assert history
+    timeline = history.current.timeline
+    assert timeline.scene_clips[0].start_ms == 0
+    for left, right in zip(timeline.scene_clips, timeline.scene_clips[1:], strict=False):
+        assert left.end_ms == right.start_ms
+    assert timeline.scene_clips[-1].end_ms == expected_ms
+    assert timeline.audio_clips[0].end_ms == expected_ms
     assert len([c for c in calls if c[0] == "capture"]) == expected_count - (
         2 if not preview else 1
     )

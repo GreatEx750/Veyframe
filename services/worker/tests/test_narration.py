@@ -2,9 +2,62 @@ from __future__ import annotations
 
 import wave
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
+import pytest
 from demodirector_contracts import NarrationVoiceConfig, Scene
 from demodirector_worker.narration import FixtureTTSAdapter, NarrationService
+from google import genai
+from google.genai.errors import ClientError
+
+
+@pytest.mark.parametrize("status", [429, 400, 403, 500])
+def test_tts_fallback_only_on_rate_limit(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                       status: int) -> None:
+    from demodirector_worker import narration as module
+    calls: list[str] = []
+    events: list[str] = []
+
+    def generate(**kwargs: Any) -> Any:
+        calls.append(kwargs["model"])
+        if kwargs["model"] == module.DEFAULT_TTS_MODEL:
+            raise ClientError(status, {"error": {"message": "private"}})
+        return SimpleNamespace(candidates=[SimpleNamespace(content=SimpleNamespace(
+            parts=[SimpleNamespace(inline_data=SimpleNamespace(data=b"\x01\x00" * 2400))]))])
+
+    monkeypatch.setattr(genai, "Client", lambda **_: SimpleNamespace(
+        models=SimpleNamespace(generate_content=generate)))
+    adapter = module.GeminiTTSAdapter(module.GeminiTTSSettings(
+        module.DEFAULT_TTS_MODEL, "test"), on_progress=events.append)
+    if status != 429:
+        with pytest.raises(ClientError):
+            adapter.synthesize("Hello", NarrationVoiceConfig())
+        assert calls == [module.DEFAULT_TTS_MODEL]
+    else:
+        assert adapter.synthesize("Hello", NarrationVoiceConfig())
+        assert adapter.synthesize("Again", NarrationVoiceConfig())
+        assert calls == [module.DEFAULT_TTS_MODEL, module.FALLBACK_TTS_MODEL,
+                         module.FALLBACK_TTS_MODEL]
+        assert adapter.model_name == module.FALLBACK_TTS_MODEL
+        assert any("fallback" in event for event in events)
+        assert all("private" not in event for event in events)
+
+
+def test_both_tts_models_limited_stop_after_two_calls(monkeypatch: pytest.MonkeyPatch) -> None:
+    from demodirector_worker import narration as module
+    calls: list[str] = []
+
+    def generate(**kwargs: Any) -> Any:
+        calls.append(kwargs["model"])
+        raise ClientError(429, {"error": {"message": "limited"}})
+
+    monkeypatch.setattr(genai, "Client", lambda **_: SimpleNamespace(
+        models=SimpleNamespace(generate_content=generate)))
+    adapter = module.GeminiTTSAdapter(module.GeminiTTSSettings(module.DEFAULT_TTS_MODEL, "test"))
+    with pytest.raises(ClientError):
+        adapter.synthesize("Hello", NarrationVoiceConfig())
+    assert calls == [module.DEFAULT_TTS_MODEL, module.FALLBACK_TTS_MODEL]
 
 
 def make_scene(scene_id: str, order: int, narration: str) -> Scene:
@@ -82,3 +135,23 @@ def test_narration_metadata_round_trips_through_shared_contract(tmp_path: Path) 
     )
 
     assert result.model_validate_json(result.model_dump_json()) == result
+
+
+def test_speech_quota_failure_is_safe_and_does_not_retry(tmp_path: Path) -> None:
+    class QuotaTTSAdapter:
+        calls = 0
+
+        def synthesize(self, text: str, voice: NarrationVoiceConfig) -> bytes:
+            self.calls += 1
+            raise ClientError(429, {"error": {"message": "private api_key=abc"}})
+
+    adapter = QuotaTTSAdapter()
+    result = NarrationService(adapter, tmp_path).generate(
+        [make_scene("scene-1", 0, "Start here.")], NarrationVoiceConfig(),
+        capture_clip_paths=["saved.webm"],
+    )
+    assert result.status == "failed"
+    assert result.error is not None and "Google speech rate or quota limit" in result.error
+    assert "private" not in result.error and "abc" not in result.error
+    assert result.preserved_capture_paths == ["saved.webm"]
+    assert adapter.calls == 1

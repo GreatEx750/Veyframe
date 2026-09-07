@@ -14,8 +14,8 @@ The worker reads the same SQLite database and artifact directory as the API. Kee
 ## Authored Presentation Demo
 
 New Presentation Demo requests use the same sequential, pre-authored `presentation-story@2`
-pipeline for both durations: nine slides totaling exactly 120 seconds, or the optional first-five
-61-second preview. Product Demo keeps its continuous recording pipeline. Full presentations no
+pipeline: nine slides targeting 120 seconds, with a hard 140-second maximum, or an optional
+first-five preview targeting 61 seconds (up to 81 seconds). Product Demo keeps its continuous recording pipeline. Full presentations no
 longer use the legacy whole-storyboard generator. The old renderer remains for existing exports.
 
 Each slide receives validated Google ADK/Gemini copy, Gemini narration, real browser footage at
@@ -25,6 +25,17 @@ compositions are cached separately. Each finished slide is checked before the ne
 the completed slides are assembled and their final media duration is checked before publication.
 Parallel Search is called directly. When it returns no results, inspected website evidence may
 ground the script instead; the activity log reports the separate source counts truthfully.
+
+The authored schedule remains the baseline, not a forced final runtime. Product slides may extend
+by up to five seconds each using a shared 20-second allowance. The three-second opening and
+five-second closing remain fixed. Speech is measured first, with modest pitch-preserving tempo
+adjustment; excessive pauses and out-of-budget audio still require a bounded narration rewrite.
+Slide durations use 100 ms boundaries, aligned to 30 fps. Recording duration, captions, zooms,
+scene offsets, final audio, export metadata and completion messages use the measured schedule.
+The schedule and versioned narration receipts are saved locally and included in cloud checkpoints.
+Retries recompute remaining allowance from saved prior slides rather than resetting the budget;
+recordings with obsolete durations are invalidated. A short narration is not padded with seconds
+of silence simply because a longer overall maximum is allowed.
 
 Locally, authored presentations run in the API's background executor; keep the API running.
 On the configured Firestore deployment, the same authored pipeline runs through authenticated
@@ -76,6 +87,36 @@ Fixed-duration presentation captures retain the complete observed action sequenc
 For authenticated self-capture only, inject `DEMO_JOB_TOKEN_KEY` as a Fernet key from Secret Manager and retain it across revisions. The session is encrypted in the private job input record, never returned in status responses or task payloads. Public website generation does not store a session. Locally a key is created under the ignored artifact directory with restrictive creation permissions. Expired or revoked sessions still cannot authenticate to the captured site.
 
 ## Failure semantics
+
+Presentation narration has a planning target of about 144 words per minute. Scripts above the
+budget receive grounded text correction before speech; shorter valid scripts are accepted.
+Short speech plays continuously at natural speed, then leaves a quiet hold while the product
+recording continues. Captions end with the speech instead of retaining the last highlighted
+word. Silent holds are measured and logged but do not fail the final export. Clipping, missing
+audio, unsafe scripts, and typed-schema failures still block publication.
+One corrective audio regeneration for overlong speech is allowed per slide;
+raw successful speech is saved before timing checks so it can be reused after interruption.
+Accepted saved slides do not need new speech merely because the planning policy changed.
+
+Direction failures save a private receipt with the slide number, attempt, exception category,
+validation field/type pairs and source-code check locations, excluding provider payloads and
+credentials. Jobs shows the failed slide and check instead of only a generic ValueError.
+
+Product slides may end up to two seconds earlier when previous slides have earned enough extra
+time to keep the complete presentation at least 120 seconds. They may extend by up to five
+seconds each, within the shared 140-second ceiling. Opening/closing durations are unchanged.
+Capture and interaction timing, captions, and the export follow the resolved slide durations.
+
+Only HTTP 429 from the default `gemini-3.1-flash-tts-preview` triggers one fallback request to
+`gemini-2.5-flash-preview-tts`, with the same account, voice, and text. The local presentation
+adapter then keeps using the fallback for its remaining work. Other provider errors do not
+trigger fallback. If the fallback is also limited, generation stops and preserves saved work;
+no account/key rotation or unbounded retry occurs. Jobs records the switch and subsequent model
+requests; new narration receipts record the model that actually returned the audio.
+
+Model availability and quota details: [Google TTS model documentation](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-preview-tts)
+and [Gemini rate limits](https://ai.google.dev/gemini-api/docs/rate-limits). Fallback capacity is
+not guaranteed and remains subject to its own applicable limits.
 
 Each stage saves a durable checkpoint before queuing the next stage. Cloud media checkpoints reference private object storage, not ephemeral disk. A compare-and-swap lease prevents concurrent duplicate execution. A crash after a provider response but before saving cannot be guaranteed exactly-once: the job pauses for explicit retry rather than silently repeating paid work. A queued dispatch can be safely reissued from the progress page. Do not delete job metadata while work is active.
 

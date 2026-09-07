@@ -13,8 +13,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "DemoDirector",
-  description: "Create polished, narrated product demos from a website and creative brief.",
+  title: "Veyframe — Turn what you do into a story",
+  description: "Turn your website into narrated product videos, presentations, spotlights, and shorts with real recordings and a creative brief.",
+  icons: { icon: "/brand/veyframe-icon.png" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from demodirector_worker.presentation_assets import run_ffmpeg
 
-NARRATION_VERSION = "continuous-slide-v1"
+NARRATION_VERSION = "continuous-slide-v2-flexible"
 
 
 class NarrationTimingError(ValueError):
@@ -45,19 +45,37 @@ def speech_metrics(path: Path) -> dict[str, float]:
     }
 
 
-def prepare_narration(source: Path, destination: Path, duration: float) -> dict[str, float]:
+def prepare_narration(
+    source: Path, destination: Path, duration: float, *, max_duration: float | None = None,
+    min_duration: float | None = None,
+    allow_silent_hold: bool = False,
+) -> dict[str, float]:
+    if not math.isfinite(duration) or duration <= .25:
+        raise ValueError("Invalid narration duration")
+    if max_duration is not None and (
+        not math.isfinite(max_duration) or max_duration < duration
+    ):
+        raise ValueError("Invalid narration extension budget")
+    if min_duration is not None and (
+        not math.isfinite(min_duration) or not .25 < min_duration <= duration
+    ):
+        raise ValueError("Invalid narration shortening budget")
     metrics = speech_metrics(source)
     spoken = metrics["end"] - metrics["start"]
+    if max_duration is not None:
+        # Tenth-second boundaries are exact three-frame intervals at 30 fps.
+        duration = min(max_duration, max(min_duration or duration,
+                                        math.ceil((spoken + .25) * 10) / 10))
     target = duration - .25
-    speed = max(.9, min(1.1, spoken / target))
+    speed = max(1.0 if allow_silent_hold else .9, min(1.1, spoken / target))
     fitted = spoken / speed
-    if fitted > duration - .1 or duration - fitted > 1.25:
+    if fitted > duration - .1 or (not allow_silent_hold and duration - fitted > 1.25):
         raise NarrationTimingError(
             f"Speech lasts {spoken:.2f}s for a {duration:.2f}s slide. "
             f"Rewrite to approximately {target:.2f}s at the same natural pace; "
             f"use about {target / spoken:.2f} times the current word count."
         )
-    if metrics["max_internal_silence"] / speed > 1.25:
+    if not allow_silent_hold and metrics["max_internal_silence"] / speed > 1.25:
         raise NarrationTimingError("Speech has a pause longer than 1.25s; use flowing sentences.")
     # One constant gain for the paragraph avoids short-phrase loudness pumping.
     gain = min(10 ** (-20 / 20) / metrics["active_rms"],
@@ -70,4 +88,8 @@ def prepare_narration(source: Path, destination: Path, duration: float) -> dict[
         f"apad,atrim=duration={duration}",
         "-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", str(destination),
     ], destination.parent)
-    return {**metrics, "speed": speed, "speech_duration": fitted, "gain": gain}
+    return {
+        **metrics, "speed": speed, "speech_duration": fitted,
+        "slide_duration": duration, "gain": gain,
+        "silent_hold_seconds": max(0, duration - fitted),
+    }

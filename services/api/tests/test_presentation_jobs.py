@@ -118,8 +118,13 @@ def test_preview_routes_require_ownership(tmp_path: Path) -> None:
     assert client.post(path, headers=bearer(foreign)).status_code == 404
 
 
+@pytest.mark.parametrize(
+    "mode,duration", [("presentation_demo", 120), ("spotlight_demo", 30), ("short_demo", 45)]
+)
 def test_generate_endpoint_routes_full_presentation_and_preserves_account_limit(
     tmp_path: Path,
+    mode: str,
+    duration: int,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("DEMO_DATABASE_PATH", str(tmp_path / "jobs.db"))
@@ -127,8 +132,8 @@ def test_generate_endpoint_routes_full_presentation_and_preserves_account_limit(
     owner = signup(client, "slides-owner@example.com")
     payload = {
         **project_payload("Full slides"),
-        "demo_mode": "presentation_demo",
-        "requested_duration_seconds": 120,
+        "demo_mode": mode,
+        "requested_duration_seconds": duration,
     }
     project = client.post("/projects", json=payload, headers=bearer(owner)).json()
     from typing import cast
@@ -141,7 +146,7 @@ def test_generate_endpoint_routes_full_presentation_and_preserves_account_limit(
     try:
         response = client.post(f"/projects/{project['id']}/generate", headers=bearer(owner))
         assert response.status_code == 202
-        assert "120-second" in response.json()["message"]
+        assert str(duration) in response.json()["message"]
         assert calls[0][2] is False
         overview = client.get("/jobs", headers=bearer(owner)).json()
         assert overview["jobs"][0]["kind"] == "presentation"
@@ -150,6 +155,20 @@ def test_generate_endpoint_routes_full_presentation_and_preserves_account_limit(
             client.get(f"/projects/{project['id']}/generation", headers=bearer(owner)).json()["id"]
             == response.json()["id"]
         )
+        from demodirector_api.presentation_trace import PresentationTraceRecorder
+        from demodirector_contracts.jobs import GenerationJob
+
+        recorder = PresentationTraceRecorder(
+            jobs.records, GenerationJob.model_validate(response.json())
+        )
+        recorder.call("research", "Retrieve sources", "Parallel Search direct", lambda: None)
+        trace_path = f"/projects/{project['id']}/generation/trace"
+        trace_response = client.get(trace_path, headers=bearer(owner))
+        assert trace_response.status_code == 200
+        assert trace_response.json()["stages"][0]["service"] == "Parallel Search direct"
+        assert client.get(trace_path).status_code == 401
+        foreign = signup(client, "trace-foreign@example.com")
+        assert client.get(trace_path, headers=bearer(foreign)).status_code == 404
         other = client.post(
             "/projects", json=project_payload("Product"), headers=bearer(owner)
         ).json()

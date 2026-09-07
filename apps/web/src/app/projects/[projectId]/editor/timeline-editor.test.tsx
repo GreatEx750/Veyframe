@@ -59,6 +59,7 @@ const project = {
   cta: "Try it",
   brand_kit_id: null,
   demo_mode: "product_demo" as const,
+  output_orientation: "landscape" as const,
   zoom_enabled: true,
   status: "editing" as const,
   job_status: "idle" as const,
@@ -291,6 +292,56 @@ describe("TimelineEditor", () => {
 
     expect(play).toHaveBeenCalledOnce();
     expect(await screen.findByRole("button", { name: "Pause preview" })).toBeEnabled();
+  });
+
+  it.each([false, true])("observes playback without seeking when paused=%s", (paused) => {
+    render(<TimelineEditor initialTimeline={timeline} projectId="project-1" />);
+    const video = screen.getByLabelText("Preview video") as HTMLVideoElement;
+    let clock = 0;
+    const seek = vi.fn();
+    Object.defineProperty(video, "currentTime", { configurable: true, get: () => clock, set: seek });
+    Object.defineProperty(video, "paused", { configurable: true, value: paused });
+
+    for (const second of [0.2514, 0.5028, 1.0041, 3.7549, 20]) {
+      clock = second;
+      fireEvent.timeUpdate(video);
+      expect(screen.getByLabelText("Timeline playhead")).toHaveValue(String(Math.round(second * 1000)));
+    }
+
+    expect(screen.getByLabelText("Preview time")).toHaveTextContent("0:20");
+    expect(seek).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])("seeks once for deliberate scrubbing when paused=%s", (paused) => {
+    render(<TimelineEditor initialTimeline={timeline} projectId="project-1" />);
+    const video = screen.getByLabelText("Preview video") as HTMLVideoElement;
+    let clock = 0;
+    const seek = vi.fn((seconds: number) => { clock = seconds; });
+    Object.defineProperty(video, "currentTime", { configurable: true, get: () => clock, set: seek });
+    Object.defineProperty(video, "paused", { configurable: true, value: paused });
+
+    fireEvent.change(screen.getByLabelText("Timeline playhead"), { target: { value: "12500" } });
+    fireEvent.timeUpdate(video);
+    expect(seek).toHaveBeenCalledExactlyOnceWith(12.5);
+    expect(screen.getByLabelText("Preview time")).toHaveTextContent("0:13");
+  });
+
+  it("caption navigation seeks the video and updates the timeline", () => {
+    render(<TimelineEditor initialTimeline={timeline} projectId="project-1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Captions" }));
+    fireEvent.click(screen.getByRole("button", { name: /Workflow caption/ }));
+    expect((screen.getByLabelText("Preview video") as HTMLVideoElement).currentTime).toBe(8);
+    expect(screen.getByLabelText("Timeline playhead")).toHaveValue("8000");
+  });
+
+  it("selecting a timeline scene seeks its recorded segment exactly once", () => {
+    render(<TimelineEditor initialTimeline={timeline} projectId="project-1" />);
+    const video = screen.getByLabelText("Preview video") as HTMLVideoElement;
+    const seek = vi.fn();
+    Object.defineProperty(video, "currentTime", { configurable: true, get: () => 0, set: seek });
+    fireEvent.click(screen.getByRole("button", { name: /2Workflow/ }));
+    expect(seek).toHaveBeenCalledExactlyOnceWith(8);
+    expect(screen.getByLabelText("Timeline playhead")).toHaveValue("8000");
   });
 
   it("selecting a zoom updates the inspector and manual scale persists", () => {

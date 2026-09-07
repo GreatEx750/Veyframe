@@ -66,7 +66,7 @@ class StyleSelectionRequest(BaseModel):
 @router.post("/projects/{project_id}/generate", response_model=GenerationJob, status_code=202)
 def start(project_id: str, request: Request, jobs: Jobs) -> GenerationJob:
     project = jobs.generation.projects.get(project_id)
-    if project and project.demo_mode == "presentation_demo":
+    if project and project.demo_mode in {"presentation_demo", "spotlight_demo", "short_demo"}:
         from demodirector_api.presentation_routes import start_full
 
         return start_full(project_id, request)
@@ -96,8 +96,11 @@ def latest(project_id: str, request: Request, jobs: Jobs) -> GenerationJob:
 
 
 @router.get("/projects/{project_id}/generation/trace", response_model=GenerationTrace)
-def trace(project_id: str, jobs: Jobs) -> GenerationTrace:
+def trace(project_id: str, request: Request, jobs: Jobs) -> GenerationTrace:
     try:
+        presentation: PresentationJobs | None = request.app.state.presentation_jobs
+        if presentation is not None and presentation.latest(project_id, preview=False) is not None:
+            return presentation.trace(project_id)
         return jobs.trace(project_id)
     except KeyError as error:
         raise HTTPException(404, "Generation trace not found") from error

@@ -25,7 +25,7 @@ def main() -> None:
                       wait_until="networkidle")
             page.get_by_role("button", name="Approve retry", exact=True).click()
         else:
-            page.goto("http://localhost:3000", wait_until="networkidle")
+            page.goto("http://localhost:3000/studio", wait_until="networkidle")
             page.get_by_label("Website URL", exact=False).fill("https://www.wikipedia.org/")
             page.get_by_label("Demo title", exact=False).fill("Wikipedia exploration — five slides")
             page.get_by_label("Describe your video", exact=False).fill(
@@ -36,7 +36,7 @@ def main() -> None:
             page.get_by_label("Target Audience", exact=True).select_option(label="Product leaders")
             page.get_by_label("Call to Action", exact=True).fill("Explore Wikipedia")
             page.get_by_role("radio", name="Presentation Demo", exact=True).check()
-            page.get_by_role("checkbox", name="Preview first five slides (61 seconds)").check()
+            page.get_by_role("checkbox", name="Preview first five slides (about 1 minute)").check()
             page.screenshot(path=str(OUTPUT / "studio-before-generation.png"), full_page=True)
             page.get_by_role("button", name="Create demo", exact=True).first.click()
             page.wait_for_url("**/jobs?job=*", timeout=60000)

@@ -2,11 +2,11 @@ from typing import Annotated, Literal
 
 from demodirector_contracts import Timeline, VideoExport
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict
 
 from demodirector_api.exports import ExportError, ExportService
 from demodirector_api.repositories import ProjectRepository
+from demodirector_api.streaming_file import StreamingFileResponse as FileResponse
 
 
 class ExportRequest(BaseModel):

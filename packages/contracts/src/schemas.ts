@@ -36,7 +36,8 @@ export const projectSchema = z
     requested_duration_seconds: z.number().int().positive(),
     cta: nonEmptyString,
     brand_kit_id: nonEmptyString.nullable().default(null),
-    demo_mode: z.enum(["product_demo", "presentation_demo"]).default("product_demo"),
+    demo_mode: z.enum(["product_demo", "presentation_demo", "spotlight_demo", "short_demo"]).default("product_demo"),
+    output_orientation: z.enum(["landscape", "vertical"]).default("landscape"),
     zoom_enabled: z.boolean().default(true),
     status: z
       .enum([
@@ -57,6 +58,10 @@ export const projectSchema = z
   })
   .strict()
   .superRefine((project, context) => {
+    const expected = project.demo_mode === "spotlight_demo" ? 30 : project.demo_mode === "short_demo" ? 45 : null;
+    if (expected && project.requested_duration_seconds !== expected) context.addIssue({code: z.ZodIssueCode.custom, path: ["requested_duration_seconds"], message: `This mode requires ${expected} seconds`});
+    if (!expected && project.output_orientation === "vertical") context.addIssue({code: z.ZodIssueCode.custom, path: ["output_orientation"], message: "Vertical output requires Spotlight or Short"});
+
     if (project.demo_mode === "presentation_demo" && project.requested_duration_seconds !== 120) {
       context.addIssue({
         code: "custom",
@@ -651,9 +656,10 @@ export const videoPresentationSchema = z
 
 export const timelineSchema = z
   .object({
+    output_orientation: z.enum(["landscape", "vertical"]).nullish(),
     project_id: nonEmptyString,
     duration_ms: z.number().int().positive(),
-    demo_mode: z.enum(["product_demo", "presentation_demo"]).default("product_demo"),
+    demo_mode: z.enum(["product_demo", "presentation_demo", "spotlight_demo", "short_demo"]).default("product_demo"),
     presentation_pack_id: z.literal("presentation-story@1").nullable().default(null),
     motion_plan_id: nonEmptyString.nullable().default(null),
     motion_design_version: z.literal("motion-v1").nullable().default(null),
@@ -721,10 +727,10 @@ export const timelineSchema = z
         path: ["presentation_pack_id"],
       });
     }
-    if (timeline.demo_mode === "presentation_demo" && timeline.duration_ms !== 120_000) {
+    if (timeline.demo_mode === "presentation_demo" && (timeline.duration_ms < 120_000 || timeline.duration_ms > 140_000)) {
       context.addIssue({
         code: "custom",
-        message: "Presentation Demo must be exactly 120 seconds for the MVP",
+        message: "Presentation Demo must be within 120–140 seconds",
         path: ["duration_ms"],
       });
     }

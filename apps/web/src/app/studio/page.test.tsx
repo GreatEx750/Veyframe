@@ -38,7 +38,7 @@ afterEach(() => {
   replace.mockReset();
 });
 
-describe("Create Demo Studio", () => {
+describe("Create Demo Studio at /studio", () => {
   it.each(["Product Demo", "Presentation Demo"])("opens the exact newly queued %s job", async (format) => {
     const job = { id: "product-job", project_id: projectResponse.id, status: "queued",
       stage: "inspection", completed_stages: [], attempts: 0, version: 1,
@@ -64,7 +64,8 @@ describe("Create Demo Studio", () => {
     render(<Home />);
     completeForm();
     fireEvent.click(screen.getByRole("radio", { name: "Presentation Demo" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Preview first five slides (61 seconds)" }));
+    expect(screen.getByRole("option", { name: "~2 minutes · up to 2:20" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Preview first five slides (about 1 minute)" }));
     fireEvent.submit(document.getElementById("demo-form")!);
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/jobs?job=preview-job"));
     expect(fetchMock).toHaveBeenCalledWith(`/api/projects/${projectResponse.id}/generation/presentation-preview`, expect.objectContaining({ method: "POST" }));
@@ -80,7 +81,9 @@ describe("Create Demo Studio", () => {
     expect(screen.getByLabelText("Studio preview")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Director settings" })).toBeInTheDocument();
     const navigation = screen.getByRole("navigation", { name: "Primary navigation" });
-    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Jobs", "Voice", "Settings"]);
+    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Jobs", "Settings"]);
+    expect(within(navigation).queryByRole("link", { name: "Voice" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Voice", { exact: true })).toBeInTheDocument();
   });
 
   it("defaults to Product Demo with smooth zoom and configurable duration", () => {
@@ -88,7 +91,7 @@ describe("Create Demo Studio", () => {
     expect(screen.getByRole("radio", { name: "Product Demo" })).toBeChecked();
     expect(screen.getByLabelText("Length")).toHaveValue("90");
     expect(screen.getByRole("switch", { name: "Smooth zoom" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByText("Both formats keep pointer movement and click feedback visible.")).toBeInTheDocument();
+    expect(screen.getByText("All formats keep pointer movement and click feedback visible.")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Length"), { target: { value: "30" } });
     expect(screen.getByLabelText("Length")).toHaveValue("30");
   });
@@ -199,4 +202,19 @@ describe("Create Demo Studio", () => {
     expect(JSON.parse(String(request.body)).name).toBe(projectResponse.name);
     expect(JSON.parse(String(request.body))).toMatchObject({ website_url: "https://example.com", product_summary: projectResponse.product_summary, demo_mode: "presentation_demo", audience: "Product leaders", requested_duration_seconds: 120, cta: "Start a trial", zoom_enabled: false });
   });
+});
+
+
+it.each([["Spotlight", "30", "spotlight_demo"], ["Short", "45", "short_demo"]])("queues %s with its own duration and orientation", async (label, duration, mode) => {
+  const job = {id:"promo-job", project_id:projectResponse.id, status:"queued", stage:"inspection",completed_stages:[],attempts:1,version:1,created_at:projectResponse.created_at,updated_at:projectResponse.updated_at,message:"Queued",lease_until:null,export_id:null,timeline_version:null};
+  const fetchMock = vi.fn().mockResolvedValueOnce({ok:true,json:async()=>({...projectResponse,demo_mode:mode,requested_duration_seconds:Number(duration),output_orientation:"vertical"})}).mockResolvedValueOnce({ok:true,json:async()=>job});
+  vi.stubGlobal("fetch",fetchMock);
+  render(<Home/>); completeForm();
+  fireEvent.click(screen.getByRole("radio",{name:label}));
+  expect(screen.getByLabelText("Length")).toHaveValue(duration);
+  expect(screen.getByLabelText("Length")).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Output format"),{target:{value:"vertical"}});
+  fireEvent.submit(document.getElementById("demo-form")!);
+  await waitFor(()=>expect(replace).toHaveBeenCalledWith("/jobs?job=promo-job"));
+  expect(JSON.parse(String(fetchMock.mock.calls[0][1].body))).toMatchObject({demo_mode:mode,requested_duration_seconds:Number(duration),output_orientation:"vertical"});
 });

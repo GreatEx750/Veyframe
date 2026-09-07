@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it } from "vitest";
 
-import Home from "./page";
+import Home from "./studio/page";
 
 it("keeps Studio focused on setup with one create action and no editing controls", () => {
   render(<Home />);

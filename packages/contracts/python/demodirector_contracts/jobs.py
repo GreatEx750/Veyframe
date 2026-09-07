@@ -61,6 +61,7 @@ class JobActivity(ContractModel):
 
 
 class JobDetails(ContractModel):
+    format_label: str | None = None
     job: GenerationJob
     project_name: str
     kind: Literal["generation", "presentation_preview", "presentation"]

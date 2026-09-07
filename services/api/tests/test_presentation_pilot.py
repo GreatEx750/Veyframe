@@ -9,12 +9,34 @@ from typing import Any
 import pytest
 from demodirector_api.presentation_pilot import (
     SlideScript,
+    SlideText,
     validate_capture_narration,
     validate_slide,
 )
 from demodirector_api.presentation_pipeline import presentation_schedule
 from demodirector_worker.presentation_assets import load_pack
 from pydantic import ValidationError
+
+
+def test_slide_copy_normalizes_literal_punctuation_escapes_only() -> None:
+    copy = SlideText(slot_id="body", text=r"Explore \u2014 learn \u201Cmore\u201D\u2026")
+    assert copy.text == "Explore — learn “more”…"
+    assert SlideText(slot_id="body", text=r"Keep \u0000 and \path literal").text == (
+        r"Keep \u0000 and \path literal"
+    )
+
+
+def test_word_budget_is_checked_before_speech() -> None:
+    from demodirector_api.presentation_pilot import narration_word_budget, validate_word_budget
+    assert narration_word_budget(17_000) == 40
+    validate_word_budget("word " * 40, 40)
+    with pytest.raises(ValueError, match="words"):
+        validate_word_budget("Just click here.", 40)
+    with pytest.raises(ValueError, match="words"):
+        validate_word_budget("word " * 50, 40)
+    validate_word_budget("Just click here.", 40, allow_short=True)
+    with pytest.raises(ValueError, match="words"):
+        validate_word_budget("word " * 50, 40, allow_short=True)
 
 
 def test_full_authored_schedule_is_exactly_two_minutes_and_all_templates_are_typed() -> None:
@@ -251,3 +273,24 @@ def test_director_preserves_full_paragraph_instead_of_short_action_summaries(
     assert rewritten.narration == paragraph
     assert rewritten.narration_beats == draft.narration_beats
     assert list(tmp_path.glob("narration-rewrite-*.json"))
+    draft = draft.model_copy(update={"narration": "Click search."})
+    assert pilot.PresentationPilotDirector(tmp_path).direct(
+        {"sources": [{"id": "page"}]}, template, "search", 10_000, 2
+    ).narration == "Click search."
+    paragraph = "Word " * 30
+    with pytest.raises(ValueError, match="words"):
+        pilot.PresentationPilotDirector(tmp_path).rewrite_narration(
+            {"sources": [], "capture_behavior": {}, "narration_word_budget": 23,
+            "rewrite_feedback": "Expand."}, draft,
+        )
+
+
+def test_direction_failure_does_not_expose_provider_payload() -> None:
+    from demodirector_api.job_monitor import failure_summary
+    from demodirector_api.presentation_pilot import SlideDirectionError
+    error = SlideDirectionError(6, ValueError("private api_key=abc"))
+    assert "Slide 6" in failure_summary(error)
+    assert "private" not in json.dumps(error.details) + str(error)
+    error = SlideDirectionError(6, ValueError("Copy exceeds the limit for private"))
+    assert "length limit" in failure_summary(error)
+    assert "private" not in json.dumps(error.details) + str(error)

@@ -8,11 +8,12 @@ import html
 import json
 import subprocess
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from demodirector_contracts import RenderConfig, Scene, SceneCaptureResult, ZoomClip
-from playwright.sync_api import sync_playwright
+from demodirector_contracts import CaptureAction, RenderConfig, Scene, SceneCaptureResult, ZoomClip
+from playwright.sync_api import Page, sync_playwright
 
 from demodirector_worker.captions import highlight_frame_window, word_highlights
 from demodirector_worker.capture import CaptureSettings, PlaywrightCaptureWorker, _locator
@@ -48,13 +49,21 @@ POINTER_SCRIPT = """() => {
 } """
 
 
-def load_pack() -> dict[str, Any]:
-    manifest: dict[str, Any] = json.loads((PACK_ROOT / "manifest.json").read_text("utf-8"))
-    if manifest["pack_id"] != "presentation-story@2":
+def presentation_root(theme: str = "default") -> Path:
+    if theme not in {"default", "google"}:
+        raise ValueError("Unknown presentation theme")
+    return PACK_ROOT if theme == "default" else PACK_ROOT.parent / "presentation-story-google-v1"
+
+
+def load_pack(theme: str = "default") -> dict[str, Any]:
+    root = presentation_root(theme)
+    manifest: dict[str, Any] = json.loads((root / "manifest.json").read_text("utf-8"))
+    expected = "presentation-story@2" if theme == "default" else "presentation-story-google@1"
+    if manifest["pack_id"] != expected:
         raise ValueError("Unknown authored presentation pack")
     for relative, digest in manifest["integrity"]["files"].items():
-        asset = (PACK_ROOT / relative).resolve()
-        if PACK_ROOT.resolve() not in asset.parents:
+        asset = (root / relative).resolve()
+        if root.resolve() not in asset.parents:
             raise ValueError("Asset escaped the authored pack")
         if hashlib.sha256(asset.read_bytes()).hexdigest() != digest:
             raise ValueError(f"Authored asset integrity failed: {relative}")
@@ -79,7 +88,10 @@ def capture_settings_for_template(template: dict[str, Any]) -> CaptureSettings:
     if not template.get("requires_product"):
         raise ValueError("Only product templates have a recording viewport")
     aperture = template.get("product_aperture", {})
-    for position, dimension, limit in [("x", "width", 2560), ("y", "height", 1440)]:
+    canvas = template.get("canvas", {"width": 2560, "height": 1440})
+    for position, dimension, limit in [
+        ("x", "width", canvas["width"]), ("y", "height", canvas["height"])
+    ]:
         offset, size = aperture.get(position), aperture.get(dimension)
         if (
             type(offset) is not int
@@ -105,10 +117,48 @@ def media_probe(path: Path) -> dict[str, Any]:
 
 
 class AuthoredSlideRenderer:
-    def __init__(self, output: Path) -> None:
+    def __init__(
+        self, output: Path, *, pack_root: Path | None = None, theme: str = "default"
+    ) -> None:
         self.output = output.resolve()
         self.output.mkdir(parents=True, exist_ok=True)
-        self.pack = load_pack()
+        self.pack_root = pack_root or presentation_root(theme)
+        if pack_root is None:
+            self.pack = load_pack(theme)
+        else:
+            from demodirector_worker.promo_assets import load_promo_pack
+            self.pack = load_promo_pack(pack_root)
+        self.canvas = self.pack.get("canvas", {"width": 2560, "height": 1440})
+
+    def prepare_page(
+        self, page: Page, actions: list[CaptureAction], *, timeout_seconds: int = 180,
+        on_progress: Callable[[str], None] | None = None,
+    ) -> list[str]:
+        """Execute validated setup before the visible scene clock; never synthesize actions."""
+        if not 1 <= timeout_seconds <= 180:
+            raise ValueError("Invalid preparation timeout: expected 1–180 seconds")
+        if len(actions) > 30:
+            raise ValueError("Too many preparation actions")
+        executor = PlaywrightCaptureWorker(self.output / "capture")
+        deadline = time.monotonic() + timeout_seconds
+        logs = []
+        for supplied in actions:
+            action = CaptureAction.model_validate(supplied.model_dump())
+            if action.type not in {
+                "click", "fill", "select", "wait_for", "assert_visible", "scroll"
+            }:
+                raise ValueError("Unsupported preparation action")
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise ValueError("Page preparation timeout exceeded")
+            if action.type == "wait_for" and not action.locator:
+                raise ValueError("Preparation waits must use visible readiness selectors")
+            page.set_default_timeout(remaining * 1000)
+            if on_progress:
+                on_progress(f"Preparing recording: {action.description}")
+            executor._execute(page, action)
+            logs.append(f"Preparation: {action.description}")
+        return logs
 
     def capture(
         self,
@@ -117,6 +167,8 @@ class AuthoredSlideRenderer:
         template: dict[str, Any],
         *,
         session_token: str | None = None,
+        preparation: list[CaptureAction] | None = None,
+        on_progress: Callable[[str], None] | None = None,
     ) -> tuple[Path, SceneCaptureResult]:
         """Record one scene, moving through observed targets with the standard executor."""
         settings = capture_settings_for_template(template)
@@ -144,8 +196,13 @@ class AuthoredSlideRenderer:
             page.set_default_timeout(15_000)
             try:
                 page.goto(
-                    str(scene.capture_plan.start_url), wait_until="networkidle", timeout=30_000
+                    str(scene.capture_plan.start_url),
+                    wait_until="networkidle",
+                    timeout=30_000,
                 )
+                if preparation:
+                    logs.extend(self.prepare_page(page, preparation, on_progress=on_progress))
+                    page.set_default_timeout(15_000)
                 page.wait_for_timeout(400)
                 offset_ms = round((time.monotonic() - started) * 1000)
                 visible_start = time.monotonic()
@@ -156,6 +213,15 @@ class AuthoredSlideRenderer:
                     remaining = target_time - (time.monotonic() - visible_start)
                     if remaining > 0:
                         page.wait_for_timeout(remaining * 1000)
+                    if (
+                        template.get("canvas", {}).get("width") == 1080
+                        and page.url.startswith("https://en.wikipedia.org/wiki/")
+                        and action.locator and action.locator.startswith("#vector-toc")
+                        and not page.locator(action.locator).is_visible()
+                    ):
+                        page.locator(
+                            '[aria-label="Toggle the table of contents"]:visible'
+                        ).first.click()
                     if action.locator:
                         target = _locator(page, action)
                         target.scroll_into_view_if_needed()
@@ -249,7 +315,7 @@ class AuthoredSlideRenderer:
 
     def copy_layer(self, template: dict[str, Any], copy: dict[str, str], output: Path) -> None:
         font = base64.b64encode(
-            (PACK_ROOT / "shared/inter-latin-variable.woff2").read_bytes()
+            (self.pack_root / "shared/inter-latin-variable.woff2").read_bytes()
         ).decode()
         light = template["id"] in {"brand-promise@2", "brand-outro@2"}
         body_dark = template["id"] in {
@@ -275,6 +341,7 @@ class AuthoredSlideRenderer:
                 color = "#0A211C"
             elif key == "activity_heading" or key.endswith("_status"):
                 color = "#9DE8D2"
+            color = slot.get("color", color)
             style = (
                 f"left:{rect['x']}px;top:{rect['y']}px;width:{rect['width']}px;"
                 f"height:{rect['height']}px;font-size:{token['size']}px;"
@@ -294,7 +361,7 @@ class AuthoredSlideRenderer:
         )
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page(viewport={"width": 2560, "height": 1440})
+            page = browser.new_page(viewport=self.canvas)
             page.set_content(document)
             page.evaluate("document.fonts.ready")
             measurements = page.evaluate("""() =>
@@ -338,8 +405,8 @@ class AuthoredSlideRenderer:
         directory = self.output / f"slide-{index + 1:02d}"
         directory.mkdir(exist_ok=True)
         self.copy_layer(template, copy, directory / "copy.png")
-        background = PACK_ROOT / template["assets"]["background_png"]
-        foreground = PACK_ROOT / template["assets"]["foreground_png"]
+        background = self.pack_root / template["assets"]["background_png"]
+        foreground = self.pack_root / template["assets"]["foreground_png"]
         duration = duration_ms / 1000
         caption_list = self.caption_images(
             narration_text, directory, narration_duration or duration, narration_beats
@@ -415,7 +482,7 @@ class AuthoredSlideRenderer:
                 "-loop",
                 "1",
                 "-i",
-                str(PACK_ROOT / template["assets"]["product_mask_png"]),
+                str(self.pack_root / template["assets"]["product_mask_png"]),
             ]
             a = template["product_aperture"]
             w, h, x, y = (a[k] for k in ["width", "height", "x", "y"])
@@ -435,7 +502,7 @@ class AuthoredSlideRenderer:
                 product_label = "focused"
             filters += [
                 f"[{product_label}]setpts=PTS-STARTPTS,setsar=1,"
-                f"pad=2560:1440:{x}:{y}:color=black[placed]",
+                f"pad={self.canvas['width']}:{self.canvas['height']}:{x}:{y}:color=black[placed]",
                 "[placed][6:v]alphamerge[masked]",
                 "[0:v][masked]overlay=0:0:shortest=1[base]",
             ]
@@ -445,7 +512,9 @@ class AuthoredSlideRenderer:
             "[base][1:v]overlay=0:0[frame]",
             "[2:v]format=rgba,fade=t=in:st=0:d=0.35:alpha=1[copy]",
             "[frame][copy]overlay=0:0[written]",
-            "[written][4:v]overlay=500:1252:eof_action=repeat,format=yuv420p[v]",
+            f"[written][4:v]overlay={self.pack.get('caption_layout', {}).get('x', 500)}:"
+            f"{self.pack.get('caption_layout', {}).get('y', 1252)}:eof_action=repeat:"
+            f"enable='lt(t,{narration_duration or duration:.6f})',format=yuv420p[v]",
             f"[3:a]apad,atrim=duration={duration},asetpts=PTS-STARTPTS[a]",
         ]
         output = directory / "composed.mp4"
@@ -492,30 +561,34 @@ class AuthoredSlideRenderer:
     def caption_images(
         self, text: str, directory: Path, duration: float, beats: list[str] | None = None
     ) -> Path:
+        caption = self.pack.get("caption_layout", {})
+        words_per_line = caption.get("words_per_line", 7)
         windows = [(duration - 4) / 2, (duration - 4) / 2, 4] if beats else [duration]
         chunks = []
         elapsed_ms = 0
         for beat, window in zip(beats or [text], windows, strict=True):
             words = beat.split()
-            for offset in range(0, len(words), 7):
-                chunk = words[offset : offset + 7]
+            for offset in range(0, len(words), words_per_line):
+                chunk = words[offset : offset + words_per_line]
                 chunk_ms = round(window * 1000 * len(chunk) / len(words))
                 chunks.extend(word_highlights(" ".join(chunk), elapsed_ms, elapsed_ms + chunk_ms))
                 elapsed_ms += chunk_ms
         font = base64.b64encode(
-            (PACK_ROOT / "shared/inter-latin-variable.woff2").read_bytes()
+            (self.pack_root / "shared/inter-latin-variable.woff2").read_bytes()
         ).decode()
         entries = []
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page(viewport={"width": 1560, "height": 104})
+            page = browser.new_page(viewport={"width": caption.get("width", 1560), "height": 104})
             page.set_content(
                 '<!doctype html><meta charset="utf-8"><style>'
                 f"@font-face{{font-family:Inter;src:url(data:font/woff2;base64,{font});}}"
                 "body{margin:0;height:104px;display:flex;align-items:center;justify-content:center;"
-                "font:44px/56px Inter;color:#F3EDE1;background:transparent;}"
+                f"font:44px/56px Inter;color:{caption.get('text_color', '#F3EDE1')};"
+                "background:transparent;}"
                 "span{display:inline-block;padding:4px 6px;border-radius:8px;vertical-align:top;}"
-                ".active{background:#9DE8D2;color:#0A211C;}"
+                f".active{{background:{caption.get('highlight_background', '#9DE8D2')};"
+                f"color:{caption.get('highlight_color', '#0A211C')};}}"
                 "p{margin:0;white-space:nowrap}</style><p></p>"
             )
             page.evaluate("async () => { await document.fonts.load('44px Inter'); }")

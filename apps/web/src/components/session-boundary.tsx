@@ -27,24 +27,26 @@ export function SessionBoundary({ children }: { children: ReactNode }) {
   }, [router]);
 
   useEffect(() => {
-    if (pathname === "/login" || pathname === "/signup") return;
+    if (pathname === "/" || pathname === "/login" || pathname === "/signup") return;
     let active = true;
-    void fetch("/api/auth/session", { cache: "no-store" })
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const retryLater = () => { if (active) retry = setTimeout(check, 3000); };
+    const check = () => { void fetch("/api/auth/session", { cache: "no-store" })
       .then(async (response) => {
+        if (response.status >= 500 || response.status === 429) { retryLater(); return; }
         const body = await response.json() as { status?: string };
-        if (active && (!response.ok || body.status !== "active")) {
+        if (active && (response.status === 401 || response.status === 403 ||
+          ["absent", "expired", "revoked"].includes(body.status ?? ""))) {
           router.replace("/login?reason=session_expired");
           router.refresh();
-        }
+        } else if (body.status !== "active") retryLater();
       })
-      .catch(() => {
-        if (active) {
-          router.replace("/login?reason=session_expired");
-          router.refresh();
-        }
-      });
+      .catch(retryLater);
+    };
+    check();
     return () => {
       active = false;
+      clearTimeout(retry);
     };
   }, [pathname, router]);
 

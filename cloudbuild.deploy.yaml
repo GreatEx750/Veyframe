@@ -61,7 +61,7 @@ steps:
       - run
       - services
       - update
-      - demodirector-web
+      - veyframe-web
       - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-web:${SHORT_SHA}
       - --region=${_REGION}
       - --project=${PROJECT_ID}
@@ -75,7 +75,7 @@ steps:
       - run
       - services
       - update
-      - demodirector-api
+      - veyframe-api
       - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-api:${SHORT_SHA}
       - --region=${_REGION}
       - --project=${PROJECT_ID}
@@ -89,7 +89,7 @@ steps:
       - run
       - services
       - update
-      - demodirector-worker
+      - veyframe-worker
       - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/demodirector-worker:${SHORT_SHA}
       - --region=${_REGION}
       - --project=${PROJECT_ID}

@@ -18,9 +18,15 @@ from test_generation import FakeCaptureWorker, build_service
 
 def test_cloud_presentation_task_rejects_end_user_access(tmp_path: Path) -> None:
     client, _ = auth_client(tmp_path / "auth.db")
-    response = client.post("/tasks/presentation", json={
-        "project_id": "private-project", "preview": False, "attempt": 1, "step": 0,
-    })
+    response = client.post(
+        "/tasks/presentation",
+        json={
+            "project_id": "private-project",
+            "preview": False,
+            "attempt": 1,
+            "step": 0,
+        },
+    )
     assert response.status_code == 403
 
 
@@ -69,8 +75,15 @@ def test_cloud_dispatch_is_authenticated_and_step_identified() -> None:
     assert task["dispatch_deadline"] == "900s"
 
 
+@pytest.mark.parametrize(
+    "mode,count,duration",
+    [("presentation_demo", 9, 120), ("spotlight_demo", 3, 30), ("short_demo", 5, 45)],
+)
 def test_cloud_tasks_resume_one_slide_and_ignore_duplicate_delivery(
     tmp_path: Path,
+    mode: str,
+    count: int,
+    duration: int,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from demodirector_api import cloud_presentation as module
@@ -79,9 +92,7 @@ def test_cloud_tasks_resume_one_slide_and_ignore_duplicate_delivery(
     project = projects.get("project-one-click")
     assert project
     projects.update(
-        project.model_copy(
-            update={"demo_mode": "presentation_demo", "requested_duration_seconds": 120}
-        )
+        project.model_copy(update={"demo_mode": mode, "requested_duration_seconds": duration})
     )
     records = SQLiteRecordStore(tmp_path / "jobs.db")
     calls: list[Any] = []
@@ -109,21 +120,26 @@ def test_cloud_tasks_resume_one_slide_and_ignore_duplicate_delivery(
         limit = kwargs["slide_limit"]
         limits.append(limit)
         assert kwargs["generation"] is generation
-        return {"completed_slides": limit} if limit else {"export": {"id": "export-1"}}
+        return (
+            {"completed_slides": limit}
+            if limit
+            else {"export": {"id": "export-1", "duration_ms": 138200}}
+        )
 
     monkeypatch.setattr(module, "run_presentation", pipeline)
     job = jobs.start(project.id, preview=False)
     assert len(calls) == 1
     assert instance().latest(project.id, False).status == "queued"  # type: ignore[union-attr]
-    for step in range(10):
+    for step in range(count + 1):
         jobs.step(project.id, False, job.attempts, step)
         checkpoint = records.get(jobs._state_key(project.id, False))
         assert checkpoint and isinstance(checkpoint[1]["recipes"]["title"], dict)
         jobs.step(project.id, False, job.attempts, step)
-    assert limits == [1, 2, 3, 4, 5, 6, 7, 8, 9, None]
+    assert limits == [*range(1, count + 1), None]
     final = jobs.latest(project.id, False)
     assert final and final.status == "succeeded" and final.export_id == "export-1"
-    assert len(calls) == 10
+    assert "138.2 seconds" in final.message
+    assert len(calls) == count + 1
 
 
 def test_expired_cloud_lease_requires_explicit_retry(tmp_path: Path) -> None:

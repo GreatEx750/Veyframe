@@ -222,6 +222,14 @@ describe("shared client contracts", () => {
       presentation: { template: "edge_to_edge", zoom_enabled: false },
       ...presentationMedia,
     }).presentation.zoom_enabled).toBe(false);
+    for (const duration of [120_000, 125_100, 140_000, 140_100]) {
+      expect(timelineSchema.safeParse({
+        project_id: "project-presentation", duration_ms: duration,
+        demo_mode: "presentation_demo", presentation_pack_id: "presentation-story@1",
+        ...presentationMedia,
+        scene_clips: [{ ...presentationMedia.scene_clips[0], end_ms: duration }],
+      }).success).toBe(duration <= 140_000);
+    }
     expect(timelineSchema.safeParse({
       project_id: "project-presentation",
       duration_ms: 30_000,

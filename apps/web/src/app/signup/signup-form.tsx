@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -47,9 +48,9 @@ export function SignupForm() {
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <div className="auth-brand"><span>◆</span><b>DemoDirector</b></div>
+        <Link className="auth-brand" href="/" aria-label="Veyframe home"><Image src="/brand/veyframe-icon.png" width={32} height={32} alt="" /><b>Veyframe</b></Link>
         <p className="auth-kicker">Create your workspace</p>
-        <h1>Start building polished product demos</h1>
+        <h1>Create your next video with Veyframe</h1>
         <p>Your projects, captures, and exports stay private to your account.</p>
         <form onSubmit={submit}>
           <label htmlFor="signup-email">Email</label>

@@ -2,7 +2,7 @@
 
 ## Scope and current result
 
-Cloud verification is in progress; a finished video is not yet claimed. The request is a full
+Cloud verification **did not pass**; no finished two-minute video was produced. The request is a full
 two-minute Wikipedia Presentation Demo using the same authored v2 slide-by-slide pipeline as
 the local result. This is not the nested DemoDirector self-demo and not a first-five-slide preview.
 
@@ -37,6 +37,23 @@ on an API instance's background thread or local SQLite surviving a request or re
    Minimum zero/maximum one instance, concurrency two, existing secrets, task identity and
    authentication are preserved. The queue remains single-dispatch. Higher memory increases
    active-instance resource usage; no concurrency increase was made.
+5. The normal UI retry (attempt 3) restored the checkpoint on the new revision and rebuilt slides
+   2 and 3 with all three planned interactions each. Slide 2's complete 22.915-second capture was
+   fitted to ten seconds, retaining all clicks. Its composed midpoint visibly contains the actual
+   Wikipedia page, pointer, rounded product window and highlighted caption.
+6. At 21:53:17 UTC the job failed during slide 4 narration with `NarrationTimingError`, after all
+   three bounded speech attempts. This happened before slide 4 rendering, so the larger memory
+   allowance is deployed but has not yet passed that render. The UI correctly shows failed,
+   attempt 3/3, no active lease, and a disabled retry button. No attempt counter was reset and
+   no replacement project was created to circumvent the limit.
+
+The saved log exposes the narration exception type but not its measured cause. The validator
+rejects insufficient/excessive speech duration after a bounded 0.9–1.1 tempo adjustment, or an
+internal pause exceeding 1.25 seconds. The current evidence does not distinguish those cases.
+The failed slide's unsaved audio/metrics are not in the committed cloud checkpoint. The next fix
+should save safe timing diagnostics and bounded recovery checkpoints, then make narration fitting
+reliable without accepting truncated speech or long silent padding. A fresh paid cloud test needs
+explicit approval after the existing job exhausted its three attempts.
 
 ## Deployed builds
 
@@ -46,9 +63,9 @@ on an API instance's background thread or local SQLite surviving a request or re
 - Hosted web revision: `demodirector-web-00021-4qc`.
 - API image: `demodirector-api:presentation-20260905-r3` in the existing project repository.
 
-These builds use the current local source. The changes have not been committed or pushed to
-GitHub; a later push of older source would replace this deployment. Image-only deployment
-preserves runtime settings, including the memory allowance.
+These manual builds use the local source. During verification the changes were committed as
+`861b902` (`cloud update`); the final failure-report update remains a working-tree change.
+Image-only deployment preserves runtime settings, including the memory allowance.
 
 ## Automated verification
 
@@ -62,6 +79,8 @@ preserves runtime settings, including the memory allowance.
 
 ## Final media verification
 
-Pending completion: exact 120.000-second 2560×1440/30fps MP4, nine slide receipts, all planned
+Not reached: exact 120.000-second 2560×1440/30fps MP4, nine slide receipts, all planned
 interactions retained, narration checks, real Parallel/ADK evidence, full media decode, authenticated
 byte-range delivery, Projects membership, visual slide sampling and actual hosted editor playback.
+The project and its first three cloud-saved slides remain preserved. This report must not be used
+as proof that full cloud generation works yet.

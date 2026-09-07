@@ -4,7 +4,7 @@ import math
 import os
 import struct
 import wave
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -18,12 +18,23 @@ from demodirector_contracts import (
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from google.genai.errors import APIError
 
 load_dotenv()
 
 DEFAULT_TTS_MODEL = "gemini-3.1-flash-tts-preview"
+FALLBACK_TTS_MODEL = "gemini-2.5-flash-preview-tts"
 SAMPLE_RATE = 24_000
 SAMPLE_WIDTH = 2
+NARRATION_QUOTA_MESSAGE = (
+    "Google speech rate or quota limit reached. "
+    "Wait for the configured project's limit to reset before approving a retry; "
+    "completed slides are preserved."
+)
+
+
+class NarrationQuotaError(RuntimeError):
+    """Speech generation is waiting for provider capacity."""
 
 
 class AudioGenerationError(RuntimeError):
@@ -52,13 +63,29 @@ class TTSAdapter(Protocol):
 
 
 class GeminiTTSAdapter:
-    def __init__(self, settings: GeminiTTSSettings) -> None:
+    def __init__(self, settings: GeminiTTSSettings,
+                 *, on_progress: Callable[[str], None] | None = None) -> None:
         if settings.api_key is None:
             raise AudioGenerationError("GEMINI_API_KEY is required for live narration.")
         self.model_name = settings.model_name
-        self._client = genai.Client(api_key=settings.api_key)
+        self.on_progress = on_progress or (lambda _: None)
+        self._client = genai.Client(api_key=settings.api_key, http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(attempts=1)))
 
     def synthesize(self, text: str, voice: NarrationVoiceConfig) -> bytes:
+        try:
+            return self._synthesize(text, voice)
+        except APIError as error:
+            if error.code != 429 or self.model_name != DEFAULT_TTS_MODEL:
+                raise
+            self.model_name = FALLBACK_TTS_MODEL
+            self.on_progress(
+                "Gemini 3.1 Flash TTS rate limited; using Gemini 2.5 Flash TTS fallback."
+            )
+            return self._synthesize(text, voice)
+
+    def _synthesize(self, text: str, voice: NarrationVoiceConfig) -> bytes:
+        self.on_progress(f"Speech generation: {self.model_name}")
         response = self._client.models.generate_content(
             model=self.model_name,
             contents=(
@@ -137,7 +164,9 @@ class NarrationService:
                 voice_config=voice,
                 segments=segments,
                 preserved_capture_paths=preserved,
-                error=f"Narration generation failed: {error}",
+                error=(NARRATION_QUOTA_MESSAGE
+                       if isinstance(error, APIError) and error.code == 429
+                       else f"Narration generation failed: {error}"),
             )
         return NarrationJobResult(
             status="succeeded",

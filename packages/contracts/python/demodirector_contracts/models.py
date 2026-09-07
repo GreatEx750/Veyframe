@@ -55,7 +55,7 @@ ProjectStatus = Literal[
 ]
 ProjectJobStatus = Literal["idle", "queued", "running", "succeeded", "failed"]
 UserRole = Literal["customer", "judge_demo", "system"]
-DemoMode = Literal["product_demo", "presentation_demo"]
+DemoMode = Literal["product_demo", "presentation_demo", "spotlight_demo", "short_demo"]
 
 
 class ContractModel(BaseModel):
@@ -88,6 +88,7 @@ class Project(ContractModel):
     cta: NonEmptyString
     brand_kit_id: NonEmptyString | None = None
     demo_mode: DemoMode = "product_demo"
+    output_orientation: Literal["landscape", "vertical"] = "landscape"
     zoom_enabled: bool = True
     status: ProjectStatus = "draft"
     job_status: ProjectJobStatus = "idle"
@@ -99,6 +100,11 @@ class Project(ContractModel):
     def presentation_demo_uses_mvp_duration(self) -> Project:
         if self.demo_mode == "presentation_demo" and self.requested_duration_seconds != 120:
             raise ValueError("Presentation Demo must be exactly 120 seconds for the MVP")
+        expected = {"spotlight_demo": 30, "short_demo": 45}.get(self.demo_mode)
+        if expected and self.requested_duration_seconds != expected:
+            raise ValueError(f"{self.demo_mode} requires {expected} seconds")
+        if self.output_orientation == "vertical" and not expected:
+            raise ValueError("Vertical output is supported by Spotlight and Short")
         return self
 
 
@@ -527,6 +533,7 @@ class VideoPresentationConfig(ContractModel):
 
 
 class Timeline(ContractModel):
+    output_orientation: Literal["landscape", "vertical"] | None = None
     project_id: NonEmptyString
     duration_ms: int = Field(gt=0)
     demo_mode: DemoMode = "product_demo"
@@ -576,8 +583,8 @@ class Timeline(ContractModel):
             raise ValueError("long-form plan ID and version must be stored together")
         if self.demo_mode == "presentation_demo" and self.presentation_pack_id is None:
             raise ValueError("Presentation Demo requires the shipped presentation template pack")
-        if self.demo_mode == "presentation_demo" and self.duration_ms != 120_000:
-            raise ValueError("Presentation Demo must be exactly 120 seconds for the MVP")
+        if self.demo_mode == "presentation_demo" and not 120_000 <= self.duration_ms <= 140_000:
+            raise ValueError("Presentation Demo must be within 120–140 seconds")
         if self.demo_mode == "presentation_demo":
             ordered_scenes = sorted(self.scene_clips, key=lambda clip: clip.start_ms)
             expected_start = 0

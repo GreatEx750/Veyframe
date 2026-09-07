@@ -3,6 +3,11 @@ import { afterEach, expect, it, vi } from "vitest";
 
 import RootLayout from "./layout";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/projects",
+  useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+}));
+
 vi.mock("next/font/google", () => ({
   Inter: () => ({ className: "inter", variable: "--font-inter" }),
 }));

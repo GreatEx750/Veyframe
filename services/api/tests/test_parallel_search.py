@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import cast
 from uuid import NAMESPACE_URL, uuid5
 
 import pytest
@@ -15,6 +16,7 @@ from demodirector_api.parallel_search import (
     product_domain,
 )
 from demodirector_contracts import Project
+from pydantic import HttpUrl
 
 
 class StubWebResult:
@@ -136,3 +138,49 @@ def test_normalization_creates_stable_typed_sources_and_skips_invalid_results() 
     assert first[0].id != str(
         uuid5(NAMESPACE_URL, "project-1:https://example.com/docs")
     )
+
+
+def test_research_uses_inspected_redirect_and_records_broader_retry() -> None:
+    from demodirector_api.parallel_search import research_product
+    from demodirector_contracts import ResearchSource
+
+    demo = project().model_copy(update={"website_url": "https://www.wikipedia.com/"})
+    page = ResearchSource(
+        id="landing", project_id=demo.id, title="Wikipedia",
+        url=cast(HttpUrl, "https://www.wikipedia.org/"), snippet="Search Wikipedia",
+        source_type="website", retrieved_at=demo.created_at,
+    )
+
+    class RetryingSearch:
+        configured = True
+
+        def __init__(self) -> None:
+            self.calls: list[dict[str, object]] = []
+
+        def search(self, **kwargs: object) -> list[ParallelResultItem]:
+            self.calls.append(kwargs)
+            if len(self.calls) == 1:
+                return [ParallelResultItem("https://en.wikipedia.org/", "Empty", ())]
+            return [ParallelResultItem(
+                "https://en.wikipedia.org/wiki/Help:Searching", "Searching", ("Use search.",)
+            )]
+
+    search = RetryingSearch()
+    result = research_product(search, demo, [page])
+    assert len(result.sources) == 1
+    assert all(call["domain"] == "wikipedia.org" for call in search.calls)
+    assert search.calls[0]["queries"] != search.calls[1]["queries"]
+    assert result.attempts[0]["returned_count"] == 1
+    assert result.attempts[0]["accepted_count"] == 0
+    assert result.attempts[1]["accepted_count"] == 1
+
+
+def test_empty_research_is_bounded_and_reports_zero_results() -> None:
+    from demodirector_api.parallel_search import FakeParallelSearchAdapter, research_product
+
+    search = FakeParallelSearchAdapter()
+    result = research_product(search, project(), [])
+    assert len(search.calls) == 2
+    assert result.sources == []
+    assert result.warning
+    assert all(attempt["returned_count"] == 0 for attempt in result.attempts)

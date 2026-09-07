@@ -439,7 +439,20 @@ def test_presentation_demo_requires_the_shipped_template_pack() -> None:
             duration_ms=120_000,
             demo_mode="presentation_demo",
         )
-    with pytest.raises(ValidationError, match="exactly 120 seconds"):
+    for duration_ms in [120000, 125100, 140000]:
+        extended = Timeline(
+            project_id="project-presentation", duration_ms=duration_ms,
+            demo_mode="presentation_demo", presentation_pack_id="presentation-story@1",
+            scene_clips=[scene_clip.model_copy(update={"end_ms": duration_ms})],
+            cursor_events=[click],
+        )
+        assert extended.duration_ms == duration_ms
+    with pytest.raises(ValidationError, match="120–140 seconds"):
+        Timeline(
+            project_id="project-presentation", duration_ms=140100,
+            demo_mode="presentation_demo", presentation_pack_id="presentation-story@1",
+        )
+    with pytest.raises(ValidationError, match="120–140 seconds"):
         Timeline(
             project_id="project-presentation",
             duration_ms=30_000,

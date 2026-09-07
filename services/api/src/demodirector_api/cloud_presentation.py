@@ -217,16 +217,25 @@ class CloudPresentationJobs(PresentationJobs):
         output = self.artifact_root / "presentations" / project_id
         if not preview:
             output /= "full"
-        count = 5 if preview else 9
+        count = (3 if project.demo_mode == "spotlight_demo" else
+                 5 if project.demo_mode == "short_demo" or preview else 9)
         try:
             with self.monitor.heartbeat(claimed):
                 self.generation.projects.update(
                     project.model_copy(update={"job_status": "running"})
                 )
                 self.cache.restore(output, project_id, preview, state["files"])
+                from functools import partial
+
+                from demodirector_api.presentation_trace import PresentationTraceRecorder
+
+                recorder = PresentationTraceRecorder(self.records, claimed)
                 token = self.vault.decrypt(state["token"]) if state.get("token") else None
                 if not state.get("recipes"):
-                    recipes = self._recipes(project, token)
+                    recipes = recorder.call(
+                        "inspection", "Inspect the recording destination", "Playwright inspector",
+                        partial(self._recipes, project, token),
+                    )
                     state["recipes"] = {
                         name: {"url": url, "actions": [a.model_dump(mode="json") for a in actions]}
                         for name, (url, actions) in recipes.items()
@@ -267,6 +276,7 @@ class CloudPresentationJobs(PresentationJobs):
                     preview=preview,
                     session_token=token,
                     generation=self.generation,
+                    trace_recorder=recorder,
                     slide_limit=step + 1 if step < count else None,
                 )
                 state["files"] = self.cache.save(output, project_id, preview)
@@ -292,7 +302,8 @@ class CloudPresentationJobs(PresentationJobs):
                             "render",
                         ],
                         message=(
-                            f"Ready: {count} slides · {61 if preview else 120} seconds"
+                            f"Ready: {count} slides · "
+                            f"{float(export['duration_ms']) / 1000:g} seconds"
                             " · cloud video saved"
                         ),
                     )
@@ -311,6 +322,6 @@ class CloudPresentationJobs(PresentationJobs):
             return self._fail(
                 project_id,
                 preview,
-                f"Presentation stopped ({type(error).__name__}). "
+                f"{failure_summary(error)} "
                 "Retry to resume cloud-saved slides.",
             )

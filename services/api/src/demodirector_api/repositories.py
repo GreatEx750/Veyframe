@@ -131,6 +131,11 @@ class SQLiteProjectRepository:
                 connection.execute(
                     "ALTER TABLE projects ADD COLUMN demo_mode TEXT NOT NULL DEFAULT 'product_demo'"
                 )
+            if "output_orientation" not in columns:
+                connection.execute(
+                    "ALTER TABLE projects ADD COLUMN output_orientation TEXT "
+                    "NOT NULL DEFAULT 'landscape'"
+                )
             if "zoom_enabled" not in columns:
                 connection.execute(
                     "ALTER TABLE projects ADD COLUMN zoom_enabled INTEGER NOT NULL DEFAULT 1"
@@ -149,6 +154,7 @@ class SQLiteProjectRepository:
             project.cta,
             project.brand_kit_id,
             project.demo_mode,
+            project.output_orientation,
             int(project.zoom_enabled),
             project.status,
             project.job_status,
@@ -167,9 +173,9 @@ class SQLiteProjectRepository:
                 """
                 INSERT INTO projects (
                     id, name, website_url, product_summary, audience, tone,
-                    requested_duration_seconds, cta, brand_kit_id, demo_mode,
+                    requested_duration_seconds, cta, brand_kit_id, demo_mode, output_orientation,
                     zoom_enabled, status, job_status, owner_user_id, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 self._values(project),
             )
@@ -190,7 +196,8 @@ class SQLiteProjectRepository:
                 UPDATE projects SET
                     name = ?, website_url = ?, product_summary = ?, audience = ?,
                     tone = ?, requested_duration_seconds = ?, cta = ?, brand_kit_id = ?,
-                    demo_mode = ?, zoom_enabled = ?, status = ?, job_status = ?,
+                    demo_mode = ?, output_orientation = ?, zoom_enabled = ?,
+                    status = ?, job_status = ?,
                     owner_user_id = ?, created_at = ?, updated_at = ?
                 WHERE id = ?
                 """,

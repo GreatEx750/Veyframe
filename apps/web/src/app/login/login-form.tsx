@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -56,9 +57,9 @@ export function LoginForm() {
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <div className="auth-brand"><span>◆</span><b>DemoDirector</b></div>
+        <Link className="auth-brand" href="/" aria-label="Veyframe home"><Image src="/brand/veyframe-icon.png" width={32} height={32} alt="" /><b>Veyframe</b></Link>
         <p className="auth-kicker">Welcome back</p>
-        <h1>Continue creating your demo</h1>
+        <h1>Continue creating your next video</h1>
         <p>Log in to open your private projects, media, and exports.</p>
         <form onSubmit={submit}>
           <label htmlFor="login-email">Email</label>
@@ -73,7 +74,7 @@ export function LoginForm() {
           {judgeLoading ? "Preparing judge demo…" : "Enter Judge Demo"}
         </button>
         <small className="judge-note">Short-lived, isolated, and preloaded. No shared password.</small>
-        <footer>New to DemoDirector? <Link href="/signup">Create an account</Link></footer>
+        <footer>New to Veyframe? <Link href="/signup">Create an account</Link></footer>
       </section>
     </main>
   );

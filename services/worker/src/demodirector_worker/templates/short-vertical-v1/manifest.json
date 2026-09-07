@@ -1,0 +1,385 @@
+{
+  "pack_id": "short-vertical-default@1",
+  "display_name": "Editorial short demo",
+  "family": "promo",
+  "mode": "short_demo",
+  "theme": "default",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "caption_layout": {
+    "x": 88,
+    "y": 1418,
+    "width": 904,
+    "height": 104,
+    "words_per_line": 3,
+    "text_color": "#0A211C",
+    "highlight_background": "#F3EDE1",
+    "highlight_color": "#0A211C"
+  },
+  "typography": {
+    "tokens": {
+      "brand": {
+        "size": 54,
+        "line_height": 64,
+        "weight": 600,
+        "tracking": 0
+      },
+      "headline": {
+        "size": 66,
+        "line_height": 78,
+        "weight": 600,
+        "tracking": -1
+      },
+      "body": {
+        "size": 48,
+        "line_height": 62,
+        "weight": 500,
+        "tracking": 0
+      },
+      "cta": {
+        "size": 54,
+        "line_height": 68,
+        "weight": 500,
+        "tracking": -1
+      }
+    }
+  },
+  "templates": [
+    {
+      "id": "short-hook@1",
+      "name": "Editorial short hook",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "hook",
+      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "requires_product": false,
+      "product_aperture": null,
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 100,
+            "y": 160,
+            "width": 880,
+            "height": 64
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 72,
+            "y": 450,
+            "width": 840,
+            "height": 390
+          },
+          "font_token": "headline",
+          "max_characters": 60,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "body",
+          "rect": {
+            "x": 72,
+            "y": 1030,
+            "width": 840,
+            "height": 240
+          },
+          "font_token": "body",
+          "max_characters": 90,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "short-vertical-default-2",
+      "assets": {
+        "background_png": "slides/hook/background.png",
+        "foreground_png": "slides/hook/foreground.png"
+      }
+    },
+    {
+      "id": "short-search@1",
+      "name": "Editorial short search",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "search",
+      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "requires_product": true,
+      "product_aperture": {
+        "x": 56,
+        "y": 480,
+        "width": 968,
+        "height": 870,
+        "corner_radius": 0
+      },
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 100,
+            "y": 160,
+            "width": 880,
+            "height": 64
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 100,
+            "y": 274,
+            "width": 880,
+            "height": 152
+          },
+          "font_token": "body",
+          "max_characters": 72,
+          "max_lines": 2,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "short-vertical-default-2",
+      "assets": {
+        "background_png": "slides/search/background.png",
+        "foreground_png": "slides/search/foreground.png",
+        "product_mask_png": "slides/search/product-mask.png"
+      }
+    },
+    {
+      "id": "short-context@1",
+      "name": "Editorial short context",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "context",
+      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "requires_product": true,
+      "product_aperture": {
+        "x": 56,
+        "y": 480,
+        "width": 968,
+        "height": 870,
+        "corner_radius": 0
+      },
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 100,
+            "y": 160,
+            "width": 880,
+            "height": 64
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 100,
+            "y": 274,
+            "width": 880,
+            "height": 152
+          },
+          "font_token": "body",
+          "max_characters": 72,
+          "max_lines": 2,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "short-vertical-default-2",
+      "assets": {
+        "background_png": "slides/context/background.png",
+        "foreground_png": "slides/context/foreground.png",
+        "product_mask_png": "slides/context/product-mask.png"
+      }
+    },
+    {
+      "id": "short-related@1",
+      "name": "Editorial short related",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "related",
+      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "requires_product": true,
+      "product_aperture": {
+        "x": 56,
+        "y": 480,
+        "width": 968,
+        "height": 870,
+        "corner_radius": 0
+      },
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 100,
+            "y": 160,
+            "width": 880,
+            "height": 64
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 100,
+            "y": 274,
+            "width": 880,
+            "height": 152
+          },
+          "font_token": "body",
+          "max_characters": 72,
+          "max_lines": 2,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "short-vertical-default-2",
+      "assets": {
+        "background_png": "slides/related/background.png",
+        "foreground_png": "slides/related/foreground.png",
+        "product_mask_png": "slides/related/product-mask.png"
+      }
+    },
+    {
+      "id": "short-close@1",
+      "name": "Editorial short close",
+      "canvas": {
+        "width": 1080,
+        "height": 1920
+      },
+      "role": "close",
+      "story_intent": "Use a concise top brief, a central product recording, and bottom narration to introduce connected capabilities.",
+      "requires_product": false,
+      "product_aperture": null,
+      "copy_slots": [
+        {
+          "id": "brand",
+          "rect": {
+            "x": 100,
+            "y": 160,
+            "width": 880,
+            "height": 64
+          },
+          "font_token": "brand",
+          "max_characters": 32,
+          "max_lines": 1,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "headline",
+          "rect": {
+            "x": 72,
+            "y": 450,
+            "width": 840,
+            "height": 390
+          },
+          "font_token": "headline",
+          "max_characters": 60,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        },
+        {
+          "id": "cta",
+          "rect": {
+            "x": 72,
+            "y": 1030,
+            "width": 840,
+            "height": 240
+          },
+          "font_token": "cta",
+          "max_characters": 46,
+          "max_lines": 3,
+          "align": "left",
+          "color": "#F3EDE1"
+        }
+      ],
+      "visual_revision": "short-vertical-default-2",
+      "assets": {
+        "background_png": "slides/close/background.png",
+        "foreground_png": "slides/close/foreground.png"
+      }
+    }
+  ],
+  "schedule": [
+    {
+      "template_id": "short-hook@1",
+      "start_ms": 0,
+      "end_ms": 4000,
+      "recipe": "title"
+    },
+    {
+      "template_id": "short-search@1",
+      "start_ms": 4000,
+      "end_ms": 16000,
+      "recipe": "search"
+    },
+    {
+      "template_id": "short-context@1",
+      "start_ms": 16000,
+      "end_ms": 28000,
+      "recipe": "article"
+    },
+    {
+      "template_id": "short-related@1",
+      "start_ms": 28000,
+      "end_ms": 40000,
+      "recipe": "related"
+    },
+    {
+      "template_id": "short-close@1",
+      "start_ms": 40000,
+      "end_ms": 45000,
+      "recipe": "title"
+    }
+  ],
+  "integrity": {
+    "files": {
+      "slides/hook/background.png": "be274a3c2a0ed2afa1741d144d1e9aab1a4a71f97d93e61ccd965a072f247ebb",
+      "slides/hook/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "slides/search/background.png": "f1a3f63d894f896c6b58a2602a502a5c098d447760002577518274666fbdf265",
+      "slides/search/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "slides/search/product-mask.png": "3559643d10112e14e61d4b5997fd1e4c0a13379188b2b6154b033f57c1ff675c",
+      "slides/context/background.png": "f1a3f63d894f896c6b58a2602a502a5c098d447760002577518274666fbdf265",
+      "slides/context/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "slides/context/product-mask.png": "3559643d10112e14e61d4b5997fd1e4c0a13379188b2b6154b033f57c1ff675c",
+      "slides/related/background.png": "f1a3f63d894f896c6b58a2602a502a5c098d447760002577518274666fbdf265",
+      "slides/related/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "slides/related/product-mask.png": "3559643d10112e14e61d4b5997fd1e4c0a13379188b2b6154b033f57c1ff675c",
+      "slides/close/background.png": "be274a3c2a0ed2afa1741d144d1e9aab1a4a71f97d93e61ccd965a072f247ebb",
+      "slides/close/foreground.png": "7f4f3c298c64eea7ee419493e0645e76098f378b5004d10089767ec7c62a9076",
+      "shared/inter-latin-variable.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62"
+    }
+  }
+}

@@ -346,7 +346,7 @@ input[type="range"] { height: 3px; padding: 0; border: 0; accent-color: var(--in
 
 .auth-shell { display: grid; min-height: 100vh; padding: 28px; place-items: center; background: radial-gradient(circle at 50% 0, #1b2230, #090b0e 55%); color: var(--text); }
 .auth-card { width: min(100%, 430px); padding: 34px; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(145deg, rgb(25 29 36 / 98%), rgb(12 15 19 / 98%)); box-shadow: 0 28px 90px rgb(0 0 0 / 45%); }
-.auth-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 34px; }.auth-brand span { color: #8097ff; }.auth-brand b { font-size: 14px; }
+.auth-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 34px; color: inherit; text-decoration: none; }.auth-brand span { color: #8097ff; }.auth-brand b { font-size: 14px; }
 .auth-kicker { margin: 0 0 8px !important; color: #90a5ff !important; font-size: 10px !important; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
 .auth-card h1 { margin: 0 0 10px; font-size: 28px; line-height: 1.15; letter-spacing: -.04em; }.auth-card > p { color: var(--secondary); font-size: 12px; line-height: 1.6; }
 .auth-card form { display: grid; gap: 8px; margin-top: 26px; }.auth-card label { margin-top: 8px; color: var(--secondary); font-size: 10px; font-weight: 650; }.auth-card input { min-height: 44px; }.auth-card form small { color: var(--muted); font-size: 9px; }.auth-card form button { min-height: 44px; margin-top: 14px; }
