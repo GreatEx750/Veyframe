@@ -1,6 +1,7 @@
 """Run each reviewed Roamstead scene through the application's actual slide recorder."""
 
 import json
+import os
 from pathlib import Path
 
 from demodirector_api.recording_workflows import approved_workflow
@@ -9,7 +10,9 @@ from demodirector_worker.presentation_assets import AuthoredSlideRenderer
 
 
 def main() -> None:
-    url = "https://roamstead-web-tn7ddsxnmq-uc.a.run.app/"
+    url = os.getenv("ROAMSTEAD_DEMO_URL", "").rstrip("/") + "/"
+    if url == "/":
+        raise RuntimeError("ROAMSTEAD_DEMO_URL is required")
     workflow = approved_workflow(url)
     assert workflow
     output = Path("artifacts/veyframe-self-demo/roamstead-recordings")

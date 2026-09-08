@@ -29,7 +29,7 @@ describe("Veyframe public landing page", () => {
     expect(screen.getByRole("heading", { name: "Built for stories like yours" })).toBeInTheDocument();
     expect(screen.getByText(/synthetic testimonial tweets/i)).toBeInTheDocument();
     expect(screen.getByText("Epiq")).toBeInTheDocument();
-    expect(screen.getByText("Roamstead")).toBeInTheDocument();
+    expect(screen.getAllByText("Roamstead")).toHaveLength(2);
     expect(screen.getByText("HabiWatch")).toBeInTheDocument();
     expect(screen.getAllByText("BoneTwein")).toHaveLength(2);
     expect(screen.getAllByRole("img", { name: /project logo/i })).toHaveLength(4);

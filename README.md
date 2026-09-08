@@ -21,11 +21,8 @@ The goal is less production work—not replacing product footage with invented s
 
 ## Hosted demo
 
-**[Open Veyframe](https://veyframe-web-5zo4cenn3q-uc.a.run.app/)** → **Judge Demo Mode**.
-
-No personal account or API key is needed for the hosted judge entry. Cloud Run scales to zero,
-so the first visit may take a little longer. Public playback examples are also available directly
-on the landing page: select a format, then **Watch with sound**.
+Judge access is provided privately through the hackathon submission form. No personal account or
+API key is needed for the judge entry. Public playback examples remain available in this repository.
 
 ## Judge demo testing — Wikipedia
 

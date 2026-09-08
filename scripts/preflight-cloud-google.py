@@ -1,6 +1,7 @@
 """Check Google pages in the authenticated cloud recording worker, without bypasses."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -26,7 +27,9 @@ def main() -> None:
     token = subprocess.run(
         [gcloud, "auth", "print-identity-token"], capture_output=True, text=True, check=True,
     ).stdout.strip()
-    worker = "https://veyframe-worker-5zo4cenn3q-uc.a.run.app"
+    worker = os.getenv("VEYFRAME_WORKER_URL", "").rstrip("/")
+    if not worker:
+        raise RuntimeError("VEYFRAME_WORKER_URL is required")
     for name, url in [("home", "https://www.google.com/"),
                       ("ai-mode", "https://www.google.com/ai")]:
         scene = Scene.model_validate({

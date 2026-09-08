@@ -1,14 +1,17 @@
 """Observe hosted controls for the reviewed self-demo walkthrough, without generation."""
 
+import argparse
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base", required=True, help="Private deployed web origin")
+    base = parser.parse_args().base.rstrip("/")
     root = Path("artifacts/veyframe-self-demo/recording-ui")
     root.mkdir(parents=True, exist_ok=True)
-    base = "https://veyframe-web-5zo4cenn3q-uc.a.run.app"
     with sync_playwright() as p:
         browser = p.chromium.launch()
         context = browser.new_context(viewport={"width": 1502, "height": 1022})

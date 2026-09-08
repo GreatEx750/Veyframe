@@ -2,7 +2,7 @@
 
 Project: `demodirector-507722`  
 Region: `us-central1`  
-Hosted URL: `https://demodirector-web-5zo4cenn3q-uc.a.run.app`
+Hosted URL: provided privately to authorized judges
 
 ## Outcome
 
@@ -159,8 +159,5 @@ This verifies completion, not fast generation. No presentation retry was necessa
 
 ## Open the generated projects
 
-Sign in using Judge Demo, then open:
-
-- [Wikipedia — Cloud Spotlight verification](https://demodirector-web-5zo4cenn3q-uc.a.run.app/projects/7b7021ba-1b00-444b-992f-50fd9988bf59/editor)
-- [Wikipedia — Cloud Short verification](https://demodirector-web-5zo4cenn3q-uc.a.run.app/projects/3d42a559-1577-4ab1-aaf0-c27d270412fb/editor)
-- [Wikipedia — Cloud Presentation verification](https://demodirector-web-5zo4cenn3q-uc.a.run.app/projects/caf1cae8-91ca-4c15-b26a-71e84079f597/editor)
+Use the private judge URL from the submission form, sign in using Judge Demo, and open the saved
+Spotlight, Short, and Presentation verification projects from the project library.

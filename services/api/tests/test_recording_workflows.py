@@ -2,8 +2,9 @@ import pytest
 from demodirector_api.recording_workflows import ReviewedRecordingProfile, approved_workflow
 
 
-def test_owned_roamstead_has_explicit_readiness_and_three_walkthroughs() -> None:
-    workflow = approved_workflow("https://roamstead-web-tn7ddsxnmq-uc.a.run.app/")
+def test_owned_roamstead_has_explicit_readiness_and_three_walkthroughs(monkeypatch) -> None:
+    monkeypatch.setenv("ROAMSTEAD_DEMO_ORIGIN", "https://private-demo.example")
+    workflow = approved_workflow("https://private-demo.example/")
     assert workflow is not None
     assert set(workflow) == {"title", "search", "article", "related"}
     assert any("fit" in (a.locator or "") for a in workflow["article"].preparation)
@@ -12,10 +13,11 @@ def test_owned_roamstead_has_explicit_readiness_and_three_walkthroughs() -> None
                for key in ["search", "article", "related"])
 
 
-def test_workflows_do_not_match_lookalike_or_unapproved_hosts() -> None:
+def test_workflows_do_not_match_lookalike_or_unapproved_hosts(monkeypatch) -> None:
+    monkeypatch.setenv("ROAMSTEAD_DEMO_ORIGIN", "https://private-demo.example")
     assert approved_workflow("https://example.com/") is None
-    assert approved_workflow("https://roamstead-web-tn7ddsxnmq-uc.a.run.app.evil.test/") is None
-    assert approved_workflow("http://roamstead-web-tn7ddsxnmq-uc.a.run.app/") is None
+    assert approved_workflow("https://private-demo.example.evil.test/") is None
+    assert approved_workflow("http://private-demo.example/") is None
 
 
 def test_reviewed_profile_theme_is_explicit_and_validated() -> None:

@@ -42,7 +42,7 @@ const projectStories = [
     handle: "@roamstead",
     logo: "/landing/project-logos/roamstead.svg",
     quote: "The property search, fit explanation, and shortlist finally feel like one connected journey. I can show why Roamstead is useful instead of just clicking through screens.",
-    href: "https://roamstead-web-tn7ddsxnmq-uc.a.run.app/",
+    href: null,
   },
   {
     name: "BoneTwein",

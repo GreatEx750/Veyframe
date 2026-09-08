@@ -1,5 +1,6 @@
 """Verify the deployed landing page and existing judge library without generating jobs."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -7,7 +8,9 @@ from playwright.sync_api import sync_playwright
 
 
 def main() -> None:
-    base = "https://veyframe-web-5zo4cenn3q-uc.a.run.app"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base", required=True, help="Private deployed web origin")
+    base = parser.parse_args().base.rstrip("/")
     output = Path("artifacts/veyframe-self-demo/deployment")
     output.mkdir(parents=True, exist_ok=True)
     checks = {}

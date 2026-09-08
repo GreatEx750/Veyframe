@@ -5,11 +5,13 @@ Project: `demodirector-507722`. Region: `us-central1`.
 Cloud Run services were copied under the Veyframe names using their exact running
 image digests, runtime configuration, service identities and IAM policies.
 
-| Service | Verified revision | URL |
-| --- | --- | --- |
-| Web | veyframe-web-00001-rxf | https://veyframe-web-5zo4cenn3q-uc.a.run.app |
-| API | veyframe-api-00002-6h9 | https://veyframe-api-5zo4cenn3q-uc.a.run.app |
-| Worker | veyframe-worker-00001-rsx | https://veyframe-worker-5zo4cenn3q-uc.a.run.app |
+| Service | Verified revision |
+| --- | --- |
+| Web | veyframe-web-00001-rxf |
+| API | veyframe-api-00002-6h9 |
+| Worker | veyframe-worker-00001-rsx |
+
+Service URLs are kept out of the public repository and shared privately with authorized judges.
 
 The web proxy points to the new API. Capture tasks point to the new worker.
 Generation tasks use the new API origin. Authenticated capture permits both the

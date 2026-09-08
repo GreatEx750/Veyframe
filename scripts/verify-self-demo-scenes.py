@@ -13,9 +13,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("slides", type=int, nargs="+")
     parser.add_argument("--run-name", default="")
+    parser.add_argument("--base", required=True, help="Private deployed web origin")
     args = parser.parse_args()
     project_id = "3a0ab083-5be1-442e-a4c6-b0e594d5d4d0"
-    url = "https://veyframe-web-5zo4cenn3q-uc.a.run.app/"
+    url = args.base.rstrip("/") + "/"
     reviewed = load_reviewed_profile(url, project_id, Path("artifacts"))
     assert reviewed
     profile = reviewed.recipes

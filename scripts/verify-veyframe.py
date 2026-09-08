@@ -1,5 +1,6 @@
 """Verify access to existing projects and media after the Cloud Run service rename."""
 
+import argparse
 import json
 from pathlib import Path
 
@@ -8,10 +9,13 @@ from playwright.sync_api import sync_playwright
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--previous-base", required=True, help="Private previous web origin")
+    args = parser.parse_args()
     output = Path("artifacts/cloud-veyframe")
     services = json.loads((output / "services.json").read_text("utf-8"))
     base = services["web"]["url"]
-    previous = "https://demodirector-web-5zo4cenn3q-uc.a.run.app"
+    previous = args.previous_base.rstrip("/")
     summary = {"web_url": base, "checks": {}}
     checks = summary["checks"]
     with httpx.Client(timeout=120, follow_redirects=True) as old:

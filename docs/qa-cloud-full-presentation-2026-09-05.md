@@ -6,7 +6,7 @@ Cloud verification **did not pass**; no finished two-minute video was produced. 
 two-minute Wikipedia Presentation Demo using the same authored v2 slide-by-slide pipeline as
 the local result. This is not the nested DemoDirector self-demo and not a first-five-slide preview.
 
-- Hosted origin: https://demodirector-web-cq5t2gao5q-uc.a.run.app
+- Hosted origin: provided privately to authorized judges
 - Title: **Wikipedia — Cloud 2-minute Presentation Test**
 - Project: `d8613612-98b1-4f48-864b-cc873ba445cb`
 - Job: `a049de35-910e-4d6b-b6f4-cd49f2c33e61`

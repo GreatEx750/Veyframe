@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--base", default="https://demodirector-web-5zo4cenn3q-uc.a.run.app")
+parser.add_argument("--base", required=True, help="Private deployed web origin")
 parser.add_argument("--project-id", default="208f7496-2c97-4f69-956a-0e00989a7c59")
 parser.add_argument("--assert-smooth", action="store_true")
 args = parser.parse_args()

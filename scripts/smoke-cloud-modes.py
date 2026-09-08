@@ -12,7 +12,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("action", choices=["start", "retry", "rebuild", "status", "verify"])
     parser.add_argument("mode", choices=["spotlight", "short", "presentation"])
-    parser.add_argument("--base", default="https://demodirector-web-5zo4cenn3q-uc.a.run.app")
+    parser.add_argument("--base", required=True, help="Private deployed web origin")
     parser.add_argument("--artifacts-root", type=Path, default=Path("artifacts/cloud-mode-smoke"))
     parser.add_argument("--title-suffix", default="verification")
     parser.add_argument("--title")

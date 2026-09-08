@@ -1,5 +1,6 @@
 """Inspect existing cloud projects and editor controls; never submit generation."""
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -9,7 +10,9 @@ from playwright.sync_api import sync_playwright
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
-    base = "https://veyframe-web-5zo4cenn3q-uc.a.run.app"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base", required=True, help="Private deployed web origin")
+    base = parser.parse_args().base.rstrip("/")
     output = Path("artifacts/veyframe-self-demo/cloud-inspection")
     output.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:

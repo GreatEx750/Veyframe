@@ -4,6 +4,7 @@ These are deterministic capture profiles, not AI-discovered navigation. Directio
 copy, research and narration still run through the regular generation pipeline.
 """
 
+import os
 import re
 from pathlib import Path
 from typing import Literal
@@ -73,7 +74,8 @@ def _step(kind: str, target: str, description: str, value: str | None = None) ->
 
 
 def approved_workflow(url: str) -> dict[str, RecordingRecipe] | None:
-    if url.rstrip("/") != "https://roamstead-web-tn7ddsxnmq-uc.a.run.app":
+    approved_origin = os.getenv("ROAMSTEAD_DEMO_ORIGIN", "").rstrip("/")
+    if not approved_origin or url.rstrip("/") != approved_origin:
         return None
     profile = [
         _step("click", 'button:has-text("Explore with demo access")', "Open the demo profile"),

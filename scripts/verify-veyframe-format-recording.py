@@ -1,5 +1,6 @@
 """Verify the format showcase through Veyframe's authored-slide recorder."""
 
+import argparse
 from pathlib import Path
 
 from demodirector_api.presentation_pipeline import action
@@ -8,6 +9,9 @@ from demodirector_worker.presentation_assets import AuthoredSlideRenderer
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base", required=True, help="Private deployed web origin")
+    base = parser.parse_args().base.rstrip("/") + "/"
     output = Path("artifacts/veyframe-self-demo/format-recording-v2")
     renderer = AuthoredSlideRenderer(output)
     receipt = output / "capture.json"
@@ -27,7 +31,7 @@ def main() -> None:
         "title": "Formats for the marketing workflow", "objective": "Show saved examples",
         "narration": "Choose a feature spotlight or a vertical social short.",
         "duration_seconds": 20,
-        "capture_plan": {"start_url": "https://veyframe-web-5zo4cenn3q-uc.a.run.app/",
+        "capture_plan": {"start_url": base,
                          "timeout_seconds": 180, "actions": steps},
     })
     video, result = renderer.capture(

@@ -1,6 +1,7 @@
 """Check owner-authorized demo access from the actual cloud capture worker."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -14,6 +15,10 @@ from demodirector_contracts import Scene  # noqa: E402
 
 
 def main() -> None:
+    worker = os.getenv("VEYFRAME_WORKER_URL", "").rstrip("/")
+    target = os.getenv("ROAMSTEAD_DEMO_URL", "").rstrip("/")
+    if not worker or not target:
+        raise RuntimeError("VEYFRAME_WORKER_URL and ROAMSTEAD_DEMO_URL are required")
     output = ROOT / "artifacts/veyframe-self-demo/roamstead-preflight"
     output.mkdir(parents=True, exist_ok=True)
     if (output / "result.json").exists():
@@ -31,7 +36,7 @@ def main() -> None:
         "objective": "Verify demo access and an enabled profile before generating footage",
         "narration": "Cloud recording access check", "duration_seconds": 75,
         "capture_plan": {
-            "start_url": "https://roamstead-web-tn7ddsxnmq-uc.a.run.app/",
+            "start_url": target + "/",
             "timeout_seconds": 150,
             "actions": [
                 {"type": "click", "locator_strategy": "role",
@@ -47,7 +52,7 @@ def main() -> None:
         },
     })
     response = httpx.post(
-        "https://veyframe-worker-5zo4cenn3q-uc.a.run.app/tasks/capture",
+        worker + "/tasks/capture",
         headers={"Authorization": "Bearer " + token},
         json={"project_id": "veyframe-self-demo-preflight", "scene": scene.model_dump(mode="json")},
         timeout=180,

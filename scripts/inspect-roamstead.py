@@ -1,6 +1,7 @@
 """Inspect the owner-authorized Roamstead demo without modifying existing projects."""
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -9,6 +10,9 @@ from playwright.sync_api import sync_playwright
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
+    target = os.getenv("ROAMSTEAD_DEMO_URL", "").rstrip("/")
+    if not target:
+        raise RuntimeError("ROAMSTEAD_DEMO_URL is required")
     root = Path("artifacts/veyframe-self-demo/roamstead-inspection")
     root.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:
@@ -20,7 +24,7 @@ def main() -> None:
         page.on("requestfailed", lambda request: print(
             f"FAILED {request.url.split('?')[0]} {request.failure}", flush=True
         ))
-        page.goto("https://roamstead-web-tn7ddsxnmq-uc.a.run.app/", timeout=90000)
+        page.goto(target + "/", timeout=90000)
         page.get_by_role("button", name="Explore with demo access").click()
         page.get_by_text("What does the right home look like?", exact=True).wait_for(timeout=90000)
         try:
