@@ -81,7 +81,8 @@ describe("Create Demo Studio at /studio", () => {
     expect(screen.getByLabelText("Studio preview")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Director settings" })).toBeInTheDocument();
     const navigation = screen.getByRole("navigation", { name: "Primary navigation" });
-    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Jobs", "Settings"]);
+    expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual(["Projects", "Studio", "Jobs"]);
+    expect(screen.getByRole("button", { name: "Log out" })).toBeInTheDocument();
     expect(within(navigation).queryByRole("link", { name: "Voice" })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Voice", { exact: true })).toBeInTheDocument();
   });

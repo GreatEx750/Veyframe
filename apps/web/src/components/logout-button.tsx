@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const LOGOUT_EVENT = "demodirector:logout";
 
-export function LogoutButton({ compact = false }: { compact?: boolean }) {
+export function LogoutButton({ navigation = false }: { navigation?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +23,7 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
         channel.postMessage("logout");
         channel.close();
       }
-      router.replace("/login?loggedOut=1");
+      router.replace("/");
       router.refresh();
       setLoading(false);
     }
@@ -31,12 +31,18 @@ export function LogoutButton({ compact = false }: { compact?: boolean }) {
 
   return (
     <button
-      className={compact ? "logout-button compact" : "logout-button"}
+      aria-label="Log out"
+      className={navigation ? "logout-button navigation-logout" : "logout-button"}
       disabled={loading}
       onClick={logout}
       type="button"
     >
-      {loading ? "Logging out…" : "Log out"}
+      {navigation ? (
+        <svg aria-hidden="true" className="icon" viewBox="0 0 24 24">
+          <path d="M10 5H5v14h5M14 8l4 4-4 4m4-4H9" />
+        </svg>
+      ) : null}
+      <span>{loading ? "Logging out…" : "Log out"}</span>
     </button>
   );
 }

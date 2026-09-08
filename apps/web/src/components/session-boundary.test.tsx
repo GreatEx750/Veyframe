@@ -60,3 +60,17 @@ it("preserves the session when the connection fails", async () => {
   expect(navigation.replace).not.toHaveBeenCalled();
   view.unmount();
 });
+
+it("returns other tabs to the landing page after logout", async () => {
+  navigation.pathname = "/projects";
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ status: "active" }),
+  }));
+  render(<SessionBoundary><main>Projects</main></SessionBoundary>);
+
+  window.dispatchEvent(new StorageEvent("storage", { key: "demodirector:logout" }));
+
+  await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/"));
+  expect(navigation.refresh).toHaveBeenCalled();
+});

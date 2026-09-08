@@ -11,7 +11,7 @@ export function SessionBoundary({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const redirect = () => {
-      router.replace("/login?loggedOut=1");
+      router.replace("/");
       router.refresh();
     };
     const onStorage = (event: StorageEvent) => {

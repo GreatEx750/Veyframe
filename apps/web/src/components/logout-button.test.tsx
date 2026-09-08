@@ -19,7 +19,7 @@ describe("LogoutButton", () => {
     localStorage.clear();
   });
 
-  it("clears browser session state and returns to login", async () => {
+  it("clears browser session state and returns to the landing page", async () => {
     sessionStorage.setItem("editor", "private");
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ status: "logged_out" }), { status: 200 }),
@@ -28,7 +28,7 @@ describe("LogoutButton", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Log out" }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?loggedOut=1"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
     expect(sessionStorage.getItem("editor")).toBeNull();
     expect(localStorage.getItem("demodirector:logout")).toBeTruthy();
     expect(refresh).toHaveBeenCalled();
@@ -40,6 +40,6 @@ describe("LogoutButton", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Log out" }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?loggedOut=1"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   });
 });

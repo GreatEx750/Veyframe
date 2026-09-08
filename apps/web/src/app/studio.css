@@ -694,3 +694,65 @@ input, select, textarea { font-size: var(--font-ui-body); }
   .studio-shell .nav-item,
   .library-shell .nav-item { min-height: 43px; }
 }
+
+.studio-shell .product-navigation > .navigation-logout,
+.library-shell .product-navigation > .navigation-logout,
+.editor-shell .product-navigation > .navigation-logout {
+  display: flex;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 7px 9px;
+  padding: 7px 3px;
+  border: 1px solid #43383a;
+  border-radius: 7px;
+  background: #211719;
+  color: #ffc7cb;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.studio-shell .product-navigation > .navigation-logout:hover,
+.library-shell .product-navigation > .navigation-logout:hover,
+.editor-shell .product-navigation > .navigation-logout:hover {
+  border-color: #774b51;
+  background: #291b1e;
+}
+
+.product-navigation > .navigation-logout .icon {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+@media (max-width: 900px) {
+  .studio-shell .product-navigation > .navigation-logout {
+    width: 52px;
+    min-height: 43px;
+    flex: 0 0 52px;
+    margin: 4px 4px 4px 0;
+    padding: 4px;
+  }
+
+  .studio-shell .product-navigation > .navigation-logout span { display: none; }
+}
+
+@media (max-width: 700px) {
+  .library-shell .product-navigation > .navigation-logout,
+  .editor-shell .product-navigation > .navigation-logout {
+    width: 52px;
+    min-height: 43px;
+    flex: 0 0 52px;
+    margin: 4px 4px 4px 0;
+    padding: 4px;
+  }
+
+  .library-shell .product-navigation > .navigation-logout span,
+  .editor-shell .product-navigation > .navigation-logout span { display: none; }
+}
