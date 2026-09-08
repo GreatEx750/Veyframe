@@ -101,17 +101,16 @@ The screenshots below were captured from the running local application. The anim
 shortened, silent excerpts of real exports—not mockups. The hosted version follows the last
 successful deployment and may not yet include every local UI change.
 
-### Continuous Product Demo
+### Presentation Demo
 
-An uninterrupted walkthrough with narration, visible pointer interactions, captions, and optional
-smooth zoom. This one-minute export uses the Roamstead property-search application and a continuous
-browser recording with visible clicks, narration, captions, and smooth zoom.
+A roughly two-minute, slide-by-slide product story with reusable layouts, real Roamstead footage,
+narration, visible interactions, highlighted captions, and research-to-script evidence.
 
-![Five-second excerpt from a real Product Demo export](docs/images/product-demo.gif)
+![Presentation example with real Roamstead footage](apps/web/public/examples/roamstead-presentation-120s.jpg)
 
-[Full one-minute Roamstead Product Demo with audio](apps/web/public/examples/roamstead-product-60s.mp4)
+[Full Roamstead Presentation Demo with audio](apps/web/public/examples/roamstead-presentation-120s.mp4)
 
-### Presentation, Spotlight, and Short
+### Other formats
 
 | Format | Purpose | Output |
 | --- | --- | --- |
@@ -119,9 +118,6 @@ browser recording with visible clicks, narration, captions, and smooth zoom.
 | Spotlight | Demonstrate one feature and its benefit | 30 seconds |
 | Short | Introduce connected capabilities in a concise story | 45 seconds; landscape or portrait |
 
-![Presentation example with real Roamstead footage](apps/web/public/examples/roamstead-presentation-120s.jpg)
-
-[Roamstead Presentation Demo with audio](apps/web/public/examples/roamstead-presentation-120s.mp4) ·
 [Spotlight example with audio](apps/web/public/landing/spotlight-example.mp4)
 
 <p align="center">
