@@ -106,7 +106,7 @@ successful deployment and may not yet include every local UI change.
 A roughly two-minute, slide-by-slide product story with reusable layouts, real Roamstead footage,
 narration, visible interactions, highlighted captions, and research-to-script evidence.
 
-![Presentation example with real Roamstead footage](apps/web/public/examples/roamstead-presentation-120s.jpg)
+![Five-second Presentation Demo excerpt](docs/images/presentation-demo.gif)
 
 [Full Roamstead Presentation Demo with audio](apps/web/public/examples/roamstead-presentation-120s.mp4)
 
