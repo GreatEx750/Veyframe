@@ -18,10 +18,13 @@ Captured on 2026-09-07 from the running local application:
 - `images/landing.png`: public landing page, excluding the synthetic testimonial section.
 - `images/studio.png`: a filled Wikipedia brief, not a submitted job or fabricated output.
 - `images/projects.png`: the actual local library filtered to published Wikipedia-related projects.
-- `images/editor.png`: the completed blue/coral Wikipedia Short in the real editor.
+- `images/roamstead-editor.png`: the completed blue/coral Roamstead Short in the real editor.
 - `images/benchmark.png`: the real comparison table, including its estimate disclosure.
-- `images/product-demo.gif`: five-second silent excerpt from the bundled Northstar Product Demo.
-- `images/short-demo.gif`: five-second silent excerpt from the locally generated Wikipedia Short.
+- `images/product-demo.gif`: five-second silent excerpt from the Roamstead Product Demo.
+- `images/short-demo.gif`: five-second silent excerpt from the locally generated Roamstead Short.
+- `../apps/web/public/examples/roamstead-product-60s.mp4`: one-minute, 2560×1440 Roamstead Product Demo export with narration, captions, click feedback, and smooth zoom.
+- `../apps/web/public/examples/roamstead-short-45s.mp4`: 45-second Roamstead Short export in the blue vertical layout.
+- `../apps/web/public/examples/roamstead-presentation-120s.mp4`: two-minute Roamstead Presentation Demo export.
 
 The GIFs are trimmed, resized, and frame-rate-reduced for documentation. They do not represent
 full-duration playback or real-time generation speed. The linked MP4s retain narration.
@@ -29,7 +32,7 @@ full-duration playback or real-time generation speed. The linked MP4s retain nar
 the local example project. Documentation screenshots are checked in, so running this script is
 not required to build the application.
 
-Northstar Analytics is the project's fictional example application. It is not a customer testimonial.
+Roamstead is an owner-authorized project used as an example recording destination; it is not a customer testimonial.
 The independent, manually edited Veyframe showcase is not presented here as an unedited generated export.
 
 ## Wikipedia content

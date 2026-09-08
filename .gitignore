@@ -55,6 +55,7 @@ artifacts/verification/*
 /.idea/
 /.vscode/
 /.devpost-hackathon-state.json
+/devpost-submission.md
 /tmp/
 /temp/
 /recordings/

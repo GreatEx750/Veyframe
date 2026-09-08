@@ -1,3 +1,13 @@
+# Current timing correction — September 7, 2026
+
+Supersedes the historical timing methodology below. Per user instruction, current public values count the selected successful attempt only: Presentation 535 seconds, Spotlight 142 seconds, Short 211 seconds (all rounded up). Failed attempts and retry waiting are excluded. Short is explicitly labeled resumed/cached work. Product Demo remains the user-reported 1216-second estimate.
+
+With the unchanged estimated five-minute brief/review allowance, totals are 13m55s, 7m22s and 8m31s. Presentation comparison is 88%; Spotlight 79%; Short 81%. Presentation's 120-minute manual baseline is now attributed to the creator's reported measured average; other totals and all stage allocations remain estimates. Sample size is not available in the snapshot.
+
+Updated shared docs/images/benchmark.png (referenced by README and devpost-submission.md), landing data/copy, downloadable JSON, and desktop/mobile verification captures. Six focused tests, web typecheck and lint passed. Browser checks verified displayed values, resumed labeling and mobile page width. Local assets updated; publication/deployment is separate.
+
+---
+
 # Landing-page production-time comparison
 
 ## Scope

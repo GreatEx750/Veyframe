@@ -1,10 +1,10 @@
 {
-  "version": 4,
+  "version": 5,
   "date": "2026-09-06",
   "environment": "Local development",
-  "selection": "Four formats with fixed manual estimates. Three selected completed application jobs have recorded timing; Product Demo uses a user-provided 20-minute 16-second generation time. Not a representative sample or a success-rate study.",
-  "timing": "Recorded jobs use job creation to saved completion, rounded up to a whole second, including queued time, retry attempts and gaps within that job. Product Demo uses an approximate generation time rather than a matched job record. All generation times exclude brief preparation before submission and final human review.",
-  "manualMethod": "Illustrative planning estimates, not timed human trials. One editor familiar with the product, existing templates, a short script, screen recording, voiceover, captions, layout and one review pass. No custom animation or approval rounds. Estimates are not industry averages.",
+  "selection": "Three selected successful local attempts, plus a creator-measured Product Demo duration. Not a representative sample or success-rate study.",
+  "timing": "Generation time is the selected successful attempt only, rounded up to whole seconds. Failed attempts, retry waiting, later rebuilds and gaps are excluded. A resumed attempt may reuse saved work, so it is not equivalent to a fresh run. Product Demo remains an creator-reported measured time.",
+  "manualMethod": "Presentation uses the creator-reported measured manual average of 120 minutes. Sample size and individual timing records are not supplied here. Other manual totals and all stage allocations are planning estimates. The five-minute brief/review allowance is estimated.",
   "veyframeBriefReviewMinutes": 5,
   "limitations": "Prepared application, templates and recording workflows were already available. Setup, workflow authoring, earlier development/debugging and later revisions are not included. Retries may reuse completed work. Human intervention was not timed separately. These different tasks are not a controlled quality-matched comparison. No claim of labor hours saved or automatic conversion of one video into three.",
   "runs": [
@@ -17,16 +17,32 @@
       "startedAt": null,
       "completedAt": null,
       "attempts": null,
-      "estimatedGenerationSeconds": 1216,
+      "estimatedGenerationSeconds": 316,
       "manualMinutes": 60,
-      "note": "User-provided estimates: generation is 20 minutes 16 seconds, compared with about one hour to professionally produce a 90-second continuous walkthrough with narration, captions and smooth zoom. Neither estimate is a matched timed trial, and the stage breakdown is illustrative rather than individually measured.",
+      "note": "Creator-measured generation time: 5 minutes 16 seconds for a 90-second Product Demo, excluding retries. Reported by the creator; no matching job timestamps are attached. Manual production baseline is about one hour; stage allocations are estimates.",
       "manualSteps": [
-        { "label": "Research and script", "minutes": 10 },
-        { "label": "Record the workflow", "minutes": 10 },
-        { "label": "Record and clean narration", "minutes": 15 },
-        { "label": "Edit, captions and layout", "minutes": 20 },
-        { "label": "Review and export", "minutes": 5 }
-      ]
+        {
+          "label": "Research and script",
+          "minutes": 10
+        },
+        {
+          "label": "Record the workflow",
+          "minutes": 10
+        },
+        {
+          "label": "Record and clean narration",
+          "minutes": 15
+        },
+        {
+          "label": "Edit, captions and layout",
+          "minutes": 20
+        },
+        {
+          "label": "Review and export",
+          "minutes": 5
+        }
+      ],
+      "manualBasis": "Planning estimate"
     },
     {
       "id": "presentation",
@@ -35,18 +51,41 @@
       "project": "Veyframe marketing workflow presentation",
       "jobId": "cca5a332-3c48-4bc4-a9b7-057d04029a2b",
       "startedAt": "2026-09-06T09:56:15.999490Z",
-      "completedAt": "2026-09-06T10:23:23.700754Z",
-      "attempts": 3,
+      "completedAt": "2026-09-06T10:05:10.175976Z",
+      "attempts": 1,
       "estimatedGenerationSeconds": null,
       "manualMinutes": 120,
-      "note": "Original app-generated 120-second presentation, not the independently edited showcase. Three attempts are included.",
+      "note": "Original app-generated presentation, not the independently edited showcase. First successful run: 8m55s rounded up. Two later successful rebuilds and 13m11s of completed-state gaps are excluded.",
       "manualSteps": [
-        { "label": "Research and script", "minutes": 25 },
-        { "label": "Record the workflow", "minutes": 20 },
-        { "label": "Record and clean narration", "minutes": 20 },
-        { "label": "Edit, captions and layout", "minutes": 50 },
-        { "label": "Review and export", "minutes": 5 }
-      ]
+        {
+          "label": "Research and script",
+          "minutes": 25
+        },
+        {
+          "label": "Record the workflow",
+          "minutes": 20
+        },
+        {
+          "label": "Record and clean narration",
+          "minutes": 20
+        },
+        {
+          "label": "Edit, captions and layout",
+          "minutes": 50
+        },
+        {
+          "label": "Review and export",
+          "minutes": 5
+        }
+      ],
+      "revisionHistory": {
+        "latestCompletedAt": "2026-09-06T10:23:23.700754Z",
+        "totalAttempts": 3,
+        "fullWindowSeconds": 1628,
+        "laterRebuildSeconds": 303,
+        "completedStateGapSeconds": 791
+      },
+      "manualBasis": "Creator-reported measured average"
     },
     {
       "id": "spotlight",
@@ -61,12 +100,28 @@
       "manualMinutes": 35,
       "note": "App-generated three-slide feature video with recorded interactions, narration and highlighted captions.",
       "manualSteps": [
-        { "label": "Research and script", "minutes": 8 },
-        { "label": "Record the workflow", "minutes": 7 },
-        { "label": "Record and clean narration", "minutes": 7 },
-        { "label": "Edit, captions and layout", "minutes": 10 },
-        { "label": "Review and export", "minutes": 3 }
-      ]
+        {
+          "label": "Research and script",
+          "minutes": 8
+        },
+        {
+          "label": "Record the workflow",
+          "minutes": 7
+        },
+        {
+          "label": "Record and clean narration",
+          "minutes": 7
+        },
+        {
+          "label": "Edit, captions and layout",
+          "minutes": 10
+        },
+        {
+          "label": "Review and export",
+          "minutes": 3
+        }
+      ],
+      "manualBasis": "Planning estimate"
     },
     {
       "id": "short",
@@ -74,19 +129,41 @@
       "outputSeconds": 45,
       "project": "Roamstead Short showcase",
       "jobId": "e6756d91-cc93-4dfe-88e6-4624037726eb",
-      "startedAt": "2026-09-06T16:07:54.969078Z",
+      "startedAt": "2026-09-06T16:11:05.299951Z",
       "completedAt": "2026-09-06T16:14:35.451602Z",
-      "attempts": 2,
+      "attempts": 1,
       "estimatedGenerationSeconds": null,
       "manualMinutes": 45,
-      "note": "App-generated five-slide vertical video. Includes a narration-related retry and the gap before retry.",
+      "note": "Successful resumed attempt only: 3m31s rounded up. Reuses saved work from an earlier failed attempt. Excludes 44s of failed processing and 2m26s of retry waiting.",
       "manualSteps": [
-        { "label": "Research and script", "minutes": 10 },
-        { "label": "Record the workflow", "minutes": 8 },
-        { "label": "Record and clean narration", "minutes": 8 },
-        { "label": "Edit, captions and layout", "minutes": 16 },
-        { "label": "Review and export", "minutes": 3 }
-      ]
+        {
+          "label": "Research and script",
+          "minutes": 10
+        },
+        {
+          "label": "Record the workflow",
+          "minutes": 8
+        },
+        {
+          "label": "Record and clean narration",
+          "minutes": 8
+        },
+        {
+          "label": "Edit, captions and layout",
+          "minutes": 16
+        },
+        {
+          "label": "Review and export",
+          "minutes": 3
+        }
+      ],
+      "manualBasis": "Planning estimate",
+      "priorAttempt": {
+        "failedProcessingSeconds": 44.407,
+        "retryWaitSeconds": 145.923,
+        "attemptNumber": 2
+      }
     }
-  ]
+  ],
+  "updatedAt": "2026-09-07"
 }

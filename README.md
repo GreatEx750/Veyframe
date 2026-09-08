@@ -62,7 +62,7 @@ Paste this into **Describe your video**:
 
 ![Studio configured with the Wikipedia test URL and brief](docs/images/studio.png)
 
-The Studio preview is a saved **Northstar example**, not your newly generated Wikipedia video.
+The Studio preview is a saved **Roamstead example**, not your newly generated Wikipedia video.
 Click **Create demo** to submit the brief. New generation uses the configured live Google and
 Parallel services and consumes API quota.
 
@@ -104,11 +104,12 @@ successful deployment and may not yet include every local UI change.
 ### Continuous Product Demo
 
 An uninterrupted walkthrough with narration, visible pointer interactions, captions, and optional
-smooth zoom. This five-second excerpt uses the fictional Northstar Analytics example application.
+smooth zoom. This one-minute export uses the Roamstead property-search application and a continuous
+browser recording with visible clicks, narration, captions, and smooth zoom.
 
 ![Five-second excerpt from a real Product Demo export](docs/images/product-demo.gif)
 
-[Full 20-second example with audio](apps/web/public/examples/northstar-product-20s.mp4)
+[Full one-minute Roamstead Product Demo with audio](apps/web/public/examples/roamstead-product-60s.mp4)
 
 ### Presentation, Spotlight, and Short
 
@@ -118,16 +119,16 @@ smooth zoom. This five-second excerpt uses the fictional Northstar Analytics exa
 | Spotlight | Demonstrate one feature and its benefit | 30 seconds |
 | Short | Introduce connected capabilities in a concise story | 45 seconds; landscape or portrait |
 
-![Presentation example with real Northstar footage](apps/web/public/examples/northstar-presentation-20s.jpg)
+![Presentation example with real Roamstead footage](apps/web/public/examples/roamstead-presentation-120s.jpg)
 
-[Presentation excerpt with audio](apps/web/public/examples/northstar-presentation-20s.mp4) ·
+[Roamstead Presentation Demo with audio](apps/web/public/examples/roamstead-presentation-120s.mp4) ·
 [Spotlight example with audio](apps/web/public/landing/spotlight-example.mp4)
 
 <p align="center">
-  <img src="docs/images/short-demo.gif" width="360" alt="Wikipedia Short with a rounded video frame, blue theme, mouse movement, and highlighted captions">
+  <img src="docs/images/short-demo.gif" width="360" alt="Roamstead Short with a rounded video frame, blue theme, mouse movement, and highlighted captions">
 </p>
 
-[Full 45-second Short with audio](apps/web/public/landing/short-example.mp4)
+[Full 45-second Roamstead Short with audio](apps/web/public/examples/roamstead-short-45s.mp4)
 
 ### Review and delivery
 
@@ -135,21 +136,23 @@ Finished videos stay in Projects. The editor provides playback, download, and fo
 controls for layout and camera review. YouTube upload is optional and requires a separately
 configured Google OAuth connection; **Download MP4** does not require YouTube authorization.
 
-![A completed Wikipedia Short playing in the Veyframe editor](docs/images/editor.png)
+![A completed Roamstead Short playing in the Veyframe editor](docs/images/roamstead-editor.png)
 
 ## Workflow benchmark
 
 ![Veyframe generation timing and manual workflow estimates](docs/images/benchmark.png)
 
-The table compares **three selected, recorded local jobs** and a **user-provided Product Demo
-generation estimate** against fixed, illustrative manual-production estimates. Veyframe totals
-include an additional estimated five minutes for the brief and human review. The Product Demo
-generation estimate is **20 minutes 16 seconds**; it is not a timestamped job measurement.
+The table measures **successful attempt duration only** for three selected local jobs:
+Presentation **8m55s**, Spotlight **2m22s**, and Short **3m31s** (a resumed attempt using saved work; failed processing and retry waiting excluded). The old Presentation figure included two later successful rebuilds
+and completed-state gaps; these are now excluded. Product Demo remains a **creator-measured
+5m16s**, without a matched timestamped job.
 
-These are planning comparisons, **not controlled human trials, industry averages, guaranteed
-savings, or a measured success rate**. Setup, earlier debugging, and workflow authoring are not
-included. Retries can reuse completed stages. See the
-[downloadable timing data and methodology](apps/web/public/benchmarks/generation-2026-09-06.json).
+With an estimated five minutes for brief/review, Presentation totals **13m55s**, approximately
+**88% less elapsed time** than the creator-reported measured manual average of 120 minutes.
+Other manual baselines and all stage allocations are estimates. Manual sample size and timing
+records are not provided here. These selected runs are not a controlled comparison or speed guarantee.
+
+[Download timing data and methodology](apps/web/public/benchmarks/generation-2026-09-06.json).
 
 ## Runtime technology and evidence
 
