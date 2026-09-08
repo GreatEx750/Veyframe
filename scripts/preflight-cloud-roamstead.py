@@ -15,10 +15,10 @@ from demodirector_contracts import Scene  # noqa: E402
 
 
 def main() -> None:
-    worker = os.getenv("VEYFRAME_WORKER_URL", "").rstrip("/")
-    target = os.getenv("ROAMSTEAD_DEMO_URL", "").rstrip("/")
+    worker = os.getenv("DEMO_WORKER_URL", "").rstrip("/")
+    target = os.getenv("ROAMSTEAD_DEMO_ORIGIN", "").rstrip("/")
     if not worker or not target:
-        raise RuntimeError("VEYFRAME_WORKER_URL and ROAMSTEAD_DEMO_URL are required")
+        raise RuntimeError("DEMO_WORKER_URL and ROAMSTEAD_DEMO_ORIGIN are required")
     output = ROOT / "artifacts/veyframe-self-demo/roamstead-preflight"
     output.mkdir(parents=True, exist_ok=True)
     if (output / "result.json").exists():

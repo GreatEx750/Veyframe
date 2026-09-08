@@ -10,9 +10,9 @@ from demodirector_worker.presentation_assets import AuthoredSlideRenderer
 
 
 def main() -> None:
-    url = os.getenv("ROAMSTEAD_DEMO_URL", "").rstrip("/") + "/"
+    url = os.getenv("ROAMSTEAD_DEMO_ORIGIN", "").rstrip("/") + "/"
     if url == "/":
-        raise RuntimeError("ROAMSTEAD_DEMO_URL is required")
+        raise RuntimeError("ROAMSTEAD_DEMO_ORIGIN is required")
     workflow = approved_workflow(url)
     assert workflow
     output = Path("artifacts/veyframe-self-demo/roamstead-recordings")

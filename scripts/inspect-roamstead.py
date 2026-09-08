@@ -10,9 +10,9 @@ from playwright.sync_api import sync_playwright
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
-    target = os.getenv("ROAMSTEAD_DEMO_URL", "").rstrip("/")
+    target = os.getenv("ROAMSTEAD_DEMO_ORIGIN", "").rstrip("/")
     if not target:
-        raise RuntimeError("ROAMSTEAD_DEMO_URL is required")
+        raise RuntimeError("ROAMSTEAD_DEMO_ORIGIN is required")
     root = Path("artifacts/veyframe-self-demo/roamstead-inspection")
     root.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as p:

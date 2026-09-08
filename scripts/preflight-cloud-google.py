@@ -27,9 +27,9 @@ def main() -> None:
     token = subprocess.run(
         [gcloud, "auth", "print-identity-token"], capture_output=True, text=True, check=True,
     ).stdout.strip()
-    worker = os.getenv("VEYFRAME_WORKER_URL", "").rstrip("/")
+    worker = os.getenv("DEMO_WORKER_URL", "").rstrip("/")
     if not worker:
-        raise RuntimeError("VEYFRAME_WORKER_URL is required")
+        raise RuntimeError("DEMO_WORKER_URL is required")
     for name, url in [("home", "https://www.google.com/"),
                       ("ai-mode", "https://www.google.com/ai")]:
         scene = Scene.model_validate({
