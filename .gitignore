@@ -1,4 +1,5 @@
 /DemoDirector_Build_Package/
+/AgentForHuman/
 
 .env
 .env.*

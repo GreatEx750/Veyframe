@@ -21,8 +21,13 @@ The goal is less production work—not replacing product footage with invented s
 
 ## Hosted demo
 
-Judge access is provided privately through the hackathon submission form. No personal account or
-API key is needed for the judge entry. Public playback examples remain available in this repository.
+<a href="https://veyframe-web-5zo4cenn3q-uc.a.run.app/" target="_blank" rel="noopener noreferrer">Open Veyframe</a> in a new tab to enter Judge Demo Mode.
+
+No personal account or API key is needed for the judge entry. Public playback examples remain
+available in this repository.
+
+This judge account is available only during the hackathon judging period: September 10, 2026,
+12:00 p.m. PDT through October 8, 2026, 12:00 p.m. PDT.
 
 ## Judge demo testing — Wikipedia
 
