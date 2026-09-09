@@ -64,7 +64,7 @@ Paste this into **Describe your video**:
 
 ![Studio configured with the Wikipedia test URL and brief](docs/images/studio.png)
 
-The Studio preview is a saved **Roamstead example**, not your newly generated Wikipedia video.
+The Studio preview is a saved **Fictional Website example**, not your newly generated Wikipedia video.
 Click **Create demo** to submit the brief. New generation uses the configured live Google and
 Parallel services and consumes API quota.
 
